@@ -41,6 +41,22 @@ alias aicc='ai-conventional-commit'
 
 After that you can type `aicc` instead of the full command. All subsequent examples use the full name for clarity.
 
+## Publishing
+
+A build is automatically produced on `npm publish` via the `prepublishOnly` script so you can simply bump the version and run:
+
+```bash
+npm publish
+```
+
+Only `dist`, `README.md`, and `LICENSE` are included in the published package (see the `files` field). If you need to test the packaging result first:
+
+```bash
+npm publish --dry-run
+```
+
+The shorter `aicc` binary has been removed from the package itself; create a local alias if you still prefer it.
+
 ## Quick Start
 
 ```bash

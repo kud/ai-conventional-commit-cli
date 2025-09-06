@@ -4,12 +4,17 @@
   "type": "module",
   "description": "Opinionated, style-aware AI assistant for crafting and splitting git commits (Copilot + pluggable).",
   "bin": {
-    "aicc": "dist/index.js",
     "ai-conventional-commit": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsup src/index.ts --format esm,cjs --dts",
+    "prepublishOnly": "npm run build",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
