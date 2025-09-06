@@ -1,0 +1,8 @@
+{
+  "conventional": true,
+  "gitmoji": false,
+  "privacy": "low",
+  "plugins": ["./src/sample-plugin/example-plugin.ts"],
+  "reasoning": "low",
+  "gitmojiMode": "gitmoji"
+}

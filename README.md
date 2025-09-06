@@ -1,168 +1,174 @@
-# ai-conventional-commit-cli (command: ai-conventional-commit, alias: aicc)
+# aicc
 
-AI-assisted Conventional Commit generator. Reads the staged diff, asks an AI provider CLI for a concise Conventional Commit message, enforces formatting (type/scope, subject length, wrapping), optionally lets you confirm or retry, and creates the commit (unless `--dry-run`).
+Opinionated, style-aware AI assistant for crafting, splitting, and refining git commit messages via the local `opencode` CLI. Uses your installed `opencode` models (default `github-copilot/gpt-5`).
 
-Supports provider CLIs (each uses a single default model, no fallback):
-- Codex CLI (`codex`) – default model: gpt-5
-- Claude Code (`claude`) – default model: claude-sonnet-4-20250514
-- OpenCode (`opencode`) – default provider (default model: copilot)
+## Why
 
-No Jira / ticket logic is included by design. If you need Jira later, create a sibling tool (e.g. `ai-conventional-commit-jira`).
+Manual commit messages are noisy, inconsistent, and often miss context. aicc inspects your staged diff, learns your repo's commit style, and produces Conventional Commit messages (single or split) with explanations—optionally decorated with gitmoji.
 
-## Install
+## Key Features
 
-```bash
-# Inside the repo folder containing package.json & aicc.mjs
-npm i -g .
-```
+- Style fingerprinting (average title length, scope usage ratio, gitmoji ratio, top prefixes)
+- Single (`aicc` / `aicc generate`) or multi-commit planning (`aicc split`)
+- Refinement workflow (`aicc refine`) to iteratively tweak a prior result
+- Gitmoji modes: `--gitmoji` (emoji + type) and `--gitmoji-pure` (emoji only)
+- Reasoning depth control (`--reasoning low|medium|high`) influences explanation verbosity
+- Privacy tiers governing diff detail sent to model
+- Title normalization + guardrails (length, conventional schema, secret heuristic)
+- Plugin system (transform + validate phases)
+- Session persistence for later refinement (`.git/.aicc-cache/last-session.json`)
+- Deterministic mock provider mode for tests / CI
 
-This installs two executable names:
-- `ai-conventional-commit` (primary)
-- `aicc` (alias)
-
-## Usage
-
-```bash
-aicc [options]
-# or
-ai-conventional-commit [options]
-```
-
-Options:
-```
---provider codex|claude|opencode   (default opencode)
---model <model>                    (optional; overrides provider default model)
---type <feat|fix|refactor|chore|docs|test|perf|build|ci|style>
---scope <scope>
---max-subject <n>    (default 72)
---wrap <n>           (default 72)
---dry-run            (print message only)
---verbose            (log internal steps)
---plain              (disable fancy boxed output)
---debug              (print raw provider output + parsed segments + executed command)
---show-defaults      (print provider default model mapping and exit)
---yes / --no-confirm (auto-accept message; skip interactive prompt)
--h, --help
-```
-
-Environment variable equivalents (override defaults without flags):
-```
-AICC_PROVIDER, AICC_MODEL, AICC_TYPE, AICC_SCOPE,
-AICC_MAX_SUBJECT, AICC_WRAP, AICC_DRY_RUN=1, AICC_VERBOSE=1, AICC_PLAIN=1, AICC_YES=1
-```
-
-## Interactive Flow
-By default (TTY, not `--dry-run`, not `--yes`) you will see the proposed commit and be offered actions:
-```
-[y] commit  [r] retry  [c] cancel
-```
-- Retry regenerates with the same single default (or the explicit model you specified).
-- Cancel exits with code 0 and does not create a commit.
-- `--yes` / `--no-confirm` / `AICC_YES=1` skips this and auto-accepts.
-
-## Default Models
-If you do not specify `--model`, exactly one default model is used per provider (no fallback attempts):
-
-- Codex: `gpt-5`
-- Claude: `claude-sonnet-4-20250514`
-- OpenCode: `copilot`
-
-If that single model is unsupported in your local CLI version, specify another with `--model <name>` or `AICC_MODEL`. The tool will not attempt alternates automatically.
-
-## Debug vs Verbose
-`--verbose` enables zx's command echo (shows full shell commands as they run).
-`--debug` adds semantic diagnostics:
-- Executed provider command (with truncated prompt preview)
-- Raw cleaned provider output (first and retries)
-- Parsed subject and body after post-processing
-- Interactive loop entry notice
-
-Use them together for maximum transparency.
-
-## Examples
-
-### Fancy Output (default in TTY)
-```
-┌   ai-conventional-commit
-│
-◇  Detected 2 staged files:
-     dotfiles/.gitconfig
-     shell/aliases.zsh
-│
-◇  Using model: codex:o3
-│
-◇  Proposed commit message:
-
-   chore: remove and add GH related aliases in dotfiles and zsh aliases
-
-│  Actions: [y] commit  [r] retry  [c] cancel
-│
-└  ✔ Successfully committed!
-```
-
-Disable with `--plain` or `AICC_PLAIN=1`.
+## Install (Dev)
 
 ```bash
-# Inspect defaults mapping (no generation)
-aicc --show-defaults
+npm install
+npm run build
+npm link
+# then
+aicc --help
+```
 
-# Default: OpenCode provider + single model (copilot)
+## Quick Start
+
+```bash
+# Stage your changes
+git add .
+# Generate a single commit suggestion
 aicc
-
-# Claude with explicit model + scope (no fallback sequence)
-ai-conventional-commit --provider claude --model claude-sonnet-4-20250514 --scope api
-
-# OpenCode specifying model + forcing type
-aicc --provider opencode --model copilot --type fix
-
-# Preview without committing (shows final message)
-aicc --dry-run --verbose
-
-# Non-interactive auto-accept (CI script)
-aicc --yes
+# Multi-commit proposal (interactive confirm)
+aicc split
+# Use gitmoji with emoji+type form
+aicc --gitmoji
+# Pure gitmoji (emoji: subject)
+aicc --gitmoji-pure
+# Increase reasoning verbosity
+aicc --reasoning=high
+# Refine previous session’s first commit making it shorter
+aicc refine --shorter
 ```
 
-## What It Does
-1. Verifies you are in a Git repository and have staged changes.
-2. Collects the staged diff with zero-context (`--unified=0`) to remain concise.
-3. Builds a structured system + user prompt instructing the model to output ONLY a Conventional Commit.
-4. Invokes selected provider CLI (single model).
-5. Post-processes the returned text:
-   - Strips code fences & whitespace.
-   - Filters out timestamp-ish lines, CLI banners.
-   - Ensures a valid `<type>(<scope>): subject` (or `<type>: subject`) structure.
-   - Enforces provided `--type` / `--scope` if given.
-   - Truncates subject to `--max-subject` characters and removes trailing period.
-   - Wraps body paragraphs to `--wrap` columns (simple greedy algorithm).
-   - Falls back to `chore:` if no allowed type detected.
-6. Shows you the message and prompts for action unless auto-accepted.
-7. Commits using `git commit -F -` unless `--dry-run`.
+## Gitmoji Modes
 
-## Breaking Changes
-If the model outputs a footer containing `BREAKING CHANGE:` it is preserved. The generator does not attempt to infer breaking changes itself.
+| Mode               | Example                   | Notes                                |
+| ------------------ | ------------------------- | ------------------------------------ |
+| standard (default) | `feat: add search box`    | No emoji decoration                  |
+| gitmoji            | `✨ feat: add search box` | Emoji + conventional type retained   |
+| gitmoji-pure       | `✨: add search box`      | Type removed, emoji acts as category |
 
-## Determinism / Temperature
-The script does not pass temperature or sampling args. Configure determinism inside each provider's CLI settings/profile (e.g., set low temperature there). Different providers may yield stylistic differences.
+Enable via CLI flags (`--gitmoji` / `--gitmoji-pure`) or config (`gitmoji: true`, `gitmojiMode`).
 
-## Large Diffs
-For very large diffs you may want to: 
-- Add a pre-truncation guard (e.g. limit prompt size to X characters). 
-- Summarize per-file changes (add/remove line counts) and feed that instead. 
-Currently the script sends the entire staged diff (unified=0) which is compact for moderate changes.
+## Reasoning Depth
 
-## Exit Codes
-- 0 success (or user-cancel)
-- 1 generic error (e.g., no staged files, provider CLI missing, commit failure)
+Controls verbosity of reasons array in the JSON returned by the model:
 
-## Security / Privacy
-Your staged diff content is sent to the chosen provider's model via its CLI. Ensure this complies with your data policies.
+- low: minimal
+- medium: balanced
+- high: detailed, more hunk-specific references
 
-## Extending
-Ideas:
-- Add `--summary-only` mode to produce commit message without committing even without `--dry-run`.
-- Add max diff size + summarizer.
-- Add language/style presets.
-- Separate Jira-aware variant (`ai-conventional-commit-jira`).
+Configured with `--reasoning` or in config (`reasoning`).
+
+## Privacy Modes
+
+| Mode   | Data Sent to Model                                                    |
+| ------ | --------------------------------------------------------------------- |
+| low    | Hunk headers + first 40 changed/context lines per hunk (may truncate) |
+| medium | File + hunk hash + line counts + function context only                |
+| high   | File names with aggregate add/remove counts only                      |
+
+## Configuration (.aiccrc)
+
+Uses cosmiconfig; supports JSON, YAML, etc. Example:
+
+```json
+{
+  "model": "github-copilot/gpt-5",
+  "privacy": "low",
+  "gitmoji": true,
+  "gitmojiMode": "gitmoji",
+  "reasoning": "low",
+  "styleSamples": 120,
+  "plugins": ["./src/sample-plugin/example-plugin.ts"],
+  "maxTokens": 512
+}
+```
+
+### Environment Overrides
+
+- `AICC_MODEL`
+- `AICC_PRIVACY`
+- `AICC_STYLE_SAMPLES`
+- `AICC_GITMOJI` ("true")
+- `AICC_MAX_TOKENS`
+- `AICC_VERBOSE`
+- `AICC_MODEL_TIMEOUT_MS`
+- `AICC_DEBUG` (provider debug logs)
+- `AICC_PRINT_LOGS` (stream model raw output)
+- `AICC_DEBUG_PROVIDER=mock` (deterministic JSON response)
+- `AICC_REASONING` (low|medium|high)
+
+## Conventional Commits Enforcement
+
+Types: feat, fix, chore, docs, refactor, test, ci, perf, style, build, revert, merge, security, release.
+Malformed titles are auto-normalized (fallback to `chore:`) before gitmoji formatting.
+
+## Plugin API
+
+```ts
+interface PluginContext {
+  cwd: string;
+  env: NodeJS.ProcessEnv;
+}
+interface Plugin {
+  name: string;
+  transformCandidates?(
+    candidates: CommitCandidate[],
+    ctx: PluginContext,
+  ): CommitCandidate[] | Promise<CommitCandidate[]>;
+  validateCandidate?(
+    candidate: CommitCandidate,
+    ctx: PluginContext,
+  ): string | string[] | void | Promise<string | string[] | void>;
+}
+```
+
+Register via `plugins` array. Transform runs once on candidate list; validate runs per chosen candidate before commit.
+
+## Refinement Workflow
+
+1. Generate (`aicc` or `aicc split`) – session stored.
+2. Run `aicc refine` with flags (`--shorter`, `--longer`, `--scope=ui`, `--emoji`).
+3. Accept or reject refined candidate (does not auto-amend existing git history; just updates session cache for subsequent refinement or manual use).
+
+## Testing & Mocking
+
+Use `AICC_DEBUG_PROVIDER=mock` to bypass model invocation and get a deterministic single commit JSON payload for faster tests / CI.
+
+## Title Formatting Helper
+
+All gitmoji + normalization logic centralized in `src/title-format.ts` (`formatCommitTitle`). Ensures consistent application across generate, split, and refine flows; tests in `test/title-format.test.ts`.
+
+## Security
+
+Lightweight heuristic secret scan on body; pair with a dedicated scanner (e.g., gitleaks) for stronger assurance.
+
+## Roadmap Ideas
+
+- Embedding-based semantic clustering
+- Local model (Ollama) fallback
+- Streaming / partial UI updates
+- Commit plan editing (accept subset, re-cluster)
+- Scope inference heuristics
+- Extended secret scanning
+
+## Contributing
+
+PRs welcome. Please:
+
+- Keep dependencies minimal
+- Add tests for new formatting or parsing logic
+- Feature-flag experimental behavior
 
 ## License
-MIT (adjust if needed).
+
+MIT

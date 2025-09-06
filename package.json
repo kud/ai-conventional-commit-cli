@@ -1,17 +1,57 @@
 {
-  "name": "ai-conventional-commit-cli",
-  "version": "0.3.9",
+  "name": "@kud/ai-conventional-commit-cli",
+  "version": "0.1.0",
   "type": "module",
+  "description": "Opinionated, style-aware AI assistant for crafting and splitting git commits (Copilot + pluggable).",
   "bin": {
-    "ai-conventional-commit": "./aicc.mjs",
-    "aicc": "./aicc.mjs"
+    "aicc": "dist/index.js",
+    "ai-conventional-commit": "dist/index.js"
   },
-  "description": "Generate Conventional Commits from staged git diff via local AI CLIs (OpenCode default; Codex & Claude optional) with interactive confirm (single model, no fallback)",
-  "license": "MIT",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "commit": "cz"
+  },
   "dependencies": {
-    "zx": "^8.1.6"
+    "@commitlint/config-conventional": "^19.8.1",
+    "chalk": "^5.6.0",
+    "clipanion": "^3.2.1",
+    "cosmiconfig": "^9.0.0",
+    "execa": "^9.6.0",
+    "fast-glob": "^3.3.3",
+    "inquirer": "^9.3.7",
+    "keyv": "^5.5.0",
+    "lru-cache": "^11.2.1",
+    "ora": "^8.2.0",
+    "pathe": "^2.0.3",
+    "simple-git": "^3.28.0",
+    "strip-ansi": "^7.1.0",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^24.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^9.35.0",
+    "prettier": "^3.6.2",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   },
   "engines": {
-    "node": ">=18.0.0"
-  }
+    "node": ">=18.17"
+  },
+  "license": "MIT"
 }
