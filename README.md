@@ -1,16 +1,18 @@
-# aicc
+# ai-conventional-commit
 
 Opinionated, style-aware AI assistant for crafting, splitting, and refining git commit messages via the local `opencode` CLI. Uses your installed `opencode` models (default `github-copilot/gpt-5`).
 
+Formerly referenced as `aicc` in examples. The canonical command name is now `ai-conventional-commit`.
+
 ## Why
 
-Manual commit messages are noisy, inconsistent, and often miss context. aicc inspects your staged diff, learns your repo's commit style, and produces Conventional Commit messages (single or split) with explanations—optionally decorated with gitmoji.
+Manual commit messages are noisy, inconsistent, and often miss context. ai-conventional-commit inspects your staged diff, learns your repo's commit style, and produces Conventional Commit messages (single or split) with explanations—optionally decorated with gitmoji.
 
 ## Key Features
 
 - Style fingerprinting (average title length, scope usage ratio, gitmoji ratio, top prefixes)
-- Single (`aicc` / `aicc generate`) or multi-commit planning (`aicc split`)
-- Refinement workflow (`aicc refine`) to iteratively tweak a prior result
+- Single (`ai-conventional-commit` / `ai-conventional-commit generate`) or multi-commit planning (`ai-conventional-commit split`)
+- Refinement workflow (`ai-conventional-commit refine`) to iteratively tweak a prior result
 - Gitmoji modes: `--gitmoji` (emoji + type) and `--gitmoji-pure` (emoji only)
 - Reasoning depth control (`--reasoning low|medium|high`) influences explanation verbosity
 - Privacy tiers governing diff detail sent to model
@@ -26,8 +28,18 @@ npm install
 npm run build
 npm link
 # then
-aicc --help
+ai-conventional-commit --help
 ```
+
+### Optional Alias (Short Name)
+
+If you prefer the shorter historical alias, add this to your shell profile:
+
+```bash
+alias aicc='ai-conventional-commit'
+```
+
+After that you can type `aicc` instead of the full command. All subsequent examples use the full name for clarity.
 
 ## Quick Start
 
@@ -35,17 +47,17 @@ aicc --help
 # Stage your changes
 git add .
 # Generate a single commit suggestion
-aicc
+ai-conventional-commit
 # Multi-commit proposal (interactive confirm)
-aicc split
+ai-conventional-commit split
 # Use gitmoji with emoji+type form
-aicc --gitmoji
+ai-conventional-commit --gitmoji
 # Pure gitmoji (emoji: subject)
-aicc --gitmoji-pure
+ai-conventional-commit --gitmoji-pure
 # Increase reasoning verbosity
-aicc --reasoning=high
+ai-conventional-commit --reasoning=high
 # Refine previous session’s first commit making it shorter
-aicc refine --shorter
+ai-conventional-commit refine --shorter
 ```
 
 ## Gitmoji Modes
@@ -95,6 +107,8 @@ Uses cosmiconfig; supports JSON, YAML, etc. Example:
 
 ### Environment Overrides
 
+(Note: Environment variable prefix remains `AICC_` for backward compatibility.)
+
 - `AICC_MODEL`
 - `AICC_PRIVACY`
 - `AICC_STYLE_SAMPLES`
@@ -136,8 +150,8 @@ Register via `plugins` array. Transform runs once on candidate list; validate ru
 
 ## Refinement Workflow
 
-1. Generate (`aicc` or `aicc split`) – session stored.
-2. Run `aicc refine` with flags (`--shorter`, `--longer`, `--scope=ui`, `--emoji`).
+1. Generate (`ai-conventional-commit` or `ai-conventional-commit split`) – session stored.
+2. Run `ai-conventional-commit refine` with flags (`--shorter`, `--longer`, `--scope=ui`, `--emoji`).
 3. Accept or reject refined candidate (does not auto-amend existing git history; just updates session cache for subsequent refinement or manual use).
 
 ## Testing & Mocking
