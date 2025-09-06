@@ -34,7 +34,7 @@ export class OpenCodeProvider implements Provider {
     const fullPrompt = `${command}\n\nContext:\n${userAggregate}`;
 
     if (mockMode) {
-      if (debug) console.error('[aicc][mock] Returning deterministic mock response');
+      if (debug) console.error('[ai-cc][mock] Returning deterministic mock response');
       return JSON.stringify({
         commits: [
           {
@@ -69,7 +69,7 @@ export class OpenCodeProvider implements Provider {
         const elapsed = Date.now() - start;
         if (debug) {
           console.error(
-            `[aicc][provider] model=${this.model} elapsedMs=${elapsed} promptChars=${fullPrompt.length} bytesOut=${value.length}`,
+            `[ai-cc][provider] model=${this.model} elapsedMs=${elapsed} promptChars=${fullPrompt.length} bytesOut=${value.length}`,
           );
         }
         resolve(value);
@@ -84,7 +84,7 @@ export class OpenCodeProvider implements Provider {
           const candidate = acc.slice(first, last + 1).trim();
           try {
             JSON.parse(candidate); // just to validate shape; parsing again later by caller
-            if (debug) console.error('[aicc][provider] eager JSON detected, terminating process');
+            if (debug) console.error('[ai-cc][provider] eager JSON detected, terminating process');
             subprocess.kill('SIGTERM');
             finish(candidate);
           } catch {
@@ -100,7 +100,7 @@ export class OpenCodeProvider implements Provider {
       });
 
       subprocess.stderr?.on('data', (chunk) => {
-        if (debug) console.error('[aicc][provider][stderr]', chunk.toString().trim());
+        if (debug) console.error('[ai-cc][provider][stderr]', chunk.toString().trim());
       });
 
       subprocess
@@ -115,7 +115,7 @@ export class OpenCodeProvider implements Provider {
               new Error(`Model call timed out after ${timeoutMs}ms (elapsed=${elapsed}ms)`),
             );
           }
-          if (debug) console.error('[aicc][provider] failure', e.stderr || e.message);
+          if (debug) console.error('[ai-cc][provider] failure', e.stderr || e.message);
           reject(new Error(e.stderr || e.message || 'opencode invocation failed'));
         });
     });

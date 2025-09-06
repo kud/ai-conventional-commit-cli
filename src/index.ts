@@ -65,8 +65,8 @@ class RefineCommand extends Command {
 }
 
 const cli = new Cli({
-  binaryLabel: 'aicc',
-  binaryName: 'aicc',
+  binaryLabel: 'ai-conventional-commit',
+  binaryName: 'ai-conventional-commit',
   binaryVersion: '0.1.0',
 });
 

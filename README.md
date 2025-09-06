@@ -2,8 +2,6 @@
 
 Opinionated, style-aware AI assistant for crafting, splitting, and refining git commit messages via the local `opencode` CLI. Uses your installed `opencode` models (default `github-copilot/gpt-5`).
 
-Formerly referenced as `aicc` in examples. The canonical command name is now `ai-conventional-commit`.
-
 ## Why
 
 Manual commit messages are noisy, inconsistent, and often miss context. ai-conventional-commit inspects your staged diff, learns your repo's commit style, and produces Conventional Commit messages (single or split) with explanations—optionally decorated with gitmoji.
@@ -33,13 +31,11 @@ ai-conventional-commit --help
 
 ### Optional Alias (Short Name)
 
-If you prefer the shorter historical alias, add this to your shell profile:
+If you prefer a shorter alias, add this to your shell profile:
 
 ```bash
 alias aicc='ai-conventional-commit'
 ```
-
-After that you can type `aicc` instead of the full command. All subsequent examples use the full name for clarity.
 
 ## Publishing
 
@@ -54,8 +50,6 @@ Only `dist`, `README.md`, and `LICENSE` are included in the published package (s
 ```bash
 npm publish --dry-run
 ```
-
-The shorter `aicc` binary has been removed from the package itself; create a local alias if you still prefer it.
 
 ## Quick Start
 
