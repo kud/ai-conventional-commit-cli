@@ -25,7 +25,7 @@ export const parseDiffFromRaw = (raw: string): FileDiff[] => {
       const pathMatch = line.match(/diff --git a\/(.+?) b\/(.+)$/);
       if (pathMatch) {
         const file = pathMatch[2];
-        currentFile = { file, hunks: [], additions: 0, deletions: 0 };
+        currentFile = { file, hunks: [], additions: 0, deletions: 0 } as FileDiff;
         files.push(currentFile);
       }
       continue;
@@ -92,4 +92,19 @@ export const createCommit = async (title: string, body?: string) => {
   } else {
     await git.commit(title);
   }
+};
+
+// Helpers for multi-commit split staging
+export const resetIndex = async () => {
+  await git.reset(['--mixed']);
+};
+
+export const stageFiles = async (files: string[]) => {
+  if (!files.length) return;
+  await git.add(files);
+};
+
+export const getStagedFiles = async (): Promise<string[]> => {
+  const status = await git.status();
+  return status.staged;
 };

@@ -11,8 +11,8 @@ Manual commit messages are noisy, inconsistent, and often miss context. ai-conve
 - Style fingerprinting (average title length, scope usage ratio, gitmoji ratio, top prefixes)
 - Single (`ai-conventional-commit` / `ai-conventional-commit generate`) or multi-commit planning (`ai-conventional-commit split`)
 - Refinement workflow (`ai-conventional-commit refine`) to iteratively tweak a prior result
-- Gitmoji modes: `--gitmoji` (emoji + type) and `--gitmoji-pure` (emoji only)
-- Reasoning depth control (`--reasoning low|medium|high`) influences explanation verbosity
+- Gitmoji modes: `--gitmoji[-pure]` (plain adds emoji + type, pure removes type)
+
 - Privacy tiers governing diff detail sent to model
 - Title normalization + guardrails (length, conventional schema, secret heuristic)
 - Plugin system (transform + validate phases)
@@ -64,10 +64,59 @@ ai-conventional-commit split
 ai-conventional-commit --gitmoji
 # Pure gitmoji (emoji: subject)
 ai-conventional-commit --gitmoji-pure
-# Increase reasoning verbosity
-ai-conventional-commit --reasoning=high
+
+
 # Refine previous session’s first commit making it shorter
 ai-conventional-commit refine --shorter
+```
+
+## Timed Output
+
+Final success lines now include count + duration, e.g.:
+
+```
+└ ✨ commit created in 850ms.
+└ ✨ 3 commits created in 2.4s.
+```
+
+Durations under 100ms show raw milliseconds; otherwise one decimal second precision.
+
+## Commands
+
+| Command                           | Purpose                                     |
+| --------------------------------- | ------------------------------------------- |
+| `ai-conventional-commit`          | Generate single commit suggestion (default) |
+| `ai-conventional-commit generate` | Same as root (explicit)                     |
+| `ai-conventional-commit split`    | Propose multiple commits (plan)             |
+| `ai-conventional-commit refine`   | Refine last session result                  |
+
+### Help Output
+
+```text
+$ ai-conventional-commit --help
+ai-conventional-commit vX.Y.Z
+
+Usage:
+  ai-conventional-commit [generate] [options]   Generate a commit (default)
+  ai-conventional-commit split [options]        Propose multiple commits
+  ai-conventional-commit refine [options]       Refine last or indexed commit
+
+Global Options:
+  -m, --model <provider/name>   Override model provider/name
+  --gitmoji[-pure]              Gitmoji modes (emoji + type / pure emoji only)
+  -h, --help                    Show this help
+  -V, --version                 Show version
+
+Refine Options:
+  --shorter / --longer          Adjust message length
+  --scope <scope>               Add or replace scope
+  --emoji                       Add suitable gitmoji
+  --index <n>                   Select commit index
+
+Examples:
+  ai-conventional-commit --gitmoji
+  ai-conventional-commit split --max 3
+  ai-conventional-commit refine --scope api --emoji
 ```
 
 ## Gitmoji Modes
@@ -78,17 +127,7 @@ ai-conventional-commit refine --shorter
 | gitmoji            | `✨ feat: add search box` | Emoji + conventional type retained   |
 | gitmoji-pure       | `✨: add search box`      | Type removed, emoji acts as category |
 
-Enable via CLI flags (`--gitmoji` / `--gitmoji-pure`) or config (`gitmoji: true`, `gitmojiMode`).
-
-## Reasoning Depth
-
-Controls verbosity of reasons array in the JSON returned by the model:
-
-- low: minimal
-- medium: balanced
-- high: detailed, more hunk-specific references
-
-Configured with `--reasoning` or in config (`reasoning`).
+Enable via CLI flags (`--gitmoji` or `--gitmoji-pure`, shorthand `--gitmoji[-pure]`) or config (`gitmoji: true`, `gitmojiMode`).
 
 ## Privacy Modes
 
@@ -108,7 +147,7 @@ Uses cosmiconfig; supports JSON, YAML, etc. Example:
   "privacy": "low",
   "gitmoji": true,
   "gitmojiMode": "gitmoji",
-  "reasoning": "low",
+
   "styleSamples": 120,
   "plugins": ["./src/sample-plugin/example-plugin.ts"],
   "maxTokens": 512
@@ -129,7 +168,6 @@ Uses cosmiconfig; supports JSON, YAML, etc. Example:
 - `AICC_DEBUG` (provider debug logs)
 - `AICC_PRINT_LOGS` (stream model raw output)
 - `AICC_DEBUG_PROVIDER=mock` (deterministic JSON response)
-- `AICC_REASONING` (low|medium|high)
 
 ## Conventional Commits Enforcement
 

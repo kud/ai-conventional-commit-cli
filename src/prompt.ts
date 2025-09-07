@@ -74,7 +74,7 @@ export const buildGenerationMessages = (opts: {
   );
   specLines.push('Locale: en');
   specLines.push(
-    'Output JSON Schema: { "commits": [ { "title": string, "body": string, "score": 0-100, "reasons": string[] } ], "meta": { "splitRecommended": boolean } }',
+    'Output JSON Schema: { "commits": [ { "title": string, "body": string, "score": 0-100, "reasons": string[], "files"?: string[] } ], "meta": { "splitRecommended": boolean } }',
   );
   specLines.push('Primary Output Field: commits[ ].title');
   specLines.push('Title Format: <type>(<optional-scope>): <subject>');
@@ -102,8 +102,9 @@ export const buildGenerationMessages = (opts: {
     'Provide reasons array citing concrete diff elements: filenames, functions, tests, metrics.',
   );
   specLines.push(
-    `Reasoning Depth: ${config.reasoning || 'low'} (low=minimal concise reasons, medium=balanced detail, high=very detailed). Adjust reasons verbosity accordingly.`,
+    'When mode is split, WHERE POSSIBLE add a "files" array per commit listing the most relevant changed file paths (1-6, minimize overlap across commits).',
   );
+
   specLines.push('Return ONLY the JSON object. No surrounding text or markdown.');
   specLines.push('Do not add fields not listed in schema.');
   specLines.push('Never fabricate content not present or implied by the diff.');

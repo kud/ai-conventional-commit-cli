@@ -127,6 +127,7 @@ const CommitSchema = z.object({
   body: z.string().optional().default(''),
   score: z.number().min(0).max(100),
   reasons: z.array(z.string()).optional().default([]),
+  files: z.array(z.string()).optional().default([]),
 });
 
 export const PlanSchema = z.object({

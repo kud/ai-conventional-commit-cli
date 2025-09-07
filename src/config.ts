@@ -13,7 +13,6 @@ export interface AppConfig {
   cacheDir?: string;
   plugins?: string[];
   verbose?: boolean;
-  reasoning?: 'low' | 'medium' | 'high';
 }
 
 const DEFAULTS: AppConfig = {
@@ -27,7 +26,6 @@ const DEFAULTS: AppConfig = {
   cacheDir: '.git/.aicc-cache',
   plugins: [],
   verbose: process.env.AICC_VERBOSE === 'true',
-  reasoning: (process.env.AICC_REASONING as any) || 'low',
 };
 
 export async function loadConfig(cwd = process.cwd()): Promise<AppConfig> {

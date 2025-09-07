@@ -32,6 +32,7 @@ export interface CommitCandidate {
   body?: string;
   score: number;
   reasons?: string[];
+  files?: string[]; // optional list of associated files for staging
   clusterIds?: string[];
 }
 
@@ -59,10 +60,10 @@ export interface Plugin {
   name: string;
   transformCandidates?(
     candidates: CommitCandidate[],
-    ctx: PluginContext
+    ctx: PluginContext,
   ): Promise<CommitCandidate[]> | CommitCandidate[];
   validateCandidate?(
     candidate: CommitCandidate,
-    ctx: PluginContext
+    ctx: PluginContext,
   ): Promise<string[] | void | string> | string[] | void | string;
 }

@@ -2,7 +2,7 @@
   "name": "@kud/ai-conventional-commit-cli",
   "version": "0.3.0",
   "type": "module",
-  "description": "Opinionated, style-aware AI assistant for crafting and splitting git commits (Copilot + pluggable).",
+  "description": "Opinionated, style-aware AI assistant for crafting and splitting git commits (opencode-based, provider-agnostic).",
   "bin": {
     "ai-conventional-commit": "dist/index.js"
   },
@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "build": "tsup src/index.ts --format esm --dts",
     "prepublishOnly": "npm run build",
     "lint": "eslint .",
     "format": "prettier --write .",
