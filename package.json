@@ -58,5 +58,13 @@
   "engines": {
     "node": ">=18.17"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kud/ai-conventional-commit-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kud/ai-conventional-commit-cli/issues"
+  },
+  "homepage": "https://github.com/kud/ai-conventional-commit-cli#readme"
 }
