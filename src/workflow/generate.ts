@@ -13,6 +13,34 @@ import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import inquirer from 'inquirer';
 
+async function animateHeader() {
+  const text = 'ai-conventional-commit';
+  if (!process.stdout.isTTY || process.env.AICC_NO_ANIMATION) {
+    console.log('\n┌  ' + chalk.bold(text));
+    return;
+  }
+  const palette = [
+    '#3a0d6d',
+    '#5a1ea3',
+    '#7a32d6',
+    '#9a4dff',
+    '#b267ff',
+    '#c37dff',
+    '#b267ff',
+    '#9a4dff',
+    '#7a32d6',
+    '#5a1ea3',
+  ];
+  process.stdout.write('\n');
+  for (const color of palette) {
+    const frame = chalk.bold.hex(color)(text);
+    process.stdout.write('\r┌  ' + frame);
+    // eslint-disable-next-line no-await-in-loop
+    await new Promise((r) => setTimeout(r, 60));
+  }
+  process.stdout.write('\n');
+}
+
 export async function runGenerate(config: AppConfig) {
   if (!(await ensureStagedChanges())) {
     console.log('No staged changes.');
@@ -26,10 +54,12 @@ export async function runGenerate(config: AppConfig) {
   }
 
   // Panel header & staged files list
-  console.log('\n┌  ' + chalk.bold('ai-conventional-commit'));
+  await animateHeader();
   console.log('│');
-  console.log(`◆  ${chalk.bold(`Detected ${files.length} staged files:`)}`);
-  for (const f of files) console.log('   ' + f.file);
+  console.log(
+    `◆  ${chalk.bold(`Detected ${files.length} staged ${files.length === 1 ? 'file' : 'files'}:`)}`,
+  );
+  for (const f of files) console.log('   • ' + f.file);
   console.log('│');
 
   const spinner = ora({ text: ' Starting', spinner: 'dots' }).start(); // leading space for alignment
@@ -83,16 +113,16 @@ export async function runGenerate(config: AppConfig) {
   const chosen = candidates[0];
 
   // Immediately show commit after result (no extra separator first)
-  console.log('   ' + chalk.yellow(chosen.title));
+  console.log('   ' + chalk.white(chosen.title));
   if (chosen.body) {
     const indent = '   ';
+    console.log(indent);
     chosen.body.split('\n').forEach((line) => {
       if (line.trim().length === 0) console.log(indent);
-      else console.log(indent + chalk.gray(line));
+      else console.log(indent + chalk.white(line));
     });
   }
   console.log('│');
-
   const pluginErrors = await runValidations(chosen, plugins, {
     cwd: process.cwd(),
     env: process.env,
@@ -129,8 +159,8 @@ async function selectYesNo(): Promise<boolean> {
       name: 'choice',
       message: ' Use this commit message?',
       choices: [
-        { name: '● Yes', value: true },
-        { name: '○ No', value: false },
+        { name: 'Yes', value: true },
+        { name: 'No', value: false },
       ],
       default: 0,
     },
