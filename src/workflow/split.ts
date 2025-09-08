@@ -44,7 +44,7 @@ export async function runSplit(config: AppConfig, desired?: number) {
   }
 
   if (process.stdout.isTTY) {
-    await animateHeaderBase(`ai-conventional-commit (using model ${config.model})`);
+    await animateHeaderBase('ai-conventional-commit', config.model);
     borderLine();
   }
 

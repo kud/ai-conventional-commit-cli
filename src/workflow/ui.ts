@@ -1,8 +1,12 @@
 import chalk from 'chalk';
 
-export function animateHeaderBase(text = 'ai-conventional-commit') {
+export function animateHeaderBase(text = 'ai-conventional-commit', modelSegment?: string) {
+  const mainText = text;
+  const modelSeg = modelSegment ? ` (using ${modelSegment})` : '';
+
   if (!process.stdout.isTTY || process.env.AICC_NO_ANIMATION) {
-    console.log('\n┌ ' + chalk.bold(text));
+    if (modelSeg) console.log('\n\u250C ' + chalk.bold(mainText) + chalk.dim(modelSeg));
+    else console.log('\n\u250C ' + chalk.bold(mainText));
     return Promise.resolve();
   }
   const palette = [
@@ -21,8 +25,9 @@ export function animateHeaderBase(text = 'ai-conventional-commit') {
   return palette
     .reduce(async (p, color) => {
       await p; // sequential
-      const frame = chalk.bold.hex(color)(text);
-      process.stdout.write('\r┌ ' + frame);
+      const frame = chalk.bold.hex(color)(mainText);
+      if (modelSeg) process.stdout.write('\r\u250C ' + frame + chalk.dim(modelSeg));
+      else process.stdout.write('\r\u250C ' + frame);
       await new Promise((r) => setTimeout(r, 60));
     }, Promise.resolve())
     .then(() => process.stdout.write('\n'));

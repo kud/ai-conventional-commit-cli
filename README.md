@@ -181,7 +181,7 @@ Resolves via cosmiconfig (JSON/YAML/etc). Example:
 
 ```json
 {
-  "model": "github-copilot/gpt-5",
+  "model": "github-copilot/gpt-4.1",
   "privacy": "low",
   "gitmoji": true,
   "gitmojiMode": "gitmoji",

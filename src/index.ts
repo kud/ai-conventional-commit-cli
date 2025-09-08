@@ -27,7 +27,7 @@ class GenerateCommand extends Command {
 
   model = Option.String('-m,--model', {
     required: false,
-    description: 'Model provider/name (e.g. github-copilot/gpt-5)',
+    description: 'Model provider/name (e.g. github-copilot/gpt-4.1)',
   });
   async execute() {
     const config = await loadConfig();
