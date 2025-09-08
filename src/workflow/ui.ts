@@ -39,6 +39,7 @@ export function sectionTitle(label: string) {
 
 export function abortMessage() {
   console.log('└ 🙅‍♀️ No commit created.');
+  console.log();
 }
 
 export function finalSuccess(opts: { count: number; startedAt: number }) {
@@ -48,6 +49,7 @@ export function finalSuccess(opts: { count: number; startedAt: number }) {
   const plural = opts.count !== 1;
   if (plural) console.log(`└ ✨ ${opts.count} commits created in ${dur}.`);
   else console.log(`└ ✨ commit created in ${dur}.`);
+  console.log();
 }
 
 export function createPhasedSpinner(oraLib: any) {
