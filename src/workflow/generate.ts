@@ -37,7 +37,7 @@ export async function runGenerate(config: AppConfig) {
   }
 
   if (process.stdout.isTTY) {
-    await animateHeaderBase();
+    await animateHeaderBase(`ai-conventional-commit (using model ${config.model})`);
     borderLine(); // blank spacer with left border
   }
 

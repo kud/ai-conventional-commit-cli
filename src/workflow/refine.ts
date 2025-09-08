@@ -57,7 +57,7 @@ export async function runRefine(config: AppConfig, options: any) {
   }
 
   if (process.stdout.isTTY) {
-    await animateHeaderBase();
+    await animateHeaderBase(`ai-conventional-commit (using model ${config.model})`);
     borderLine();
   }
 
