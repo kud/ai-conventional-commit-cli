@@ -11,11 +11,11 @@ const style = {
   conventionalRatio: 1,
 };
 
-function cfg(gitmoji: boolean) {
+function cfg(style: 'standard' | 'gitmoji' | 'gitmoji-pure') {
   return {
     model: 'x',
     privacy: 'low',
-    gitmoji,
+    style,
     styleSamples: 50,
     maxTokens: 512,
     plugins: [],
@@ -28,7 +28,7 @@ describe('prompt generation', () => {
     const msgs = buildGenerationMessages({
       files: baseFiles as any,
       style: style as any,
-      config: cfg(false),
+      config: cfg('standard'),
       mode: 'single',
     });
     expect(msgs[0].content).toMatch(/Disallow all emojis/);
@@ -37,7 +37,7 @@ describe('prompt generation', () => {
     const msgs = buildGenerationMessages({
       files: baseFiles as any,
       style: style as any,
-      config: cfg(true),
+      config: cfg('gitmoji'),
       mode: 'single',
     });
     expect(msgs[0].content).toMatch(/OPTIONAL single leading gitmoji/);

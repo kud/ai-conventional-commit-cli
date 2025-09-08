@@ -88,7 +88,7 @@ export const buildGenerationMessages = (opts: {
   specLines.push('Length Rule: Entire title line (including type/scope) must be <= 72 chars.');
   specLines.push(
     'Emoji Rule: ' +
-      (config.gitmoji
+      (config.style === 'gitmoji' || config.style === 'gitmoji-pure'
         ? 'OPTIONAL single leading gitmoji BEFORE the type only if confidently adds clarity; do not invent or stack; omit if unsure.'
         : 'Disallow all emojis and gitmoji codes; output must start directly with the type.'),
   );
@@ -143,7 +143,7 @@ export const buildRefineMessages = (opts: {
   spec.push('Subject: imperative, present tense, no trailing period.');
   spec.push(
     'Emoji Rule: ' +
-      (config.gitmoji
+      (config.style === 'gitmoji' || config.style === 'gitmoji-pure'
         ? 'OPTIONAL single leading gitmoji BEFORE type if it adds clarity; omit if unsure.'
         : 'Disallow all emojis; start directly with the type.'),
   );

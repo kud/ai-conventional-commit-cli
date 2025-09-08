@@ -13,7 +13,7 @@
   <a href="https://www.conventionalcommits.org"><img alt="Conventional Commits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg" /></a>
 </p>
 
-> TL;DR: Stage your changes, run `ai-conventional-commit` (or `split` for multiple commits), accept, done. Add `--gitmoji` if you like emoji. Refine later with `refine`.
+> TL;DR: Stage your changes, run `ai-conventional-commit` (or `split` for multiple commits), accept, done. Add `--style gitmoji` if you like emoji. Refine later with `refine`.
 
 ---
 
@@ -101,11 +101,11 @@ ai-conventional-commit
 # Propose multiple commits (interactive confirm + real selective staging)
 ai-conventional-commit split
 
-# Add emoji decorations
-ai-conventional-commit --gitmoji
+# Add emoji decorations (gitmoji)
+ai-conventional-commit --style gitmoji
 
 # Pure emoji style (emoji: subject)
-ai-conventional-commit --gitmoji-pure
+ai-conventional-commit --style gitmoji-pure
 
 # Refine previous session's first commit (shorter wording)
 ai-conventional-commit refine --shorter
@@ -113,20 +113,23 @@ ai-conventional-commit refine --shorter
 
 ## Command Reference
 
-| Command                           | Purpose                                     |
-| --------------------------------- | ------------------------------------------- |
-| `ai-conventional-commit`          | Generate single commit suggestion (default) |
-| `ai-conventional-commit generate` | Explicit alias of root                      |
-| `ai-conventional-commit split`    | Propose & execute multiple commits          |
-| `ai-conventional-commit refine`   | Refine last session (or indexed) commit     |
+| Command                              | Purpose                                     |
+| ------------------------------------ | ------------------------------------------- |
+| `ai-conventional-commit`             | Generate single commit suggestion (default) |
+| `ai-conventional-commit generate`    | Explicit alias of root                      |
+| `ai-conventional-commit split`       | Propose & execute multiple commits          |
+| `ai-conventional-commit refine`      | Refine last session (or indexed) commit     |
+| `ai-conventional-commit models`      | List / pick models, save default            |
+| `ai-conventional-commit config show` | Show merged config + sources                |
+| `ai-conventional-commit config get`  | Get a single config value                   |
+| `ai-conventional-commit config set`  | Persist a global config value               |
 
 Helpful flags:
 
-- `--gitmoji` / `--gitmoji-pure`
+- `--style <standard|gitmoji|gitmoji-pure>`
 - `--model <provider/name>` (override)
 - `--scope <scope>` (refine)
 - `--shorter` / `--longer`
-- `--emoji` (add appropriate emoji in refine)
 
 ## Examples
 
@@ -163,7 +166,7 @@ $ ai-conventional-commit refine --scope cli --shorter
 | gitmoji      | `✨ feat: add search box` | Emoji + type retained                |
 | gitmoji-pure | `✨: add search box`      | Type removed; emoji acts as category |
 
-Enable via CLI flags or config (`gitmoji: true`, `gitmojiMode`).
+Enable via CLI flag `--style gitmoji|gitmoji-pure` or config `"style": "gitmoji"` / `"style": "gitmoji-pure"`.
 
 ## Privacy Modes
 
@@ -183,8 +186,7 @@ Resolves via cosmiconfig (JSON/YAML/etc). Example:
 {
   "model": "github-copilot/gpt-4.1",
   "privacy": "low",
-  "gitmoji": true,
-  "gitmojiMode": "gitmoji",
+  "style": "gitmoji",
   "styleSamples": 120,
   "plugins": ["./src/sample-plugin/example-plugin.ts"],
   "maxTokens": 512
@@ -192,12 +194,39 @@ Resolves via cosmiconfig (JSON/YAML/etc). Example:
 ```
 
 Environment overrides (prefix `AICC_`):
-`MODEL`, `PRIVACY`, `STYLE_SAMPLES`, `GITMOJI`, `MAX_TOKENS`, `VERBOSE`, `MODEL_TIMEOUT_MS`, `DEBUG`, `PRINT_LOGS`, `DEBUG_PROVIDER=mock`.
+
+### Configuration Precedence
+
+Lowest to highest (later wins):
+
+1. Built-in defaults
+2. Global config file: `~/.config/ai-conventional-commit-cli/aicc.json` (or `$XDG_CONFIG_HOME`)
+3. Project config (.aiccrc via cosmiconfig)
+4. Environment variables (`AICC_*`)
+5. CLI flags (e.g. `--model`, `--style`)
+
+View the resolved configuration:
+
+```bash
+ai-conventional-commit config show
+ai-conventional-commit config show --json | jq
+```
+
+Manage models:
+
+```bash
+ai-conventional-commit models               # list (opencode pass-through)
+ai-conventional-commit models --interactive      # interactive picker
+ai-conventional-commit models --interactive --save # pick + persist globally
+ai-conventional-commit models --current     # show active model + source
+```
+
+`MODEL`, `PRIVACY`, `STYLE`, `STYLE_SAMPLES`, `MAX_TOKENS`, `VERBOSE`, `MODEL_TIMEOUT_MS`, `DEBUG`, `PRINT_LOGS`, `DEBUG_PROVIDER=mock`.
 
 ## Refinement Workflow
 
 1. Generate (`ai-conventional-commit` or `split`) – session cached under `.git/.aicc-cache/last-session.json`.
-2. Run `refine` with flags (`--shorter`, `--longer`, `--scope=ui`, `--emoji`).
+2. Run `refine` with flags (`--shorter`, `--longer`, `--scope=ui`).
 3. Accept or reject; refined output does _not_ auto‑amend history until you use it.
 
 ## Plugin API

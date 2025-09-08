@@ -84,8 +84,8 @@ export async function runGenerate(config: AppConfig) {
   candidates = candidates.map((c) => ({
     ...c,
     title: formatCommitTitle(c.title, {
-      allowGitmoji: !!config.gitmoji,
-      mode: (config.gitmojiMode as any) || 'standard',
+      allowGitmoji: config.style === 'gitmoji' || config.style === 'gitmoji-pure',
+      mode: config.style,
     }),
   }));
   const chosen = candidates[0];

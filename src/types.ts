@@ -47,7 +47,6 @@ export interface RefineOptions {
   shorter?: boolean;
   longer?: boolean;
   scope?: string;
-  emoji?: boolean;
   index?: number;
 }
 

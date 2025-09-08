@@ -77,7 +77,6 @@ export async function runRefine(config: AppConfig, options: any) {
   if (options.shorter) instructions.push('Make the title shorter but keep meaning.');
   if (options.longer) instructions.push('Add more specificity to the title.');
   if (options.scope) instructions.push(`Add or adjust scope to: ${options.scope}`);
-  if (options.emoji) instructions.push('Add a relevant emoji prefix.');
 
   if (!instructions.length) {
     const add = await prompt('No refinement flags given. Enter custom instruction: ');
@@ -101,8 +100,8 @@ export async function runRefine(config: AppConfig, options: any) {
   const refinedPlan: CommitPlan = await runStep('Parsing response', async () => extractJSON(raw));
 
   refinedPlan.commits[0].title = formatCommitTitle(refinedPlan.commits[0].title, {
-    allowGitmoji: !!config.gitmoji || !!options.emoji,
-    mode: (config.gitmojiMode as any) || 'standard',
+    allowGitmoji: config.style === 'gitmoji' || config.style === 'gitmoji-pure',
+    mode: config.style,
   });
 
   phased.phase('Suggested commit');
