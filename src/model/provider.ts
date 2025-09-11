@@ -25,7 +25,8 @@ export class OpenCodeProvider implements Provider {
   async chat(messages: ChatMessage[], _opts?: { maxTokens?: number; temperature?: number }) {
     const debug = process.env.AICC_DEBUG === 'true';
     const mockMode = process.env.AICC_DEBUG_PROVIDER === 'mock';
-    const timeoutMs = parseInt(process.env.AICC_MODEL_TIMEOUT_MS || '100000', 10);
+
+    const timeoutMs = parseInt(process.env.AICC_MODEL_TIMEOUT_MS || '120000', 10);
     const eager = process.env.AICC_EAGER_PARSE !== 'false'; // enabled by default
 
     // Aggregate messages into a single prompt; keep simple for now.
