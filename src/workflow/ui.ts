@@ -166,8 +166,10 @@ export function renderCommitBlock(opts: {
     const lines = opts.body.split('\n');
     lines.forEach((line, i) => {
       if (line.trim().length === 0) borderLine();
-      else if (i === 0) borderLine(descColor('Description:') + ' ' + bodyFirst(line));
-      else borderLine(bodyRest(line));
+      else if (i === 0) {
+        borderLine(descColor('Description:'));
+        borderLine(bodyFirst(line));
+      } else borderLine(bodyRest(line));
     });
   }
 }
