@@ -78,7 +78,14 @@ export const parseDiffFromRaw = (raw: string): FileDiff[] => {
 
 export const parseDiff = async (): Promise<FileDiff[]> => {
   const raw = await getStagedDiffRaw();
-  return parseDiffFromRaw(raw);
+  const parsed = parseDiffFromRaw(raw);
+  if (parsed.length === 0) {
+    const status = await git.status();
+    if (status.staged.length) {
+      return status.staged.map((f) => ({ file: f, hunks: [], additions: 0, deletions: 0 }));
+    }
+  }
+  return parsed;
 };
 
 export const getRecentCommitMessages = async (limit: number): Promise<string[]> => {
