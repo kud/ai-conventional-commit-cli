@@ -22,6 +22,7 @@ const EMOJI_MAP: Record<string, string> = {
   release: '🏷️',
 };
 
+// Retained for potential future use; no longer applied automatically.
 const MAX_LEN = 72;
 const EMOJI_TYPE_RE = /^([\p{Emoji}\p{So}\p{Sk}])\s+(\w+)(\(.+\))?:\s+(.*)$/u; // emoji + type
 const TYPE_RE = /^(\w+)(\(.+\))?:\s+(.*)$/; // type only
@@ -31,7 +32,7 @@ export const formatCommitTitle = (raw: string, opts: GitmojiFormatOptions): stri
   let norm = normalizeConventionalTitle(sanitizeTitle(raw, allowGitmoji));
 
   if (!allowGitmoji || (mode !== 'gitmoji' && mode !== 'gitmoji-pure')) {
-    return norm.slice(0, MAX_LEN);
+    return norm;
   }
 
   if (mode === 'gitmoji-pure') {
@@ -48,13 +49,13 @@ export const formatCommitTitle = (raw: string, opts: GitmojiFormatOptions): stri
     } else if (!/^([\p{Emoji}\p{So}\p{Sk}])+:/u.test(norm)) {
       norm = `🔧: ${norm}`;
     }
-    return norm.slice(0, MAX_LEN);
+    return norm;
   }
 
   // gitmoji mode
   let m = norm.match(EMOJI_TYPE_RE);
   if (m) {
-    return norm.slice(0, MAX_LEN);
+    return norm;
   }
   if ((m = norm.match(TYPE_RE) as RegExpMatchArray | null)) {
     const type = m[1];
@@ -65,7 +66,7 @@ export const formatCommitTitle = (raw: string, opts: GitmojiFormatOptions): stri
   } else if (!/^([\p{Emoji}\p{So}\p{Sk}])+\s+\w+.*:/u.test(norm)) {
     norm = `🔧 chore: ${norm}`;
   }
-  return norm.slice(0, MAX_LEN);
+  return norm;
 };
 
 export const batchFormatTitles = (titles: string[], opts: GitmojiFormatOptions): string[] =>

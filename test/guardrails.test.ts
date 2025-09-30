@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { checkCandidate } from '../src/guardrails.js';
 
 describe('guardrails', () => {
-  it('flags long titles', () => {
+  it('does not flag long titles (length handled upstream by AI prompt)', () => {
     const errs = checkCandidate({
       title: 'a'.repeat(80),
       score: 50,
     });
-    expect(errs.some((e) => e.includes('exceeds'))).toBe(true);
+    expect(errs.some((e) => e.includes('exceeds'))).toBe(false);
   });
 
   it('flags non-conventional when required', () => {

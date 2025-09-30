@@ -59,12 +59,12 @@ export const normalizeConventionalTitle = (title: string): string => {
   if (leadingEmoji) {
     result = `${leadingEmoji} ${result}`;
   }
-  return result.slice(0, 72);
+  return result;
 };
 
 export const checkCandidate = (candidate: CommitCandidate): string[] => {
   const errs: string[] = [];
-  if (candidate.title.length > 72) errs.push('Title exceeds 72 chars.');
+  // Length not programmatically enforced; rely on prompt guidance (50/72 convention).
   if (!CONVENTIONAL_RE.test(candidate.title)) {
     errs.push('Not a valid conventional commit title.');
   }

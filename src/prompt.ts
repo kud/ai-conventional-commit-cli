@@ -78,14 +78,18 @@ export const buildGenerationMessages = (opts: {
   );
   specLines.push('Primary Output Field: commits[ ].title');
   specLines.push('Title Format: <type>(<optional-scope>): <subject>');
-  specLines.push('Max Title Length: 72 characters (hard limit)');
+  specLines.push(
+    'Title Length Guidance: Aim for <=50 chars ideal; absolute max 72 (do not exceed).',
+  );
   specLines.push('Types (JSON mapping follows on next line)');
   specLines.push('TypeMap: ' + JSON.stringify(TYPE_MAP));
   specLines.push('Scope Rules: optional; if present, lowercase kebab-case; omit when unclear.');
   specLines.push(
     'Subject Rules: imperative mood, present tense, no leading capital unless proper noun, no trailing period.',
   );
-  specLines.push('Length Rule: Entire title line (including type/scope) must be <= 72 chars.');
+  specLines.push(
+    'Length Rule: Keep titles concise; prefer 50 or fewer chars; MUST be <=72 including type/scope.',
+  );
   specLines.push(
     'Emoji Rule: ' +
       (config.style === 'gitmoji' || config.style === 'gitmoji-pure'
