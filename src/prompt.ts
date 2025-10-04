@@ -77,13 +77,15 @@ export const buildGenerationMessages = (opts: {
     'Output JSON Schema: { "commits": [ { "title": string, "body": string, "score": 0-100, "reasons": string[], "files"?: string[] } ], "meta": { "splitRecommended": boolean } }',
   );
   specLines.push('Primary Output Field: commits[ ].title');
-  specLines.push('Title Format: <type>(<optional-scope>): <subject>');
+  specLines.push('Title Format (REQUIRED): <type>(<scope>): <subject>');
   specLines.push(
     'Title Length Guidance: Aim for <=50 chars ideal; absolute max 72 (do not exceed).',
   );
   specLines.push('Types (JSON mapping follows on next line)');
   specLines.push('TypeMap: ' + JSON.stringify(TYPE_MAP));
-  specLines.push('Scope Rules: optional; if present, lowercase kebab-case; omit when unclear.');
+  specLines.push(
+    'Scope Rules: ALWAYS include a concise lowercase kebab-case scope (derive from dominant directory, package, or feature); never omit.',
+  );
   specLines.push(
     'Subject Rules: imperative mood, present tense, no leading capital unless proper noun, no trailing period.',
   );
@@ -143,7 +145,7 @@ export const buildRefineMessages = (opts: {
   spec.push(
     'Output JSON Schema: { "commits": [ { "title": string, "body": string, "score": 0-100, "reasons": string[] } ] }',
   );
-  spec.push('Title Format: <type>(<optional-scope>): <subject> (<=72 chars)');
+  spec.push('Title Format (REQUIRED): <type>(<scope>): <subject> (<=72 chars)');
   spec.push('Subject: imperative, present tense, no trailing period.');
   spec.push(
     'Emoji Rule: ' +
@@ -151,7 +153,9 @@ export const buildRefineMessages = (opts: {
         ? 'OPTIONAL single leading gitmoji BEFORE type if it adds clarity; omit if unsure.'
         : 'Disallow all emojis; start directly with the type.'),
   );
-  spec.push('Preserve semantic meaning; only improve clarity, scope, brevity, conformity.');
+  spec.push(
+    'Preserve semantic meaning; ensure a scope is present (infer one if missing); only improve clarity, brevity, conformity.',
+  );
   spec.push('If instructions request scope or emoji, incorporate only if justified by content.');
   spec.push('Return ONLY JSON (commits array length=1).');
 
