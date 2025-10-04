@@ -43,11 +43,48 @@ export async function runGenerate(config: AppConfig) {
 
   // Step: Files
   sectionTitle('Files');
-  borderLine(
-    chalk.dim(`Detected ${files.length} staged ${files.length === 1 ? 'file' : 'files'}:`),
-  );
-  files.forEach((f) => borderLine('• ' + f.file));
-  borderLine();
+  (function renderDiffStat() {
+    const BAR_WIDTH = 32;
+    const nameLens = files.map((f) => f.file.length);
+    const maxName = Math.min(Math.max(...nameLens, 0), 50);
+    const deltas = files.map((f) => (f.additions || 0) + (f.deletions || 0));
+    const maxDelta = Math.max(...deltas, 1);
+
+    borderLine(
+      chalk.dim(`Detected ${files.length} staged ${files.length === 1 ? 'file' : 'files'}:`),
+    );
+
+    let totalAdd = 0;
+    let totalDel = 0;
+
+    files.forEach((f) => {
+      const add = f.additions || 0;
+      const del = f.deletions || 0;
+      totalAdd += add;
+      totalDel += del;
+      if (add === 0 && del === 0) {
+        borderLine('• ' + f.file);
+        return;
+      }
+      const delta = add + del;
+      const barLen = Math.max(1, Math.round((delta / maxDelta) * BAR_WIDTH));
+      const addPortion = Math.min(barLen, Math.round(barLen * (add / (delta || 1))));
+      const delPortion = barLen - addPortion;
+      const bar = chalk.green('+'.repeat(addPortion)) + chalk.red('-'.repeat(delPortion));
+      const counts = chalk.green('+' + add) + ' ' + chalk.red('-' + del);
+      const name = f.file.length > maxName ? f.file.slice(0, maxName - 1) + '…' : f.file;
+      borderLine(name.padEnd(maxName) + ' | ' + counts.padEnd(12) + ' ' + bar);
+    });
+
+    borderLine(
+      chalk.dim(
+        `${files.length} file${files.length === 1 ? '' : 's'} changed, ` +
+          `${totalAdd} insertion${totalAdd === 1 ? '' : 's'}(+), ` +
+          `${totalDel} deletion${totalDel === 1 ? '' : 's'}(-)`,
+      ),
+    );
+    borderLine();
+  })();
 
   const phased = createPhasedSpinner(ora);
   const runStep = <T>(label: string, fn: () => Promise<T>) => phased.step(label, fn);
