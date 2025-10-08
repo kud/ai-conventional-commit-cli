@@ -4,11 +4,15 @@ import { runGenerate } from './workflow/generate.js';
 import { runSplit } from './workflow/split.js';
 import { runRefine } from './workflow/refine.js';
 import { loadConfig } from './config.js';
-import pkgJson from '../package.json' with { type: 'json' };
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { execa } from 'execa';
 import inquirer from 'inquirer';
 
-const pkgVersion = pkgJson.version || '0.0.0';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkgVersion =
+  JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8')).version || '0.0.0';
 
 // Root command (default). Mirrors generate behaviour but shows aggregated help.
 class RootCommand extends Command {
