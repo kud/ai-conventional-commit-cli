@@ -205,8 +205,11 @@ export async function runReword(config: AppConfig, hash: string) {
     args.push('-m', full);
     const newHash = (await git.raw(args)).trim();
 
-    // Rebase descendants onto newHash (range: resolvedHash..HEAD)
-    await git.raw(['rebase', '--onto', newHash, resolvedHash, 'HEAD']);
+    // Rebase descendants onto newHash (range: resolvedHash..branchTip)
+    // Use explicit branch name to avoid ending in detached HEAD state
+    const currentBranch = (await git.revparse(['--abbrev-ref', 'HEAD'])).trim();
+    const rebaseTarget = currentBranch === 'HEAD' ? 'HEAD' : currentBranch;
+    await git.raw(['rebase', '--onto', newHash, resolvedHash, rebaseTarget]);
 
     sectionTitle('Updated commit');
     borderLine(`Rewrote ${resolvedHash.slice(0, 7)} → ${newHash.slice(0, 7)}`);
