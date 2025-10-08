@@ -32,6 +32,10 @@ export const parseDiffFromRaw = (raw: string): FileDiff[] => {
     }
     if (line.startsWith('diff --git')) continue;
     if (line.startsWith('index ')) continue;
+    if (/^deleted file mode /.test(line)) {
+      if (currentFile) currentFile.deleted = true;
+      continue;
+    }
     if (line.startsWith('--- ')) continue;
     if (line.startsWith('+++ ')) continue;
 

@@ -16,6 +16,7 @@ export interface FileDiff {
   additions: number;
   deletions: number;
   languageGuess?: string;
+  deleted?: boolean; // true if the file is deleted in this diff
 }
 
 export interface StyleProfile {
