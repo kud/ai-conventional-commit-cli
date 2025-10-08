@@ -68,10 +68,7 @@ export async function runSplit(config: AppConfig, desired?: number) {
       const del = f.deletions || 0;
       totalAdd += add;
       totalDel += del;
-      if (add === 0 && del === 0) {
-        borderLine('• ' + f.file);
-        return;
-      }
+
       const delta = add + del;
       const barLen = Math.max(1, Math.round((delta / maxDelta) * BAR_WIDTH));
       const addPortion = Math.min(barLen, Math.round(barLen * (add / (delta || 1))));
