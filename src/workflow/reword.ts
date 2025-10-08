@@ -4,7 +4,15 @@ import { AppConfig } from '../config.js';
 import { OpenCodeProvider, extractJSON } from '../model/provider.js';
 import { formatCommitTitle } from '../title-format.js';
 import { buildRefineMessages } from '../prompt.js';
-import { animateHeaderBase, borderLine, sectionTitle, renderCommitBlock } from './ui.js';
+import {
+  animateHeaderBase,
+  borderLine,
+  sectionTitle,
+  renderCommitBlock,
+  abortMessage,
+  finalSuccess,
+  createPhasedSpinner,
+} from './ui.js';
 import inquirer from 'inquirer';
 import { simpleGit } from 'simple-git';
 import { CommitPlan } from '../types.js';
@@ -26,6 +34,16 @@ async function getCommitMessage(
     return { title: first, body, parents };
   } catch {
     return null;
+  }
+}
+
+async function isAncestor(ancestor: string, head: string): Promise<boolean> {
+  try {
+    const mb = (await git.raw(['merge-base', ancestor, head])).trim();
+    const anc = (await git.revparse([ancestor])).trim();
+    return mb === anc;
+  } catch {
+    return false;
   }
 }
 
@@ -69,22 +87,25 @@ export async function runReword(config: AppConfig, hash: string) {
   };
 
   const provider = new OpenCodeProvider(config.model);
-  const spinner = ora({ text: 'Calling model', spinner: 'dots' }).start();
+  const phased = createPhasedSpinner(ora);
   let refined: CommitPlan | null = null;
   try {
+    phased.phase('Preparing prompt');
     const messages = buildRefineMessages({
       originalPlan: syntheticPlan,
       index: 0,
       instructions,
       config,
     });
+    phased.phase('Calling model');
     const raw = await provider.chat(messages, { maxTokens: config.maxTokens });
+    phased.phase('Parsing response');
     refined = await extractJSON(raw);
   } catch (e: any) {
-    spinner.fail('Model call failed: ' + (e?.message || e));
+    phased.spinner.fail('Reword failed: ' + (e?.message || e));
     return;
   }
-  spinner.stop();
+  phased.stop();
 
   if (!refined || !refined.commits.length) {
     console.log('No refined commit produced.');
@@ -104,17 +125,15 @@ export async function runReword(config: AppConfig, hash: string) {
   });
   borderLine();
 
-  const isHead =
-    (await git.revparse(['HEAD'])).startsWith(hash) ||
-    (await git.revparse([hash])) === (await git.revparse(['HEAD']));
+  const resolvedHash = (await git.revparse([hash])).trim();
+  const headHash = (await git.revparse(['HEAD'])).trim();
+  const isHead = headHash === resolvedHash || headHash.startsWith(resolvedHash);
 
   const { ok } = await inquirer.prompt([
     {
       type: 'list',
       name: 'ok',
-      message: isHead
-        ? 'Amend HEAD with this message?'
-        : 'Use this new message (show rebase instructions)?',
+      message: isHead ? 'Amend HEAD with this message?' : 'Apply rewrite (history will change)?',
       choices: [
         { name: 'Yes', value: true },
         { name: 'No', value: false },
@@ -123,34 +142,82 @@ export async function runReword(config: AppConfig, hash: string) {
     },
   ]);
   if (!ok) {
-    borderLine('Aborted.');
+    borderLine();
+    abortMessage();
     return;
   }
 
+  const full = candidate.body ? `${candidate.title}\n\n${candidate.body}` : candidate.title;
+
   if (isHead) {
-    const full = candidate.body ? `${candidate.title}\n\n${candidate.body}` : candidate.title;
     try {
       await git.commit(full, { '--amend': null });
-      borderLine('Amended HEAD.');
     } catch (e: any) {
-      borderLine('Failed to amend: ' + (e?.message || e));
+      borderLine('Failed to amend HEAD: ' + (e?.message || e));
+      borderLine();
+      abortMessage();
+      return;
     }
-  } else {
-    const full = candidate.body ? `${candidate.title}\n\n${candidate.body}` : candidate.title;
+    borderLine();
+    finalSuccess({ count: 1, startedAt });
+    return;
+  }
+
+  // Non-HEAD: attempt automatic history rewrite if linear & no merge commits in range
+  const ancestorOk = await isAncestor(resolvedHash, headHash);
+  if (!ancestorOk) {
+    borderLine('Selected commit is not an ancestor of HEAD.');
+    borderLine('Cannot safely rewrite automatically.');
+    borderLine();
+    abortMessage();
+    return;
+  }
+
+  // Detect merges between target and HEAD (excluding target itself)
+  let mergesRange = '';
+  try {
+    mergesRange = (await git.raw(['rev-list', '--merges', `${resolvedHash}..HEAD`])).trim();
+  } catch {}
+
+  if (mergesRange) {
+    sectionTitle('Unsafe automatic rewrite');
+    borderLine('Merge commits detected between target and HEAD.');
+    borderLine('Falling back to manual instructions (preserving previous behavior).');
+    borderLine();
     sectionTitle('Apply manually');
-    borderLine('Interactive rebase steps:');
-    borderLine(`1. git rebase -i ${hash}~1 --reword`);
-    borderLine(
-      '2. In the editor, ensure the line for the commit is kept as reword (or change pick → reword).',
-    );
-    borderLine('3. When prompted, replace the message with below:');
+    borderLine(`1. git rebase -i ${resolvedHash}~1 --reword`);
+    borderLine('2. Mark the line as reword if needed.');
+    borderLine('3. Replace the message with:');
     borderLine();
     borderLine(candidate.title);
-    if (candidate.body) {
-      candidate.body.split('\n').forEach((l) => (l.trim().length ? borderLine(l) : borderLine()));
-    }
+    if (candidate.body) candidate.body.split('\n').forEach((l) => borderLine(l || undefined));
     borderLine();
+    abortMessage();
+    return;
   }
-  const elapsed = ((Date.now() - startedAt) / 1000).toFixed(1) + 's';
-  borderLine(`Done in ${elapsed}.`);
+
+  // Build a new commit object with amended message, then rebase descendants onto it
+  try {
+    const tree = (await git.raw(['show', '-s', '--format=%T', resolvedHash])).trim();
+    const parent = commit.parents[0];
+    const args = ['commit-tree', tree];
+    if (parent) args.push('-p', parent);
+    args.push('-m', full);
+    const newHash = (await git.raw(args)).trim();
+
+    // Rebase descendants onto newHash (range: resolvedHash..HEAD)
+    await git.raw(['rebase', '--onto', newHash, resolvedHash, 'HEAD']);
+
+    borderLine(`Rewrote commit ${resolvedHash.slice(0, 7)} → ${newHash.slice(0, 7)}`);
+    borderLine(candidate.title);
+    if (candidate.body) candidate.body.split('\n').forEach((l) => borderLine(l || undefined));
+    borderLine();
+    finalSuccess({ count: 1, startedAt });
+  } catch (e: any) {
+    borderLine('Automatic rewrite failed: ' + (e?.message || e));
+    borderLine('If a rebase is in progress, resolve conflicts then run: git rebase --continue');
+    borderLine('Or abort with: git rebase --abort');
+    borderLine();
+    abortMessage();
+  }
 }

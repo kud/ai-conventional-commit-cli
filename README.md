@@ -109,6 +109,12 @@ ai-conventional-commit --style gitmoji-pure
 
 # Refine previous session's first commit (shorter wording)
 ai-conventional-commit refine --shorter
+
+# Reword an existing commit (picker)
+ai-conventional-commit reword
+
+# Reword HEAD directly (auto-amend)
+ai-conventional-commit reword HEAD
 ```
 
 ## Command Reference
