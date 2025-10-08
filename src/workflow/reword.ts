@@ -208,9 +208,9 @@ export async function runReword(config: AppConfig, hash: string) {
     // Rebase descendants onto newHash (range: resolvedHash..HEAD)
     await git.raw(['rebase', '--onto', newHash, resolvedHash, 'HEAD']);
 
-    borderLine(`Rewrote commit ${resolvedHash.slice(0, 7)} → ${newHash.slice(0, 7)}`);
-    borderLine(candidate.title);
-    if (candidate.body) candidate.body.split('\n').forEach((l) => borderLine(l || undefined));
+    sectionTitle('Updated commit');
+    borderLine(`Rewrote ${resolvedHash.slice(0, 7)} → ${newHash.slice(0, 7)}`);
+    renderCommitBlock({ title: candidate.title, body: candidate.body, hideMessageLabel: true });
     borderLine();
     finalSuccess({ count: 1, startedAt });
   } catch (e: any) {
