@@ -350,9 +350,13 @@ class RewordCommand extends Command {
     ],
   });
   hash = Option.String({ required: false });
+  style = Option.String('--style', { required: false, description: 'Title style override' });
+  model = Option.String('-m,--model', { required: false, description: 'Model override' });
   async execute() {
     const { runReword } = await import('./workflow/reword.js');
     const config = await loadConfig();
+    if (this.style) config.style = this.style as any;
+    if (this.model) config.model = this.model;
     let target = this.hash;
     if (!target) {
       try {
