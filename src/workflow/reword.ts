@@ -159,6 +159,9 @@ export async function runReword(config: AppConfig, hash: string) {
       return;
     }
     borderLine();
+    sectionTitle('Updated commit');
+    renderCommitBlock({ title: candidate.title, body: candidate.body, hideMessageLabel: true });
+    borderLine();
     finalSuccess({ count: 1, startedAt });
     return;
   }
