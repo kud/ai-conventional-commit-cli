@@ -337,6 +337,60 @@ class ConfigSetCommand extends Command {
   }
 }
 
+class RewordCommand extends Command {
+  static paths = [[`reword`]];
+  static usage = Command.Usage({
+    description: 'AI-assisted reword of an existing commit (by hash).',
+    details:
+      'Generate an improved Conventional Commit message for the given commit hash. If the hash is HEAD the commit is amended; otherwise rebase instructions are shown. If no hash is provided, an interactive picker of recent commits appears.',
+    examples: [
+      ['Interactive pick', 'ai-conventional-commit reword'],
+      ['Reword HEAD', 'ai-conventional-commit reword HEAD'],
+      ['Reword older commit', 'ai-conventional-commit reword d30fd1b'],
+    ],
+  });
+  hash = Option.String({ required: false });
+  async execute() {
+    const { runReword } = await import('./workflow/reword.js');
+    const config = await loadConfig();
+    let target = this.hash;
+    if (!target) {
+      try {
+        const { simpleGit } = await import('simple-git');
+        const git = simpleGit();
+        const log = await git.log({ maxCount: 20 });
+        if (!log.all.length) {
+          this.context.stderr.write('No commits available to select.\n');
+          return;
+        }
+        const choices = log.all.map((c) => ({
+          name: `${c.hash.slice(0, 7)} ${c.message.split('\n')[0]}`.slice(0, 80),
+          value: c.hash,
+        }));
+        choices.push({ name: 'Cancel', value: '__CANCEL__' });
+        const { picked } = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'picked',
+            message: 'Select a commit to reword',
+            choices,
+            pageSize: Math.min(choices.length, 15),
+          },
+        ]);
+        if (picked === '__CANCEL__') {
+          this.context.stdout.write('Aborted.\n');
+          return;
+        }
+        target = picked;
+      } catch (e: any) {
+        this.context.stderr.write('Failed to list commits: ' + (e?.message || e) + '\n');
+        return;
+      }
+    }
+    await runReword(config, target!);
+  }
+}
+
 class VersionCommand extends Command {
   static paths = [[`--version`], [`-V`]];
   async execute() {
@@ -358,6 +412,7 @@ cli.register(ModelsCommand);
 cli.register(ConfigShowCommand);
 cli.register(ConfigGetCommand);
 cli.register(ConfigSetCommand);
+cli.register(RewordCommand);
 cli.register(VersionCommand);
 
 cli.runExit(process.argv.slice(2), {
