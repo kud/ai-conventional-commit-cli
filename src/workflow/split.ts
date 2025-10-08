@@ -76,10 +76,11 @@ export async function runSplit(config: AppConfig, desired?: number) {
       const bar = chalk.green('+'.repeat(addPortion)) + chalk.red('-'.repeat(delPortion));
       const counts = chalk.green('+' + add) + ' ' + chalk.red('-' + del);
       let name = f.file.length > maxName ? f.file.slice(0, maxName - 1) + '…' : f.file;
+      let line = name.padEnd(maxName) + ' | ' + counts.padEnd(12) + ' ' + bar;
       if ((f as any).deleted) {
-        name += ' ' + chalk.red('[deleted]');
+        line += ' ' + chalk.red('[deleted]');
       }
-      borderLine(name.padEnd(maxName) + ' | ' + counts.padEnd(12) + ' ' + bar);
+      borderLine(line);
     });
 
     borderLine(
