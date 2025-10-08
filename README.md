@@ -113,12 +113,38 @@ ai-conventional-commit refine --shorter
 
 ## Command Reference
 
+### Reword Existing Commit
+
+Reword (improve) the message of an existing non-merge commit without touching its diff.
+
+```
+# Interactive picker (last 20 commits)
+ai-conventional-commit reword
+
+# Reword HEAD (auto-amend)
+ai-conventional-commit reword HEAD
+
+# Reword older commit (shows interactive rebase instructions)
+ai-conventional-commit reword <hash>
+
+# With style/model overrides
+ai-conventional-commit reword <hash> --style gitmoji -m github-copilot/gpt-4.1
+```
+
+Notes:
+
+- Merge commits (multiple parents) are rejected.
+- If target is HEAD and accepted, the commit is amended in-place.
+- If not HEAD, printed instructions guide you through `git rebase -i --reword`.
+- Title formatting (gitmoji, normalization) matches other commands.
+
 | Command                              | Purpose                                     |
 | ------------------------------------ | ------------------------------------------- |
 | `ai-conventional-commit`             | Generate single commit suggestion (default) |
 | `ai-conventional-commit generate`    | Explicit alias of root                      |
 | `ai-conventional-commit split`       | Propose & execute multiple commits          |
 | `ai-conventional-commit refine`      | Refine last session (or indexed) commit     |
+| `ai-conventional-commit reword`      | AI-assisted reword of existing commit       |
 | `ai-conventional-commit models`      | List / pick models, save default            |
 | `ai-conventional-commit config show` | Show merged config + sources                |
 | `ai-conventional-commit config get`  | Get a single config value                   |
