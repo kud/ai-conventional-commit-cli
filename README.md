@@ -221,9 +221,30 @@ Resolves via cosmiconfig (JSON/YAML/etc). Example:
   "style": "gitmoji",
   "styleSamples": 120,
   "plugins": ["./src/sample-plugin/example-plugin.ts"],
-  "maxTokens": 512
+  "maxTokens": 512,
+  "maxFileLines": 1000,
+  "skipFilePatterns": [
+    "**/package-lock.json",
+    "**/yarn.lock",
+    "**/*.d.ts",
+    "**/dist/**"
+  ]
 }
 ```
+
+### Configuration Options
+
+- **`maxFileLines`** (default: 1000): Skip file content in AI prompt if diff line count exceeds this threshold (per file). Files are still committed - the AI just sees the filename and stats instead of full content. Helps avoid token overflow from extremely large files.
+
+- **`skipFilePatterns`** (default: see below): Glob patterns for files whose content should be skipped in the AI prompt but still committed. Useful for generated files, lock files, and build artifacts.
+
+  **Default patterns:**
+  - Lock files: `**/package-lock.json`, `**/yarn.lock`, `**/pnpm-lock.yaml`, `**/bun.lockb`, `**/composer.lock`, `**/Gemfile.lock`, `**/Cargo.lock`, `**/poetry.lock`
+  - TypeScript declarations: `**/*.d.ts`
+  - Build output: `**/dist/**`, `**/build/**`, `**/.next/**`, `**/out/**`, `**/coverage/**`
+  - Minified files: `**/*.min.js`, `**/*.min.css`, `**/*.map`
+
+  To override, provide your own array in config. To disable entirely, set to `[]`.
 
 Environment overrides (prefix `AICC_`):
 
@@ -253,7 +274,9 @@ ai-conventional-commit models --interactive --save # pick + persist globally
 ai-conventional-commit models --current     # show active model + source
 ```
 
-`MODEL`, `PRIVACY`, `STYLE`, `STYLE_SAMPLES`, `MAX_TOKENS`, `VERBOSE`, `MODEL_TIMEOUT_MS`, `DEBUG`, `PRINT_LOGS`, `DEBUG_PROVIDER=mock`.
+`MODEL`, `PRIVACY`, `STYLE`, `STYLE_SAMPLES`, `MAX_TOKENS`, `MAX_FILE_LINES`, `VERBOSE`, `MODEL_TIMEOUT_MS`, `DEBUG`, `PRINT_LOGS`, `DEBUG_PROVIDER=mock`.
+
+**Note:** `skipFilePatterns` cannot be set via environment variable - use config file or accept defaults.
 
 ## Refinement Workflow
 

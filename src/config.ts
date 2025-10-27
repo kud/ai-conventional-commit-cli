@@ -10,6 +10,8 @@ export interface AppConfig {
   style: 'standard' | 'gitmoji' | 'gitmoji-pure';
   styleSamples: number;
   maxTokens: number;
+  maxFileLines: number; // Skip file content in AI prompt if total lines exceed this
+  skipFilePatterns: string[]; // Glob patterns for files to skip in AI prompt (but still commit)
   cacheDir?: string;
   plugins?: string[];
   verbose?: boolean;
@@ -22,6 +24,26 @@ const DEFAULTS: AppConfig = {
   style: (process.env.AICC_STYLE as any) || 'standard',
   styleSamples: parseInt(process.env.AICC_STYLE_SAMPLES || '120', 10),
   maxTokens: parseInt(process.env.AICC_MAX_TOKENS || '512', 10),
+  maxFileLines: parseInt(process.env.AICC_MAX_FILE_LINES || '1000', 10),
+  skipFilePatterns: [
+    '**/package-lock.json',
+    '**/yarn.lock',
+    '**/pnpm-lock.yaml',
+    '**/bun.lockb',
+    '**/composer.lock',
+    '**/Gemfile.lock',
+    '**/Cargo.lock',
+    '**/poetry.lock',
+    '**/*.d.ts',
+    '**/dist/**',
+    '**/build/**',
+    '**/.next/**',
+    '**/out/**',
+    '**/coverage/**',
+    '**/*.min.js',
+    '**/*.min.css',
+    '**/*.map',
+  ],
   cacheDir: '.git/.aicc-cache',
   plugins: [],
   verbose: process.env.AICC_VERBOSE === 'true',
@@ -88,6 +110,8 @@ export async function loadConfigDetailed(cwd = process.cwd()): Promise<{
   if (process.env.AICC_STYLE_SAMPLES)
     envCfg.styleSamples = parseInt(process.env.AICC_STYLE_SAMPLES, 10);
   if (process.env.AICC_MAX_TOKENS) envCfg.maxTokens = parseInt(process.env.AICC_MAX_TOKENS, 10);
+  if (process.env.AICC_MAX_FILE_LINES)
+    envCfg.maxFileLines = parseInt(process.env.AICC_MAX_FILE_LINES, 10);
   if (process.env.AICC_VERBOSE) envCfg.verbose = process.env.AICC_VERBOSE === 'true';
 
   const merged: AppConfig = {
@@ -101,6 +125,11 @@ export async function loadConfigDetailed(cwd = process.cwd()): Promise<{
     const abs = resolve(cwd, p);
     return existsSync(abs);
   });
+
+  // Ensure skipFilePatterns is always an array
+  if (!merged.skipFilePatterns) {
+    merged.skipFilePatterns = DEFAULTS.skipFilePatterns;
+  }
 
   const sources: AppConfigWithMeta['_sources'] = Object.keys(merged).reduce<any>((acc, key) => {
     const k = key as keyof AppConfig;
