@@ -6,7 +6,7 @@ const git = simpleGit();
 
 export const ensureStagedChanges = async (): Promise<boolean> => {
   const status = await git.status();
-  return status.staged.length > 0;
+  return status.staged.length > 0 || status.renamed.length > 0;
 };
 
 export const getStagedDiffRaw = async (): Promise<string> => {
@@ -88,8 +88,12 @@ export const parseDiff = async (): Promise<FileDiff[]> => {
   const parsed = parseDiffFromRaw(raw);
   if (parsed.length === 0) {
     const status = await git.status();
-    if (status.staged.length) {
-      return status.staged.map((f) => ({ file: f, hunks: [], additions: 0, deletions: 0 }));
+    const allStaged = [
+      ...status.staged.map((f) => ({ file: f, hunks: [], additions: 0, deletions: 0 })),
+      ...status.renamed.map((r) => ({ file: r.to, hunks: [], additions: 0, deletions: 0 })),
+    ];
+    if (allStaged.length > 0) {
+      return allStaged;
     }
   }
   return parsed;
@@ -120,5 +124,5 @@ export const stageFiles = async (files: string[]) => {
 
 export const getStagedFiles = async (): Promise<string[]> => {
   const status = await git.status();
-  return status.staged;
+  return [...status.staged, ...status.renamed.map((r) => r.to)];
 };
