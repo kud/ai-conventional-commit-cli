@@ -12,6 +12,12 @@ index 0000000..e69de29
 +  return 42;
 +}`;
 
+// Diff for a renamed file with no content changes
+const RENAMED_FILE_DIFF = `diff --git a/.github/workflows/auto-draft-pr.yml b/.github/workflows/pr-readiness-guard.yml
+similarity index 100%
+rename from .github/workflows/auto-draft-pr.yml
+rename to .github/workflows/pr-readiness-guard.yml`;
+
 describe('parseDiffFromRaw', () => {
   it('parses new file diff producing one file and one hunk', () => {
     const files = parseDiffFromRaw(SAMPLE_DIFF);
@@ -24,5 +30,15 @@ describe('parseDiffFromRaw', () => {
     const h = f.hunks[0];
     expect(h.lines.join('\n')).toContain('return 42;');
     expect(h.hash).toHaveLength(8);
+  });
+
+  it('parses renamed file with no content changes', () => {
+    const files = parseDiffFromRaw(RENAMED_FILE_DIFF);
+    expect(files.length).toBe(1);
+    const f = files[0];
+    expect(f.file).toBe('.github/workflows/pr-readiness-guard.yml');
+    expect(f.hunks.length).toBe(0);
+    expect(f.additions).toBe(0);
+    expect(f.deletions).toBe(0);
   });
 });

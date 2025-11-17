@@ -10,7 +10,7 @@ export const ensureStagedChanges = async (): Promise<boolean> => {
 };
 
 export const getStagedDiffRaw = async (): Promise<string> => {
-  return git.diff(['--cached', '--unified=3', '--no-color']);
+  return git.diff(['--cached', '--unified=3', '--no-color', '-M']);
 };
 
 const HUNK_HEADER_RE = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@ ?(.*)$/;
@@ -32,6 +32,9 @@ export const parseDiffFromRaw = (raw: string): FileDiff[] => {
     }
     if (line.startsWith('diff --git')) continue;
     if (line.startsWith('index ')) continue;
+    if (line.startsWith('similarity index ')) continue;
+    if (line.startsWith('rename from ')) continue;
+    if (line.startsWith('rename to ')) continue;
     if (/^deleted file mode /.test(line)) {
       if (currentFile) currentFile.deleted = true;
       continue;
