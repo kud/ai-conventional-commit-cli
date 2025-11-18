@@ -69,19 +69,22 @@ export async function runSplit(config: AppConfig, desired?: number) {
       totalAdd += add;
       totalDel += del;
 
-      const delta = add + del;
-      const counts = chalk.green('+' + add) + ' ' + chalk.red('-' + del);
-      let name = f.file.length > maxName ? f.file.slice(0, maxName - 1) + '…' : f.file;
-      let line = name.padEnd(maxName) + ' | ' + counts.padEnd(12);
-      if (delta > 0) {
-        const barLen = Math.max(1, Math.round((delta / maxDelta) * BAR_WIDTH));
-        const addPortion = Math.min(barLen, Math.round(barLen * (add / (delta || 1))));
-        const delPortion = barLen - addPortion;
-        const bar = chalk.green('+'.repeat(addPortion)) + chalk.red('-'.repeat(delPortion));
-        line += ' ' + bar;
-      }
+      const name = f.file.length > maxName ? f.file.slice(0, maxName - 1) + '…' : f.file;
+      let line = name.padEnd(maxName) + ' | ';
+
       if ((f as any).deleted) {
-        line += ' ' + chalk.red('[deleted]');
+        line += chalk.red('[deleted]');
+      } else {
+        const delta = add + del;
+        const counts = chalk.green('+' + add) + ' ' + chalk.red('-' + del);
+        line += counts.padEnd(12);
+        if (delta > 0) {
+          const barLen = Math.max(1, Math.round((delta / maxDelta) * BAR_WIDTH));
+          const addPortion = Math.min(barLen, Math.round(barLen * (add / (delta || 1))));
+          const delPortion = barLen - addPortion;
+          const bar = chalk.green('+'.repeat(addPortion)) + chalk.red('-'.repeat(delPortion));
+          line += ' ' + bar;
+        }
       }
       borderLine(line);
     });
