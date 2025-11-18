@@ -156,14 +156,10 @@ export async function runSplit(config: AppConfig, desired?: number) {
   borderLine();
   const { ok } = await inquirer.prompt([
     {
-      type: 'list',
+      type: 'confirm',
       name: 'ok',
       message: 'Use the commits?',
-      choices: [
-        { name: 'Yes', value: true },
-        { name: 'No', value: false },
-      ],
-      default: 0,
+      default: true,
     },
   ]);
 

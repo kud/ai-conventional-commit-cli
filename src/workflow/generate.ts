@@ -171,14 +171,10 @@ function saveSession(data: any) {
 async function selectYesNo(): Promise<boolean> {
   const { choice } = await inquirer.prompt([
     {
-      type: 'list',
+      type: 'confirm',
       name: 'choice',
       message: 'Use the commit?',
-      choices: [
-        { name: 'Yes', value: true },
-        { name: 'No', value: false },
-      ],
-      default: 0,
+      default: true,
     },
   ]);
   return choice as boolean;
