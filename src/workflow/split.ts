@@ -19,7 +19,7 @@ import { formatCommitTitle } from '../title-format.js';
 import { CommitPlan } from '../types.js';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import inquirer from 'inquirer';
+import { select } from '@inquirer/prompts';
 
 import {
   animateHeaderBase,
@@ -154,18 +154,14 @@ export async function runSplit(config: AppConfig, desired?: number) {
   });
 
   borderLine();
-  const { ok } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'ok',
-      message: 'Use the commits?',
-      choices: [
-        { name: 'Yes', value: true },
-        { name: 'No', value: false },
-      ],
-      default: 0,
-    },
-  ]);
+  const ok = await select({
+    message: 'Use the commits?',
+    choices: [
+      { name: 'Yes', value: true },
+      { name: 'No', value: false },
+    ],
+    default: true,
+  });
 
   if (!ok) {
     borderLine();

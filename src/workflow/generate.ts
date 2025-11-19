@@ -11,7 +11,7 @@ import { formatCommitTitle } from '../title-format.js';
 import { CommitCandidate, CommitPlan } from '../types.js';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import inquirer from 'inquirer';
+import { select } from '@inquirer/prompts';
 
 import {
   animateHeaderBase,
@@ -169,17 +169,13 @@ function saveSession(data: any) {
 }
 
 async function selectYesNo(): Promise<boolean> {
-  const { choice } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'choice',
-      message: 'Use the commit?',
-      choices: [
-        { name: 'Yes', value: true },
-        { name: 'No', value: false },
-      ],
-      default: 0,
-    },
-  ]);
-  return choice as boolean;
+  const choice = await select({
+    message: 'Use the commit?',
+    choices: [
+      { name: 'Yes', value: true },
+      { name: 'No', value: false },
+    ],
+    default: true,
+  });
+  return choice;
 }
