@@ -98,6 +98,9 @@ git add .
 # Generate a single commit suggestion
 ai-conventional-commit
 
+# Auto-confirm without prompting (useful for automation)
+ai-conventional-commit --yes
+
 # Propose multiple commits (interactive confirm + real selective staging)
 ai-conventional-commit split
 
@@ -160,6 +163,7 @@ Helpful flags:
 
 - `--style <standard|gitmoji|gitmoji-pure>`
 - `--model <provider/name>` (override)
+- `-y, --yes` (auto-confirm without prompting)
 - `--scope <scope>` (refine)
 - `--shorter` / `--longer`
 
@@ -274,7 +278,7 @@ ai-conventional-commit models --interactive --save # pick + persist globally
 ai-conventional-commit models --current     # show active model + source
 ```
 
-`MODEL`, `PRIVACY`, `STYLE`, `STYLE_SAMPLES`, `MAX_TOKENS`, `MAX_FILE_LINES`, `VERBOSE`, `MODEL_TIMEOUT_MS`, `DEBUG`, `PRINT_LOGS`, `DEBUG_PROVIDER=mock`.
+`MODEL`, `PRIVACY`, `STYLE`, `STYLE_SAMPLES`, `MAX_TOKENS`, `MAX_FILE_LINES`, `VERBOSE`, `YES`, `MODEL_TIMEOUT_MS`, `DEBUG`, `PRINT_LOGS`, `DEBUG_PROVIDER=mock`.
 
 **Note:** `skipFilePatterns` cannot be set via environment variable - use config file or accept defaults.
 

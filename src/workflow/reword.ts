@@ -129,7 +129,7 @@ export async function runReword(config: AppConfig, hash: string) {
   const headHash = (await git.revparse(['HEAD'])).trim();
   const isHead = headHash === resolvedHash || headHash.startsWith(resolvedHash);
 
-  const { ok } = await inquirer.prompt([
+  const ok = config.yes || (await inquirer.prompt([
     {
       type: 'list',
       name: 'ok',
@@ -140,7 +140,7 @@ export async function runReword(config: AppConfig, hash: string) {
       ],
       default: 0,
     },
-  ]);
+  ])).ok;
   if (!ok) {
     borderLine();
     abortMessage();

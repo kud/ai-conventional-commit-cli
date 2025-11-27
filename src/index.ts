@@ -40,10 +40,15 @@ class RootCommand extends Command {
     description: 'Model provider/name (e.g. github-copilot/gpt-4.1)',
   });
 
+  yes = Option.Boolean('-y,--yes', false, {
+    description: 'Auto-confirm commit without prompting',
+  });
+
   async execute() {
     const config = await loadConfig();
     if (this.style) config.style = this.style as any;
     if (this.model) config.model = this.model;
+    if (this.yes) config.yes = this.yes;
     await runGenerate(config);
   }
 }
@@ -72,6 +77,11 @@ class GenerateCommand extends Command {
     required: false,
     description: 'Model provider/name (e.g. github-copilot/gpt-4.1)',
   });
+
+  yes = Option.Boolean('-y,--yes', false, {
+    description: 'Auto-confirm commit without prompting',
+  });
+
   async execute() {
     const config = await loadConfig();
     if (this.style) {
@@ -79,6 +89,7 @@ class GenerateCommand extends Command {
     }
 
     if (this.model) config.model = this.model;
+    if (this.yes) config.yes = this.yes;
     await runGenerate(config);
   }
 }
@@ -106,11 +117,17 @@ class SplitCommand extends Command {
     required: false,
     description: 'Model provider/name override',
   });
+
+  yes = Option.Boolean('-y,--yes', false, {
+    description: 'Auto-confirm commit without prompting',
+  });
+
   async execute() {
     const config = await loadConfig();
     if (this.style) config.style = this.style as any;
 
     if (this.model) config.model = this.model;
+    if (this.yes) config.yes = this.yes;
     await runSplit(config, this.max ? parseInt(this.max, 10) : undefined);
   }
 }
@@ -141,11 +158,17 @@ class RefineCommand extends Command {
     required: false,
     description: 'Model provider/name override',
   });
+
+  yes = Option.Boolean('-y,--yes', false, {
+    description: 'Auto-confirm commit without prompting',
+  });
+
   async execute() {
     const config = await loadConfig();
 
     if (this.style) config.style = this.style as any;
     if (this.model) config.model = this.model;
+    if (this.yes) config.yes = this.yes;
     await runRefine(config, {
       shorter: this.shorter,
       longer: this.longer,
@@ -309,17 +332,18 @@ class ConfigSetCommand extends Command {
   static usage = Command.Usage({
     description: 'Set and persist a global configuration key.',
     details:
-      'Writes to the global aicc.json (XDG config). Accepts JSON for complex values. Only allowed keys: model, style, privacy, styleSamples, maxTokens, verbose.',
+      'Writes to the global aicc.json (XDG config). Accepts JSON for complex values. Only allowed keys: model, style, privacy, styleSamples, maxTokens, verbose, yes.',
     examples: [
       ['Set default model', 'ai-conventional-commit config set model github-copilot/gpt-4.1'],
       ['Set style to gitmoji', 'ai-conventional-commit config set style gitmoji'],
       ['Enable verbose mode', 'ai-conventional-commit config set verbose true'],
+      ['Auto-confirm commits', 'ai-conventional-commit config set yes true'],
     ],
   });
   key = Option.String();
   value = Option.String();
   async execute() {
-    const allowed = new Set(['model', 'style', 'privacy', 'styleSamples', 'maxTokens', 'verbose']);
+    const allowed = new Set(['model', 'style', 'privacy', 'styleSamples', 'maxTokens', 'verbose', 'yes']);
     if (!allowed.has(this.key)) {
       this.context.stderr.write(`Cannot set key: ${this.key}\n`);
       process.exitCode = 1;
@@ -356,11 +380,16 @@ class RewordCommand extends Command {
   hash = Option.String({ required: false });
   style = Option.String('--style', { required: false, description: 'Title style override' });
   model = Option.String('-m,--model', { required: false, description: 'Model override' });
+  yes = Option.Boolean('-y,--yes', false, {
+    description: 'Auto-confirm commit without prompting',
+  });
+
   async execute() {
     const { runReword } = await import('./workflow/reword.js');
     const config = await loadConfig();
     if (this.style) config.style = this.style as any;
     if (this.model) config.model = this.model;
+    if (this.yes) config.yes = this.yes;
     let target = this.hash;
     if (!target) {
       try {

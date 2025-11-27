@@ -15,6 +15,7 @@ export interface AppConfig {
   cacheDir?: string;
   plugins?: string[];
   verbose?: boolean;
+  yes?: boolean; // Auto-confirm commit suggestions without prompting
 }
 
 const DEFAULTS: AppConfig = {
@@ -47,6 +48,7 @@ const DEFAULTS: AppConfig = {
   cacheDir: '.git/.aicc-cache',
   plugins: [],
   verbose: process.env.AICC_VERBOSE === 'true',
+  yes: process.env.AICC_YES === 'true',
 };
 
 export function getGlobalConfigPath(): string {
@@ -113,6 +115,7 @@ export async function loadConfigDetailed(cwd = process.cwd()): Promise<{
   if (process.env.AICC_MAX_FILE_LINES)
     envCfg.maxFileLines = parseInt(process.env.AICC_MAX_FILE_LINES, 10);
   if (process.env.AICC_VERBOSE) envCfg.verbose = process.env.AICC_VERBOSE === 'true';
+  if (process.env.AICC_YES) envCfg.yes = process.env.AICC_YES === 'true';
 
   const merged: AppConfig = {
     ...DEFAULTS,

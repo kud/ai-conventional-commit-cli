@@ -154,7 +154,7 @@ export async function runSplit(config: AppConfig, desired?: number) {
   });
 
   borderLine();
-  const ok = await select({
+  const ok = config.yes || await select({
     message: 'Use the commits?',
     choices: [
       { name: 'Yes', value: true },

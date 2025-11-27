@@ -150,7 +150,7 @@ export async function runGenerate(config: AppConfig) {
     errorLines.forEach((l) => borderLine(l));
   }
   borderLine();
-  const yn = await selectYesNo();
+  const yn = config.yes || (await selectYesNo());
   if (!yn) {
     borderLine();
     abortMessage();

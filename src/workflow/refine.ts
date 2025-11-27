@@ -115,7 +115,7 @@ export async function runRefine(config: AppConfig, options: any) {
   });
 
   borderLine();
-  const { ok } = await inquirer.prompt([
+  const ok = config.yes || (await inquirer.prompt([
     {
       type: 'list',
       name: 'ok',
@@ -126,7 +126,7 @@ export async function runRefine(config: AppConfig, options: any) {
       ],
       default: 0,
     },
-  ]);
+  ])).ok;
 
   if (!ok) {
     borderLine();
