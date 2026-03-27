@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createOpencode } from '@opencode-ai/sdk';
+import { createOpencode, createOpencodeClient } from '@opencode-ai/sdk';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -55,9 +55,18 @@ export class OpenCodeProvider implements Provider {
     let server: Awaited<ReturnType<typeof createOpencode>>['server'] | undefined;
 
     try {
-      const opencode = await createOpencode({ signal: ac.signal });
-      server = opencode.server;
-      const { client } = opencode;
+      let client: ReturnType<typeof createOpencodeClient>;
+
+      try {
+        client = createOpencodeClient({ baseUrl: 'http://localhost:4096' });
+        await client.session.list();
+        if (debug) console.error('[ai-cc][provider] reusing existing opencode server');
+      } catch {
+        if (debug) console.error('[ai-cc][provider] starting opencode server');
+        const opencode = await createOpencode({ signal: ac.signal });
+        server = opencode.server;
+        client = opencode.client;
+      }
 
       const session = await client.session.create({ body: { title: 'aicc' } });
       if (!session.data) throw new Error('Failed to create opencode session');
