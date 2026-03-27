@@ -227,12 +227,7 @@ Resolves via cosmiconfig (JSON/YAML/etc). Example:
   "plugins": ["./src/sample-plugin/example-plugin.ts"],
   "maxTokens": 512,
   "maxFileLines": 1000,
-  "skipFilePatterns": [
-    "**/package-lock.json",
-    "**/yarn.lock",
-    "**/*.d.ts",
-    "**/dist/**"
-  ]
+  "skipFilePatterns": ["**/package-lock.json", "**/yarn.lock", "**/*.d.ts", "**/dist/**"]
 }
 ```
 
@@ -256,11 +251,12 @@ Environment overrides (prefix `AICC_`):
 
 Lowest to highest (later wins):
 
-1. Built-in defaults
-2. Global config file: `~/.config/ai-conventional-commit-cli/aicc.json` (or `$XDG_CONFIG_HOME`)
-3. Project config (.aiccrc via cosmiconfig)
-4. Environment variables (`AICC_*`)
-5. CLI flags (e.g. `--model`, `--style`)
+1. Built-in defaults (`github-copilot/gpt-4.1`)
+2. `OPENCODE_FREE_MODEL` env var (ambient opencode default)
+3. Global config file: `~/.config/ai-conventional-commit-cli/aicc.json` (or `$XDG_CONFIG_HOME`)
+4. Project config (.aiccrc via cosmiconfig)
+5. Environment variables (`AICC_*`)
+6. CLI flags (e.g. `--model`, `--style`)
 
 View the resolved configuration:
 
@@ -278,7 +274,7 @@ ai-conventional-commit models --interactive --save # pick + persist globally
 ai-conventional-commit models --current     # show active model + source
 ```
 
-`MODEL`, `PRIVACY`, `STYLE`, `STYLE_SAMPLES`, `MAX_TOKENS`, `MAX_FILE_LINES`, `VERBOSE`, `YES`, `MODEL_TIMEOUT_MS`, `DEBUG`, `PRINT_LOGS`, `DEBUG_PROVIDER=mock`.
+`MODEL`, `PRIVACY`, `STYLE`, `STYLE_SAMPLES`, `MAX_TOKENS`, `MAX_FILE_LINES`, `VERBOSE`, `YES`, `MODEL_TIMEOUT_MS`, `DEBUG`, `PRINT_LOGS`, `DEBUG_PROVIDER=mock`. The external `OPENCODE_FREE_MODEL` env var is also honoured as a lower-priority model default (before `AICC_MODEL`).
 
 **Note:** `skipFilePatterns` cannot be set via environment variable - use config file or accept defaults.
 
