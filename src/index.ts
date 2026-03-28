@@ -343,7 +343,15 @@ class ConfigSetCommand extends Command {
   key = Option.String();
   value = Option.String();
   async execute() {
-    const allowed = new Set(['model', 'style', 'privacy', 'styleSamples', 'maxTokens', 'verbose', 'yes']);
+    const allowed = new Set([
+      'model',
+      'style',
+      'privacy',
+      'styleSamples',
+      'maxTokens',
+      'verbose',
+      'yes',
+    ]);
     if (!allowed.has(this.key)) {
       this.context.stderr.write(`Cannot set key: ${this.key}\n`);
       process.exitCode = 1;
@@ -452,8 +460,10 @@ cli.register(ConfigSetCommand);
 cli.register(RewordCommand);
 cli.register(VersionCommand);
 
-cli.runExit(process.argv.slice(2), {
-  stdin: process.stdin,
-  stdout: process.stdout,
-  stderr: process.stderr,
-});
+cli
+  .runExit(process.argv.slice(2), {
+    stdin: process.stdin,
+    stdout: process.stdout,
+    stderr: process.stderr,
+  })
+  .then(() => process.exit(process.exitCode ?? 0));
