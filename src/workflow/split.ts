@@ -2,13 +2,11 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { AppConfig } from '../config.js';
 import {
-  ensureStagedChanges,
-  parseDiff,
+  getStagedFilesAndDiff,
   getRecentCommitMessages,
   createCommit,
   resetIndex,
   stageFiles,
-  getStagedFiles,
 } from '../git.js';
 import { buildStyleProfile } from '../style.js';
 import { buildGenerationMessages } from '../prompt.js';
@@ -33,11 +31,14 @@ import {
 
 export async function runSplit(config: AppConfig, desired?: number) {
   const startedAt = Date.now();
-  if (!(await ensureStagedChanges())) {
+  const provider = new OpenCodeProvider(config.model);
+  provider.warmup();
+
+  const { files, hasStagedChanges } = await getStagedFilesAndDiff();
+  if (!hasStagedChanges) {
     console.log('No staged changes.');
     return;
   }
-  const files = await parseDiff();
   if (!files.length) {
     console.log('No diff content detected after staging. Aborting.');
     return;
@@ -102,18 +103,16 @@ export async function runSplit(config: AppConfig, desired?: number) {
   const phased = createPhasedSpinner(ora);
   const runStep = <T>(label: string, fn: () => Promise<T>) => phased.step(label, fn);
 
-  await runStep('Clustering changes', async () => {
-    clusterHunks(files);
-  });
-  const style = await runStep('Profiling style', async () => {
-    const history = await getRecentCommitMessages(config.styleSamples);
-    return buildStyleProfile(history);
-  });
-  const plugins = await runStep('Loading plugins', async () => loadPlugins(config));
+  clusterHunks(files);
+  const [style, plugins] = await runStep('Profiling style', async () =>
+    Promise.all([
+      getRecentCommitMessages(config.styleSamples).then(buildStyleProfile),
+      loadPlugins(config),
+    ]),
+  );
   const messages = await runStep('Building prompt', async () =>
     buildGenerationMessages({ files, style, config, mode: 'split', desiredCommits: desired }),
   );
-  const provider = new OpenCodeProvider(config.model);
   const raw = await runStep('Calling model', async () =>
     provider.chat(messages, { maxTokens: config.maxTokens }),
   );
@@ -196,9 +195,8 @@ export async function runSplit(config: AppConfig, desired?: number) {
   for (const candidate of candidates) {
     // reset index (keep worktree)
     await resetIndex();
-    await stageFiles(candidate.files || []);
-    const stagedNow = await getStagedFiles();
-    if (!stagedNow.length) continue; // skip empty
+    if (!candidate.files?.length) continue;
+    await stageFiles(candidate.files);
     try {
       await createCommit(candidate.title, candidate.body);
       success++;

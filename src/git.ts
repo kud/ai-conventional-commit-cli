@@ -99,6 +99,25 @@ export const parseDiff = async (): Promise<FileDiff[]> => {
   return parsed;
 };
 
+export const getStagedFilesAndDiff = async (): Promise<{
+  files: FileDiff[];
+  hasStagedChanges: boolean;
+}> => {
+  const [raw, status] = await Promise.all([getStagedDiffRaw(), git.status()]);
+  const hasStagedChanges = status.staged.length > 0 || status.renamed.length > 0;
+  const parsed = parseDiffFromRaw(raw);
+  if (parsed.length === 0) {
+    return {
+      files: [
+        ...status.staged.map((f) => ({ file: f, hunks: [], additions: 0, deletions: 0 })),
+        ...status.renamed.map((r) => ({ file: r.to, hunks: [], additions: 0, deletions: 0 })),
+      ],
+      hasStagedChanges,
+    };
+  }
+  return { files: parsed, hasStagedChanges };
+};
+
 export const getRecentCommitMessages = async (limit: number): Promise<string[]> => {
   const log = await git.log({ maxCount: limit });
   return log.all.map((e) => e.message);

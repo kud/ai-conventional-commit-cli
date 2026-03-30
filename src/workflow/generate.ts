@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { AppConfig } from '../config.js';
-import { ensureStagedChanges, parseDiff, getRecentCommitMessages, createCommit } from '../git.js';
+import { getStagedFilesAndDiff, getRecentCommitMessages, createCommit } from '../git.js';
 import { buildStyleProfile } from '../style.js';
 import { buildGenerationMessages } from '../prompt.js';
 import { OpenCodeProvider, extractJSON } from '../model/provider.js';
@@ -25,12 +25,14 @@ import {
 
 export async function runGenerate(config: AppConfig) {
   const startedAt = Date.now();
-  if (!(await ensureStagedChanges())) {
+  const provider = new OpenCodeProvider(config.model);
+  provider.warmup();
+
+  const { files, hasStagedChanges } = await getStagedFilesAndDiff();
+  if (!hasStagedChanges) {
     console.log('No staged changes.');
     return;
   }
-
-  const files = await parseDiff();
   if (!files.length) {
     console.log('No diff content detected after staging. Aborting.');
     return;
@@ -96,19 +98,17 @@ export async function runGenerate(config: AppConfig) {
   const phased = createPhasedSpinner(ora);
   const runStep = <T>(label: string, fn: () => Promise<T>) => phased.step(label, fn);
 
-  let style: any;
-  let plugins: any;
   let messages: any;
   let raw: string | undefined;
   let plan: CommitPlan | undefined;
   let candidates: CommitCandidate[] = [];
-  const provider = new OpenCodeProvider(config.model);
 
-  style = await runStep('Profiling style', async () => {
-    const history = await getRecentCommitMessages(config.styleSamples);
-    return buildStyleProfile(history);
-  });
-  plugins = await runStep('Loading plugins', async () => loadPlugins(config));
+  const [style, plugins] = await runStep('Profiling style', async () =>
+    Promise.all([
+      getRecentCommitMessages(config.styleSamples).then(buildStyleProfile),
+      loadPlugins(config),
+    ]),
+  );
   messages = await runStep('Building prompt', async () =>
     buildGenerationMessages({ files, style, config, mode: 'single' }),
   );

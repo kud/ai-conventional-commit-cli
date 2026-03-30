@@ -1,12 +1,11 @@
-# opencode SDK migration
+# Performance optimisations
 
-Replaced the `execa`-based subprocess provider with `@opencode-ai/sdk` for cleaner,
-typed communication with the opencode server.
+Reduced startup latency by parallelising independent operations.
 
 ## Changes
 
-- `OpenCodeProvider` now uses `createOpencode()` instead of spawning `opencode run`
-- Timeout handled via `AbortController` passed to the SDK
-- Removed eager JSON detection and stdout accumulation hacks
-- Model string `"provider/model"` split into `{ providerID, modelID }` for the SDK
-- Session lifecycle: create → prompt → `server.close()` in `finally`
+- Combined `ensureStagedChanges` and `parseDiff` into a single `getStagedFilesAndDiff` call
+- Git diff and status now run in parallel via `Promise.all`
+- Style profiling and plugin loading now run in parallel
+- Removed synchronous `clusterHunks` wrapper step in split mode
+- Removed redundant `getStagedFiles` call in split commit loop

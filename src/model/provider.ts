@@ -1,5 +1,8 @@
 import { z } from 'zod';
 import { createServer, type AddressInfo } from 'node:net';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { createOpencode } from '@opencode-ai/sdk/v2';
 
 export interface ChatMessage {
@@ -26,20 +29,80 @@ function findFreePort(): Promise<number> {
   });
 }
 
+interface WarmContext {
+  client: Awaited<ReturnType<typeof createOpencode>>['client'];
+  server: Awaited<ReturnType<typeof createOpencode>>['server'];
+  sessionID: string;
+}
+
 export class OpenCodeProvider implements Provider {
-  constructor(private model: string = 'github-copilot/gpt-4.1') {}
+  private warmPromise: Promise<WarmContext> | null = null;
+  private ac = new AbortController();
+  private readonly timeoutMs: number;
+  private readonly debug: boolean;
+
+  constructor(private model: string = 'github-copilot/gpt-4.1') {
+    this.timeoutMs = parseInt(process.env.AICC_MODEL_TIMEOUT_MS || '120000', 10);
+    this.debug = process.env.AICC_DEBUG === 'true';
+    setTimeout(() => this.ac.abort(), this.timeoutMs);
+  }
 
   name() {
     return 'opencode';
   }
 
+  warmup(): void {
+    if (!this.warmPromise) {
+      this.warmPromise = this._startServer();
+    }
+  }
+
+  private async _startServer(): Promise<WarmContext> {
+    if (this.debug) console.error('[ai-cc][provider] starting opencode server');
+
+    // Isolate opencode from the user's global MCP config by pointing
+    // XDG_CONFIG_HOME to a temp dir with a minimal (MCP-free) config.
+    const isolatedDir = join(tmpdir(), `aicc-${process.pid}`, 'opencode');
+    mkdirSync(isolatedDir, { recursive: true });
+    writeFileSync(join(isolatedDir, 'config.json'), '{"mcp":{}}');
+
+    const originalXDG = process.env.XDG_CONFIG_HOME;
+    process.env.XDG_CONFIG_HOME = join(tmpdir(), `aicc-${process.pid}`);
+
+    let opencode: Awaited<ReturnType<typeof createOpencode>>;
+    try {
+      const port = await findFreePort();
+      opencode = await createOpencode({ signal: this.ac.signal, port });
+    } finally {
+      // Restore immediately — the child process already captured the env at spawn
+      if (originalXDG === undefined) delete process.env.XDG_CONFIG_HOME;
+      else process.env.XDG_CONFIG_HOME = originalXDG;
+    }
+
+    const { server, client } = opencode;
+
+    if (this.debug) {
+      const mcpStatusResult = await client.mcp.status();
+      console.error('[ai-cc][provider] mcp status =', JSON.stringify(mcpStatusResult.data, null, 2));
+    }
+
+    const sessionResult = await client.session.create({ title: 'aicc' });
+    if (!sessionResult.data) {
+      const errMsg =
+        (sessionResult.error as any)?.message ??
+        JSON.stringify(sessionResult.error) ??
+        'unknown';
+      throw new Error(`Failed to create opencode session: ${errMsg}`);
+    }
+
+    return { client, server, sessionID: sessionResult.data.id };
+  }
+
   async chat(messages: ChatMessage[], _opts?: { maxTokens?: number; temperature?: number }) {
-    const debug = process.env.AICC_DEBUG === 'true';
     const mockMode = process.env.AICC_DEBUG_PROVIDER === 'mock';
-    const timeoutMs = parseInt(process.env.AICC_MODEL_TIMEOUT_MS || '120000', 10);
 
     if (mockMode) {
-      if (debug) console.error('[ai-cc][mock] Returning deterministic mock response');
+      if (this.debug) console.error('[ai-cc][mock] Returning deterministic mock response');
       return JSON.stringify({
         commits: [
           {
@@ -60,45 +123,15 @@ export class OpenCodeProvider implements Provider {
     const providerID = slashIdx !== -1 ? this.model.slice(0, slashIdx) : this.model;
     const modelID = slashIdx !== -1 ? this.model.slice(slashIdx + 1) : this.model;
 
-    const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), timeoutMs);
     const start = Date.now();
-
-    let server: Awaited<ReturnType<typeof createOpencode>>['server'] | undefined;
+    let server: WarmContext['server'] | undefined;
 
     try {
-      if (debug) console.error('[ai-cc][provider] starting opencode server');
-      const port = await findFreePort();
-      const opencode = await createOpencode({ signal: ac.signal, port });
-      server = opencode.server;
-      const client = opencode.client;
+      const ctx = await (this.warmPromise ?? this._startServer());
+      server = ctx.server;
 
-      const mcpStatusResult = await client.mcp.status();
-      const mcpNames = Object.keys(mcpStatusResult.data ?? {});
-      if (mcpNames.length > 0) {
-        if (debug) {
-          console.error('[ai-cc][provider] mcp status (before disconnect) =', JSON.stringify(mcpStatusResult.data, null, 2));
-          console.error(`[ai-cc][provider] disconnecting ${mcpNames.length} MCP servers: ${mcpNames.join(', ')}`);
-        }
-        await Promise.all(mcpNames.map((name) => client.mcp.disconnect({ name }).catch(() => {})));
-        if (debug) {
-          const afterStatus = await client.mcp.status();
-          console.error('[ai-cc][provider] mcp status (after disconnect) =', JSON.stringify(afterStatus.data, null, 2));
-        }
-      }
-
-      const sessionResult = await client.session.create({ title: 'aicc' });
-
-      if (!sessionResult.data) {
-        const errMsg =
-          (sessionResult.error as any)?.message ??
-          JSON.stringify(sessionResult.error) ??
-          'unknown';
-        throw new Error(`Failed to create opencode session: ${errMsg}`);
-      }
-
-      const result = await client.session.prompt({
-        sessionID: sessionResult.data.id,
+      const result = await ctx.client.session.prompt({
+        sessionID: ctx.sessionID,
         model: { providerID, modelID },
         format: {
           type: 'json_schema',
@@ -107,7 +140,7 @@ export class OpenCodeProvider implements Provider {
         parts: [{ type: 'text', text: fullPrompt }],
       });
 
-      if (debug) {
+      if (this.debug) {
         const elapsed = Date.now() - start;
         console.error(
           `[ai-cc][provider] model=${this.model} elapsedMs=${elapsed} promptChars=${fullPrompt.length}`,
@@ -125,13 +158,12 @@ export class OpenCodeProvider implements Provider {
 
       return JSON.stringify(structured);
     } catch (e: any) {
-      if (ac.signal.aborted) {
-        throw new Error(`Model call timed out after ${timeoutMs}ms`);
+      if (this.ac.signal.aborted) {
+        throw new Error(`Model call timed out after ${this.timeoutMs}ms`);
       }
-      if (debug) console.error('[ai-cc][provider] failure', e.message);
+      if (this.debug) console.error('[ai-cc][provider] failure', e.message);
       throw new Error(e.message || 'opencode SDK call failed');
     } finally {
-      clearTimeout(timer);
       server?.close();
     }
   }
