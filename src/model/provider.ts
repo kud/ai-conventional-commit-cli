@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createServer, type AddressInfo } from 'node:net';
-import { createOpencode } from '@opencode-ai/sdk';
+import { createOpencode } from '@opencode-ai/sdk/v2';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -73,18 +73,31 @@ export class OpenCodeProvider implements Provider {
       server = opencode.server;
       const client = opencode.client;
 
-      const session = await client.session.create({ body: { title: 'aicc' } });
-      if (!session.data) {
-        const errMsg = (session.error as any)?.message ?? JSON.stringify(session.error) ?? 'unknown';
+      const mcpStatusResult = await client.mcp.status();
+      const mcpNames = Object.keys(mcpStatusResult.data ?? {});
+      if (mcpNames.length > 0) {
+        if (debug) console.error(`[ai-cc][provider] disconnecting ${mcpNames.length} MCP servers: ${mcpNames.join(', ')}`);
+        await Promise.all(mcpNames.map((name) => client.mcp.disconnect({ name }).catch(() => {})));
+      }
+
+      const sessionResult = await client.session.create({ title: 'aicc' });
+
+      if (!sessionResult.data) {
+        const errMsg =
+          (sessionResult.error as any)?.message ??
+          JSON.stringify(sessionResult.error) ??
+          'unknown';
         throw new Error(`Failed to create opencode session: ${errMsg}`);
       }
 
       const result = await client.session.prompt({
-        path: { id: session.data.id },
-        body: {
-          model: { providerID, modelID },
-          parts: [{ type: 'text', text: fullPrompt }],
+        sessionID: sessionResult.data.id,
+        model: { providerID, modelID },
+        format: {
+          type: 'json_schema',
+          schema: COMMIT_PLAN_JSON_SCHEMA,
         },
+        parts: [{ type: 'text', text: fullPrompt }],
       });
 
       if (debug) {
@@ -92,15 +105,18 @@ export class OpenCodeProvider implements Provider {
         console.error(
           `[ai-cc][provider] model=${this.model} elapsedMs=${elapsed} promptChars=${fullPrompt.length}`,
         );
+        console.error('[ai-cc][provider] result.data =', JSON.stringify(result.data, null, 2));
       }
 
-      const text =
-        (result.data as any).parts
-          ?.filter((p: any) => p.type === 'text')
-          .map((p: any) => p.data ?? p.text ?? '')
-          .join('') ?? '';
+      const structured = (result.data as any)?.info?.structured;
+      if (structured == null) {
+        const err = (result.data as any)?.info?.error;
+        throw new Error(
+          err ? `Model error: ${JSON.stringify(err)}` : 'No structured output in response',
+        );
+      }
 
-      return text;
+      return JSON.stringify(structured);
     } catch (e: any) {
       if (ac.signal.aborted) {
         throw new Error(`Model call timed out after ${timeoutMs}ms`);
@@ -132,6 +148,34 @@ export const PlanSchema = z.object({
 });
 
 export type CommitPlan = z.infer<typeof PlanSchema>;
+
+const COMMIT_PLAN_JSON_SCHEMA = {
+  type: 'object',
+  required: ['commits'],
+  properties: {
+    commits: {
+      type: 'array',
+      minItems: 1,
+      items: {
+        type: 'object',
+        required: ['title', 'score'],
+        properties: {
+          title: { type: 'string' },
+          body: { type: 'string' },
+          score: { type: 'number', minimum: 0, maximum: 100 },
+          reasons: { type: 'array', items: { type: 'string' } },
+          files: { type: 'array', items: { type: 'string' } },
+        },
+      },
+    },
+    meta: {
+      type: 'object',
+      properties: {
+        splitRecommended: { type: 'boolean' },
+      },
+    },
+  },
+};
 
 export const extractJSON = (raw: string): CommitPlan => {
   const trimmed = raw.trim();
