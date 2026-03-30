@@ -76,8 +76,15 @@ export class OpenCodeProvider implements Provider {
       const mcpStatusResult = await client.mcp.status();
       const mcpNames = Object.keys(mcpStatusResult.data ?? {});
       if (mcpNames.length > 0) {
-        if (debug) console.error(`[ai-cc][provider] disconnecting ${mcpNames.length} MCP servers: ${mcpNames.join(', ')}`);
+        if (debug) {
+          console.error('[ai-cc][provider] mcp status (before disconnect) =', JSON.stringify(mcpStatusResult.data, null, 2));
+          console.error(`[ai-cc][provider] disconnecting ${mcpNames.length} MCP servers: ${mcpNames.join(', ')}`);
+        }
         await Promise.all(mcpNames.map((name) => client.mcp.disconnect({ name }).catch(() => {})));
+        if (debug) {
+          const afterStatus = await client.mcp.status();
+          console.error('[ai-cc][provider] mcp status (after disconnect) =', JSON.stringify(afterStatus.data, null, 2));
+        }
       }
 
       const sessionResult = await client.session.create({ title: 'aicc' });
