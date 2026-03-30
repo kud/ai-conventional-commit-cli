@@ -58,6 +58,7 @@ Manual commit messages are often noisy, inconsistent, and context‑poor. This t
 | Plugins            | Transform & validate hooks over candidates                               |
 | Determinism        | Mock provider for CI & tests (`AICC_DEBUG_PROVIDER=mock`)                |
 | UX                 | Timing output, scoped prompts, animated header (optional)                |
+| Performance        | MCP servers auto-disconnected — model focuses solely on commit generation |
 
 ## Install
 
@@ -246,6 +247,18 @@ Resolves via cosmiconfig (JSON/YAML/etc). Example:
   To override, provide your own array in config. To disable entirely, set to `[]`.
 
 Environment overrides (prefix `AICC_`):
+
+### OpenCode Provider & MCP
+
+This tool uses the [OpenCode SDK](https://opencode.ai/docs/sdk/) to talk to models. On startup, **all MCP servers from your global OpenCode config are automatically disconnected**. This is intentional:
+
+- Keeps the tool count well within provider limits (e.g. GitHub Copilot caps at 128 tools)
+- Removes unnecessary latency from MCP initialization
+- Lets the model (e.g. `gpt-4.1`) focus entirely on commit generation
+
+Your global OpenCode MCP setup is unaffected — disconnection only applies to this tool's short-lived server process.
+
+To verify which MCPs were disconnected, run with `AICC_DEBUG=true`.
 
 ### Configuration Precedence
 
