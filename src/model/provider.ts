@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { createOpencode, createOpencodeClient } from '@opencode-ai/sdk';
+import { createServer, type AddressInfo } from 'node:net';
+import { createOpencode } from '@opencode-ai/sdk';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -12,6 +13,17 @@ export interface Provider {
     messages: ChatMessage[],
     opts?: { maxTokens?: number; temperature?: number },
   ): Promise<string>;
+}
+
+function findFreePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = createServer();
+    server.on('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const port = (server.address() as AddressInfo).port;
+      server.close(() => resolve(port));
+    });
+  });
 }
 
 export class OpenCodeProvider implements Provider {
@@ -55,21 +67,17 @@ export class OpenCodeProvider implements Provider {
     let server: Awaited<ReturnType<typeof createOpencode>>['server'] | undefined;
 
     try {
-      let client: ReturnType<typeof createOpencodeClient>;
-
-      try {
-        client = createOpencodeClient({ baseUrl: 'http://localhost:4096' });
-        await client.session.list();
-        if (debug) console.error('[ai-cc][provider] reusing existing opencode server');
-      } catch {
-        if (debug) console.error('[ai-cc][provider] starting opencode server');
-        const opencode = await createOpencode({ signal: ac.signal });
-        server = opencode.server;
-        client = opencode.client;
-      }
+      if (debug) console.error('[ai-cc][provider] starting opencode server');
+      const port = await findFreePort();
+      const opencode = await createOpencode({ signal: ac.signal, port });
+      server = opencode.server;
+      const client = opencode.client;
 
       const session = await client.session.create({ body: { title: 'aicc' } });
-      if (!session.data) throw new Error('Failed to create opencode session');
+      if (!session.data) {
+        const errMsg = (session.error as any)?.message ?? JSON.stringify(session.error) ?? 'unknown';
+        throw new Error(`Failed to create opencode session: ${errMsg}`);
+      }
 
       const result = await client.session.prompt({
         path: { id: session.data.id },
