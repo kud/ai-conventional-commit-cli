@@ -8,7 +8,7 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { execa } from 'execa';
-import inquirer from 'inquirer';
+import { select } from '@inquirer/prompts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkgVersion =
@@ -238,16 +238,10 @@ class ModelsCommand extends Command {
         this.context.stdout.write(stdout.trim() + '\n');
         return;
       }
-      const { model } = await inquirer.prompt<{
-        model: string;
-      }>([
-        {
-          name: 'model',
-          type: 'list',
-          message: 'Select a model',
-          choices: candidates,
-        },
-      ]);
+      const model = await select({
+        message: 'Select a model',
+        choices: candidates.map((c: string) => ({ name: c, value: c })),
+      });
       this.context.stdout.write(model + '\n');
       if (this.save) {
         try {
@@ -413,15 +407,11 @@ class RewordCommand extends Command {
           value: c.hash,
         }));
         choices.push({ name: 'Cancel', value: '__CANCEL__' });
-        const { picked } = await inquirer.prompt([
-          {
-            type: 'list',
-            name: 'picked',
-            message: 'Select a commit to reword',
-            choices,
-            pageSize: Math.min(choices.length, 15),
-          },
-        ]);
+        const picked = await select({
+          message: 'Select a commit to reword',
+          choices,
+          pageSize: Math.min(choices.length, 15),
+        });
         if (picked === '__CANCEL__') {
           this.context.stdout.write('Aborted.\n');
           return;
