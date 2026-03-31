@@ -63,17 +63,22 @@ export class OpenCodeProvider implements Provider {
   }
 
   private async _closeServer(): Promise<void> {
+    this.ac.abort(); // triggers AbortSignal on spawned process → guaranteed kill
     if (!this.warmPromise) return;
     try {
       const ctx = await this.warmPromise;
       ctx.server?.close();
     } catch {
-      // server never started — nothing to close
+      // server never started or was aborted — nothing to close
     } finally {
       process.off('exit', this.exitHandler);
       process.off('SIGINT', this.exitHandler);
       process.off('SIGTERM', this.exitHandler);
     }
+  }
+
+  async close(): Promise<void> {
+    return this._closeServer();
   }
 
   name() {

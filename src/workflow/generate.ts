@@ -39,10 +39,12 @@ export async function runGenerate(config: AppConfig) {
   const { files, hasStagedChanges } = await getStagedFilesAndDiff();
   dbg('staged files', { files: files.length, hasStagedChanges });
   if (!hasStagedChanges) {
+    await provider.close();
     console.log('No staged changes.');
     return;
   }
   if (!files.length) {
+    await provider.close();
     console.log('No diff content detected after staging. Aborting.');
     return;
   }
