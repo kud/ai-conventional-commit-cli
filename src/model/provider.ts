@@ -40,11 +40,31 @@ export class OpenCodeProvider implements Provider {
   private ac = new AbortController();
   private readonly timeoutMs: number;
   private readonly debug: boolean;
+  private readonly exitHandler: () => void;
 
   constructor(private model: string = 'github-copilot/gpt-4.1') {
     this.timeoutMs = parseInt(process.env.AICC_MODEL_TIMEOUT_MS || '120000', 10);
     this.debug = process.env.AICC_DEBUG === 'true';
     setTimeout(() => this.ac.abort(), this.timeoutMs);
+
+    this.exitHandler = () => { void this._closeServer(); };
+    process.once('exit', this.exitHandler);
+    process.once('SIGINT', this.exitHandler);
+    process.once('SIGTERM', this.exitHandler);
+  }
+
+  private async _closeServer(): Promise<void> {
+    if (!this.warmPromise) return;
+    try {
+      const ctx = await this.warmPromise;
+      ctx.server?.close();
+    } catch {
+      // server never started — nothing to close
+    } finally {
+      process.off('exit', this.exitHandler);
+      process.off('SIGINT', this.exitHandler);
+      process.off('SIGTERM', this.exitHandler);
+    }
   }
 
   name() {
