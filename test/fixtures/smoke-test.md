@@ -1,11 +1,10 @@
-# Performance optimisations
+# Fix context overflow on large staged diffs
 
-Reduced startup latency by parallelising independent operations.
+Prevent `ContextOverflowError` when committing repos with generated or cache files.
 
 ## Changes
 
-- Combined `ensureStagedChanges` and `parseDiff` into a single `getStagedFilesAndDiff` call
-- Git diff and status now run in parallel via `Promise.all`
-- Style profiling and plugin loading now run in parallel
-- Removed synchronous `clusterHunks` wrapper step in split mode
-- Removed redundant `getStagedFiles` call in split commit loop
+- Added `.vite/**`, `.nuxt/**`, `.svelte-kit/**`, `.parcel-cache/**`, `.turbo/**`, `.cache/**` to default `skipFilePatterns`
+- Added `MAX_DIFF_CHARS` (80 000) budget in `summarizeDiffForPrompt`
+- Auto-degrade privacy level `low → medium → high` when diff exceeds budget
+- Guard `skipFilePatterns` against `undefined` in `shouldSkipFile`
