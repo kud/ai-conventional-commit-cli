@@ -1,6 +1,7 @@
 import { AppConfig } from './config.js';
 import { StyleProfile, CommitPlan } from './types.js';
 import { FileDiff } from './types.js';
+import chalk from 'chalk';
 
 // Simple glob pattern matcher for file paths
 const matchesPattern = (filePath: string, pattern: string): boolean => {
@@ -17,6 +18,17 @@ const matchesPattern = (filePath: string, pattern: string): boolean => {
 };
 
 const MAX_DIFF_CHARS = 80_000;
+
+const tag = (module: string) =>
+  chalk.dim('[ai-cc]') + chalk.cyan(`[${module}]`);
+
+const kv = (k: string, v: unknown) => chalk.dim(k + '=') + chalk.yellow(String(v));
+
+const dbg = (module: string, msg: string, pairs: Record<string, unknown> = {}) => {
+  if (process.env.AICC_DEBUG !== 'true') return;
+  const kvStr = Object.entries(pairs).map(([k, v]) => kv(k, v)).join(' ');
+  console.error(tag(module), chalk.white(msg), kvStr || '');
+};
 
 export const summarizeDiffForPrompt = (
   files: FileDiff[],
@@ -44,7 +56,10 @@ export const summarizeDiffForPrompt = (
       })
       .join('\n');
 
-  if (privacy === 'high') return buildHigh();
+  if (privacy === 'high') {
+    dbg('prompt', 'privacy=high', { files: files.length });
+    return buildHigh();
+  }
 
   const buildMedium = (): string =>
     files
@@ -70,7 +85,10 @@ export const summarizeDiffForPrompt = (
 
   if (privacy === 'medium') {
     const result = buildMedium();
-    return result.length <= MAX_DIFF_CHARS ? result : buildHigh();
+    dbg('prompt', 'privacy=medium', { chars: result.length, budget: MAX_DIFF_CHARS });
+    if (result.length <= MAX_DIFF_CHARS) return result;
+    dbg('prompt', chalk.red('medium exceeds budget → degrading to high'));
+    return buildHigh();
   }
 
   const buildLow = (): string =>
@@ -98,9 +116,13 @@ export const summarizeDiffForPrompt = (
       .join('\n');
 
   const low = buildLow();
+  dbg('prompt', 'privacy=low', { chars: low.length, budget: MAX_DIFF_CHARS });
   if (low.length <= MAX_DIFF_CHARS) return low;
   const medium = buildMedium();
-  return medium.length <= MAX_DIFF_CHARS ? medium : buildHigh();
+  dbg('prompt', chalk.yellow('low exceeds budget → trying medium'), { chars: medium.length });
+  if (medium.length <= MAX_DIFF_CHARS) return medium;
+  dbg('prompt', chalk.red('medium exceeds budget → degrading to high'));
+  return buildHigh();
 };
 
 export const buildGenerationMessages = (opts: {
@@ -184,16 +206,20 @@ export const buildGenerationMessages = (opts: {
     'If mode is split and multiple logical changes exist, set meta.splitRecommended=true.',
   );
 
-  return [
+  const messages = [
     {
-      role: 'system',
+      role: 'system' as const,
       content: specLines.join('\n'),
     },
     {
-      role: 'user',
+      role: 'user' as const,
       content: `Mode: ${mode}\nRequestedCommitCount: ${desiredCommits || (mode === 'split' ? '2-6' : 1)}\nStyleFingerprint: ${JSON.stringify(style)}\nDiff:\n${diff}\nGenerate commit candidates now.`,
     },
   ];
+
+  dbg('prompt', 'messages built', { systemChars: messages[0].content.length, userChars: messages[1].content.length, totalChars: messages[0].content.length + messages[1].content.length });
+
+  return messages;
 };
 
 export const buildRefineMessages = (opts: {

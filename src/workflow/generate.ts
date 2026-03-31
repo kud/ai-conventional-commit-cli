@@ -24,11 +24,20 @@ import {
 } from './ui.js';
 
 export async function runGenerate(config: AppConfig) {
+  const debug = process.env.AICC_DEBUG === 'true';
+  const dbg = (msg: string, pairs: Record<string, unknown> = {}) => {
+    if (!debug) return;
+    const kvStr = Object.entries(pairs)
+      .map(([k, v]) => chalk.dim(k + '=') + chalk.yellow(String(v)))
+      .join(' ');
+    console.error(chalk.dim('[ai-cc]') + chalk.cyan('[generate]'), chalk.white(msg), kvStr || '');
+  };
   const startedAt = Date.now();
   const provider = new OpenCodeProvider(config.model);
   provider.warmup();
 
   const { files, hasStagedChanges } = await getStagedFilesAndDiff();
+  dbg('staged files', { files: files.length, hasStagedChanges });
   if (!hasStagedChanges) {
     console.log('No staged changes.');
     return;
@@ -103,18 +112,28 @@ export async function runGenerate(config: AppConfig) {
   let plan: CommitPlan | undefined;
   let candidates: CommitCandidate[] = [];
 
-  const [style, plugins] = await runStep('Profiling style', async () =>
-    Promise.all([
+  const [style, plugins] = await runStep('Profiling style', async () => {
+    const t = Date.now();
+    const result = await Promise.all([
       getRecentCommitMessages(config.styleSamples).then(buildStyleProfile),
       loadPlugins(config),
-    ]),
-  );
-  messages = await runStep('Building prompt', async () =>
-    buildGenerationMessages({ files, style, config, mode: 'single' }),
-  );
-  raw = await runStep('Calling model', async () =>
-    provider.chat(messages, { maxTokens: config.maxTokens }),
-  );
+    ]);
+    dbg('profiling done', { ms: Date.now() - t });
+    return result;
+  });
+  messages = await runStep('Building prompt', async () => {
+    const t = Date.now();
+    const result = buildGenerationMessages({ files, style, config, mode: 'single' });
+    dbg('prompt built', { ms: Date.now() - t });
+    return result;
+  });
+  raw = await runStep('Calling model', async () => {
+    const t = Date.now();
+    dbg('model call start', { model: config.model });
+    const result = await provider.chat(messages, { maxTokens: config.maxTokens });
+    dbg('model call done', { ms: Date.now() - t, responseChars: result.length });
+    return result;
+  });
   plan = await runStep('Parsing response', async () => extractJSON(raw!));
   candidates = await runStep('Analyzing changes', async () =>
     applyTransforms(plan!.commits, plugins, { cwd: process.cwd(), env: process.env }),
