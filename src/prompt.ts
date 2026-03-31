@@ -16,24 +16,24 @@ const matchesPattern = (filePath: string, pattern: string): boolean => {
   return regex.test(filePath);
 };
 
+const MAX_DIFF_CHARS = 80_000;
+
 export const summarizeDiffForPrompt = (
   files: FileDiff[],
   privacy: AppConfig['privacy'],
   maxFileLines: number,
   skipFilePatterns: string[],
 ): string => {
-  // Helper to calculate total lines in a file
   const getTotalLines = (f: FileDiff): number => {
     return f.hunks.reduce((sum, h) => sum + h.lines.length, 0);
   };
 
-  // Helper to check if file should be skipped
   const shouldSkipFile = (filePath: string): boolean => {
-    return skipFilePatterns.some((pattern) => matchesPattern(filePath, pattern));
+    return (skipFilePatterns ?? []).some((pattern) => matchesPattern(filePath, pattern));
   };
 
-  if (privacy === 'high') {
-    return files
+  const buildHigh = (): string =>
+    files
       .map((f) => {
         const totalLines = getTotalLines(f);
         const patternSkipped = shouldSkipFile(f.file);
@@ -43,9 +43,11 @@ export const summarizeDiffForPrompt = (
         return `file: ${f.file} (+${f.additions} -${f.deletions}) hunks:${f.hunks.length}${skipped ? ` [${reason}, content skipped]` : ''}`;
       })
       .join('\n');
-  }
-  if (privacy === 'medium') {
-    return files
+
+  if (privacy === 'high') return buildHigh();
+
+  const buildMedium = (): string =>
+    files
       .map((f) => {
         const totalLines = getTotalLines(f);
         const patternSkipped = shouldSkipFile(f.file);
@@ -65,30 +67,40 @@ export const summarizeDiffForPrompt = (
         );
       })
       .join('\n');
+
+  if (privacy === 'medium') {
+    const result = buildMedium();
+    return result.length <= MAX_DIFF_CHARS ? result : buildHigh();
   }
-  // low
-  return files
-    .map((f) => {
-      const totalLines = getTotalLines(f);
-      const patternSkipped = shouldSkipFile(f.file);
-      const sizeSkipped = totalLines > maxFileLines;
-      if (patternSkipped || sizeSkipped) {
-        const reason = patternSkipped ? 'generated/lock file' : 'large file';
-        return `file: ${f.file} (+${f.additions} -${f.deletions}) hunks:${f.hunks.length} [${reason}, content skipped]`;
-      }
-      return (
-        `file: ${f.file}\n` +
-        f.hunks
-          .map(
-            (h) =>
-              `${h.header}\n${h.lines
-                .slice(0, 40)
-                .join('\n')}${h.lines.length > 40 ? '\n[truncated]' : ''}`,
-          )
-          .join('\n')
-      );
-    })
-    .join('\n');
+
+  const buildLow = (): string =>
+    files
+      .map((f) => {
+        const totalLines = getTotalLines(f);
+        const patternSkipped = shouldSkipFile(f.file);
+        const sizeSkipped = totalLines > maxFileLines;
+        if (patternSkipped || sizeSkipped) {
+          const reason = patternSkipped ? 'generated/lock file' : 'large file';
+          return `file: ${f.file} (+${f.additions} -${f.deletions}) hunks:${f.hunks.length} [${reason}, content skipped]`;
+        }
+        return (
+          `file: ${f.file}\n` +
+          f.hunks
+            .map(
+              (h) =>
+                `${h.header}\n${h.lines
+                  .slice(0, 40)
+                  .join('\n')}${h.lines.length > 40 ? '\n[truncated]' : ''}`,
+            )
+            .join('\n')
+        );
+      })
+      .join('\n');
+
+  const low = buildLow();
+  if (low.length <= MAX_DIFF_CHARS) return low;
+  const medium = buildMedium();
+  return medium.length <= MAX_DIFF_CHARS ? medium : buildHigh();
 };
 
 export const buildGenerationMessages = (opts: {
