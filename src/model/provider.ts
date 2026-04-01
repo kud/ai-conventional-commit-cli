@@ -50,13 +50,17 @@ export class OpenCodeProvider implements Provider {
   private readonly timeoutMs: number;
   private readonly debug: boolean;
   private readonly exitHandler: () => void;
+  private syncClose: (() => void) | null = null;
 
   constructor(private model: string = 'github-copilot/gpt-4.1') {
     this.timeoutMs = parseInt(process.env.AICC_MODEL_TIMEOUT_MS || '120000', 10);
     this.debug = process.env.AICC_DEBUG === 'true';
     setTimeout(() => this.ac.abort(), this.timeoutMs);
 
-    this.exitHandler = () => { void this._closeServer(); };
+    this.exitHandler = () => {
+      this.syncClose?.();
+      void this._closeServer();
+    };
     process.once('exit', this.exitHandler);
     process.once('SIGINT', this.exitHandler);
     process.once('SIGTERM', this.exitHandler);
@@ -114,6 +118,7 @@ export class OpenCodeProvider implements Provider {
     }
 
     const { server, client } = opencode;
+    this.syncClose = () => server?.close();
 
     if (this.debug) {
       const mcpStatusResult = await client.mcp.status();
@@ -123,9 +128,7 @@ export class OpenCodeProvider implements Provider {
     const sessionResult = await client.session.create({ title: 'aicc' });
     if (!sessionResult.data) {
       const errMsg =
-        (sessionResult.error as any)?.message ??
-        JSON.stringify(sessionResult.error) ??
-        'unknown';
+        (sessionResult.error as any)?.message ?? JSON.stringify(sessionResult.error) ?? 'unknown';
       throw new Error(`Failed to create opencode session: ${errMsg}`);
     }
 
@@ -182,7 +185,11 @@ export class OpenCodeProvider implements Provider {
 
       if (this.debug) {
         const elapsed = Date.now() - start;
-        pdbg('response received', { model: this.model, elapsedMs: elapsed, promptChars: fullPrompt.length });
+        pdbg('response received', {
+          model: this.model,
+          elapsedMs: elapsed,
+          promptChars: fullPrompt.length,
+        });
         pdbg('result.data', { json: JSON.stringify(result.data, null, 2) });
       }
 
