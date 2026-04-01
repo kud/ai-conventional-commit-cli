@@ -91,51 +91,59 @@ export async function runRefine(config: AppConfig, options: any) {
   const runStep = <T>(label: string, fn: () => Promise<T>) => phased.step(label, fn);
 
   const provider = new OpenCodeProvider(config.model);
-  const messages = await runStep('Building prompt', async () =>
-    buildRefineMessages({ originalPlan: plan, index, instructions, config }),
-  );
-  const raw = await runStep('Calling model', async () =>
-    provider.chat(messages, { maxTokens: config.maxTokens }),
-  );
-  const refinedPlan: CommitPlan = await runStep('Parsing response', async () => extractJSON(raw));
+  try {
+    const messages = await runStep('Building prompt', async () =>
+      buildRefineMessages({ originalPlan: plan, index, instructions, config }),
+    );
+    const raw = await runStep('Calling model', async () =>
+      provider.chat(messages, { maxTokens: config.maxTokens }),
+    );
+    const refinedPlan: CommitPlan = await runStep('Parsing response', async () => extractJSON(raw));
 
-  refinedPlan.commits[0].title = formatCommitTitle(refinedPlan.commits[0].title, {
-    allowGitmoji: config.style === 'gitmoji' || config.style === 'gitmoji-pure',
-    mode: config.style,
-  });
+    refinedPlan.commits[0].title = formatCommitTitle(refinedPlan.commits[0].title, {
+      allowGitmoji: config.style === 'gitmoji' || config.style === 'gitmoji-pure',
+      mode: config.style,
+    });
 
-  phased.phase('Suggested commit');
-  phased.stop();
-  sectionTitle('Suggested commit');
+    phased.phase('Suggested commit');
+    phased.stop();
+    sectionTitle('Suggested commit');
 
-  renderCommitBlock({
-    title: refinedPlan.commits[0].title,
-    body: refinedPlan.commits[0].body,
-    titleColor: (s) => chalk.yellow(s),
-  });
+    renderCommitBlock({
+      title: refinedPlan.commits[0].title,
+      body: refinedPlan.commits[0].body,
+      titleColor: (s) => chalk.yellow(s),
+    });
 
-  borderLine();
-  const ok = config.yes || (await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'ok',
-      message: 'Use the commit?',
-      choices: [
-        { name: 'Yes', value: true },
-        { name: 'No', value: false },
-      ],
-      default: 0,
-    },
-  ])).ok;
-
-  if (!ok) {
     borderLine();
-    abortMessage();
-    return;
-  }
+    const ok =
+      config.yes ||
+      (
+        await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'ok',
+            message: 'Use the commit?',
+            choices: [
+              { name: 'Yes', value: true },
+              { name: 'No', value: false },
+            ],
+            default: 0,
+          },
+        ])
+      ).ok;
 
-  session.plan.commits[index] = refinedPlan.commits[0];
-  saveSession(session);
-  borderLine();
-  finalSuccess({ count: 1, startedAt });
+    if (!ok) {
+      borderLine();
+      abortMessage();
+      return;
+    }
+
+    session.plan.commits[index] = refinedPlan.commits[0];
+    saveSession(session);
+    borderLine();
+    finalSuccess({ count: 1, startedAt });
+  } finally {
+    await provider.close();
+  }
 }

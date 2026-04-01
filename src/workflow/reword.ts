@@ -104,6 +104,8 @@ export async function runReword(config: AppConfig, hash: string) {
   } catch (e: any) {
     phased.spinner.fail('Reword failed: ' + (e?.message || e));
     return;
+  } finally {
+    await provider.close();
   }
   phased.stop();
 
@@ -129,18 +131,24 @@ export async function runReword(config: AppConfig, hash: string) {
   const headHash = (await git.revparse(['HEAD'])).trim();
   const isHead = headHash === resolvedHash || headHash.startsWith(resolvedHash);
 
-  const ok = config.yes || (await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'ok',
-      message: isHead ? 'Amend HEAD with this message?' : 'Apply rewrite (history will change)?',
-      choices: [
-        { name: 'Yes', value: true },
-        { name: 'No', value: false },
-      ],
-      default: 0,
-    },
-  ])).ok;
+  const ok =
+    config.yes ||
+    (
+      await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'ok',
+          message: isHead
+            ? 'Amend HEAD with this message?'
+            : 'Apply rewrite (history will change)?',
+          choices: [
+            { name: 'Yes', value: true },
+            { name: 'No', value: false },
+          ],
+          default: 0,
+        },
+      ])
+    ).ok;
   if (!ok) {
     borderLine();
     abortMessage();

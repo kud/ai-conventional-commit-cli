@@ -33,7 +33,19 @@ export async function runSplit(config: AppConfig, desired?: number) {
   const startedAt = Date.now();
   const provider = new OpenCodeProvider(config.model);
   provider.warmup();
+  try {
+    return await _runSplit(provider, config, desired, startedAt);
+  } finally {
+    await provider.close();
+  }
+}
 
+async function _runSplit(
+  provider: OpenCodeProvider,
+  config: AppConfig,
+  desired: number | undefined,
+  startedAt: number,
+) {
   const { files, hasStagedChanges } = await getStagedFilesAndDiff();
   if (!hasStagedChanges) {
     console.log('No staged changes.');
@@ -153,14 +165,16 @@ export async function runSplit(config: AppConfig, desired?: number) {
   });
 
   borderLine();
-  const ok = config.yes || await select({
-    message: 'Use the commits?',
-    choices: [
-      { name: 'Yes', value: true },
-      { name: 'No', value: false },
-    ],
-    default: true,
-  });
+  const ok =
+    config.yes ||
+    (await select({
+      message: 'Use the commits?',
+      choices: [
+        { name: 'Yes', value: true },
+        { name: 'No', value: false },
+      ],
+      default: true,
+    }));
 
   if (!ok) {
     borderLine();
