@@ -3,7 +3,8 @@ import { createServer, type AddressInfo } from 'node:net';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { createOpencode } from '@opencode-ai/sdk/v2';
+import { spawn } from 'node:child_process';
+import { createOpencodeClient } from '@opencode-ai/sdk/v2';
 import chalk from 'chalk';
 
 const pTag = chalk.dim('[ai-cc]') + chalk.cyan('[provider]');
@@ -39,8 +40,8 @@ function findFreePort(): Promise<number> {
 }
 
 interface WarmContext {
-  client: Awaited<ReturnType<typeof createOpencode>>['client'];
-  server: Awaited<ReturnType<typeof createOpencode>>['server'];
+  client: ReturnType<typeof createOpencodeClient>;
+  server: { url: string; close(): void };
   sessionID: string;
 }
 
@@ -104,21 +105,68 @@ export class OpenCodeProvider implements Provider {
     mkdirSync(isolatedDir, { recursive: true });
     writeFileSync(join(isolatedDir, 'config.json'), '{"mcp":{}}');
 
+    const port = await findFreePort();
+
     const originalXDG = process.env.XDG_CONFIG_HOME;
     process.env.XDG_CONFIG_HOME = join(tmpdir(), `aicc-${process.pid}`);
 
-    let opencode: Awaited<ReturnType<typeof createOpencode>>;
-    try {
-      const port = await findFreePort();
-      opencode = await createOpencode({ signal: this.ac.signal, port });
-    } finally {
-      // Restore immediately — the child process already captured the env at spawn
-      if (originalXDG === undefined) delete process.env.XDG_CONFIG_HOME;
-      else process.env.XDG_CONFIG_HOME = originalXDG;
-    }
+    const proc = spawn('opencode', ['serve', `--hostname=127.0.0.1`, `--port=${port}`], {
+      env: { ...process.env, OPENCODE_CONFIG_CONTENT: JSON.stringify({ mcp: {} }) },
+    });
 
-    const { server, client } = opencode;
-    this.syncClose = () => server?.close();
+    // Set syncClose immediately — proc.pid is available right after spawn,
+    // before the server finishes starting up. This ensures SIGINT during
+    // startup still kills the child.
+    const killProc = () => {
+      try {
+        process.kill(proc.pid!, 'SIGTERM');
+      } catch {}
+    };
+    this.syncClose = killProc;
+
+    // Restore env immediately — the child already captured it at spawn time.
+    if (originalXDG === undefined) delete process.env.XDG_CONFIG_HOME;
+    else process.env.XDG_CONFIG_HOME = originalXDG;
+
+    const url = await new Promise<string>((resolve, reject) => {
+      const id = setTimeout(
+        () => reject(new Error(`Timeout waiting for opencode server after 10s`)),
+        10_000,
+      );
+      let output = '';
+      proc.stdout?.on('data', (chunk: Buffer) => {
+        output += chunk.toString();
+        for (const line of output.split('\n')) {
+          if (!line.startsWith('opencode server listening')) continue;
+          const match = line.match(/on\s+(https?:\/\/[^\s]+)/);
+          if (!match) {
+            reject(new Error(`Failed to parse server url: ${line}`));
+            return;
+          }
+          clearTimeout(id);
+          resolve(match[1]);
+          return;
+        }
+      });
+      proc.stderr?.on('data', (chunk: Buffer) => {
+        output += chunk.toString();
+      });
+      proc.on('exit', (code) => {
+        clearTimeout(id);
+        reject(new Error(`Server exited with code ${code}\n${output}`));
+      });
+      proc.on('error', (err) => {
+        clearTimeout(id);
+        reject(err);
+      });
+      this.ac.signal.addEventListener('abort', () => {
+        clearTimeout(id);
+        killProc();
+        reject(new Error('Aborted'));
+      });
+    });
+
+    const client = createOpencodeClient({ baseUrl: url });
 
     if (this.debug) {
       const mcpStatusResult = await client.mcp.status();
@@ -134,7 +182,7 @@ export class OpenCodeProvider implements Provider {
 
     if (this.debug) pdbg('session created', { id: sessionResult.data.id });
 
-    return { client, server, sessionID: sessionResult.data.id };
+    return { client, server: { url, close: killProc }, sessionID: sessionResult.data.id };
   }
 
   async chat(messages: ChatMessage[], _opts?: { maxTokens?: number; temperature?: number }) {
@@ -163,11 +211,9 @@ export class OpenCodeProvider implements Provider {
     const modelID = slashIdx !== -1 ? this.model.slice(slashIdx + 1) : this.model;
 
     const start = Date.now();
-    let server: WarmContext['server'] | undefined;
 
     try {
       const ctx = await (this.warmPromise ?? this._startServer());
-      server = ctx.server;
 
       if (this.debug) {
         pdbg('sending prompt', { model: this.model, promptChars: fullPrompt.length });
@@ -208,8 +254,6 @@ export class OpenCodeProvider implements Provider {
       }
       if (this.debug) pdbg(chalk.red('call failed'), { error: e.message });
       throw new Error(e.message || 'opencode SDK call failed');
-    } finally {
-      server?.close();
     }
   }
 }
