@@ -35,16 +35,26 @@ export async function runGenerate(config: AppConfig) {
   const startedAt = Date.now();
   const provider = new OpenCodeProvider(config.model);
   provider.warmup();
+  try {
+    await _runGenerate(provider, config, dbg, startedAt);
+  } finally {
+    await provider.close();
+  }
+}
 
+async function _runGenerate(
+  provider: OpenCodeProvider,
+  config: AppConfig,
+  dbg: (msg: string, pairs?: Record<string, unknown>) => void,
+  startedAt: number,
+) {
   const { files, hasStagedChanges } = await getStagedFilesAndDiff();
   dbg('staged files', { files: files.length, hasStagedChanges });
   if (!hasStagedChanges) {
-    await provider.close();
     console.log('No staged changes.');
     return;
   }
   if (!files.length) {
-    await provider.close();
     console.log('No diff content detected after staging. Aborting.');
     return;
   }
