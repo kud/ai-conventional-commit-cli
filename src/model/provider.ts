@@ -28,6 +28,35 @@ export interface Provider {
   ): Promise<string>;
 }
 
+const killWithFallback = async (pid: number): Promise<void> => {
+  try {
+    process.kill(pid, 'SIGTERM');
+  } catch {
+    return;
+  }
+  const deadline = Date.now() + 1000;
+  while (Date.now() < deadline) {
+    await new Promise<void>((r) => setTimeout(r, 100));
+    try {
+      process.kill(pid, 0);
+    } catch {
+      return;
+    }
+  }
+  try {
+    process.kill(pid, 'SIGKILL');
+    console.warn(
+      chalk.yellow('\n⚠ [ai-cc]') +
+        ' opencode server did not shut down cleanly and had to be force-killed.' +
+        chalk.dim(
+          ' Please report this at https://github.com/kud/ai-conventional-commit-cli/issues/new',
+        ),
+    );
+  } catch {
+    // already gone
+  }
+};
+
 function findFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createServer();
@@ -41,7 +70,7 @@ function findFreePort(): Promise<number> {
 
 interface WarmContext {
   client: ReturnType<typeof createOpencodeClient>;
-  server: { url: string; close(): void };
+  server: { url: string; close(): void; closeAsync(): Promise<void> };
   sessionID: string;
 }
 
@@ -72,7 +101,7 @@ export class OpenCodeProvider implements Provider {
     if (!this.warmPromise) return;
     try {
       const ctx = await this.warmPromise;
-      ctx.server?.close();
+      await ctx.server?.closeAsync();
     } catch {
       // server never started or was aborted — nothing to close
     } finally {
@@ -182,7 +211,11 @@ export class OpenCodeProvider implements Provider {
 
     if (this.debug) pdbg('session created', { id: sessionResult.data.id });
 
-    return { client, server: { url, close: killProc }, sessionID: sessionResult.data.id };
+    return {
+      client,
+      server: { url, close: killProc, closeAsync: () => killWithFallback(proc.pid!) },
+      sessionID: sessionResult.data.id,
+    };
   }
 
   async chat(messages: ChatMessage[], _opts?: { maxTokens?: number; temperature?: number }) {
