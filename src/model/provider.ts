@@ -3,7 +3,7 @@ import { createServer, type AddressInfo } from 'node:net';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { spawn } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { createOpencodeClient } from '@opencode-ai/sdk/v2';
 import chalk from 'chalk';
 
@@ -28,33 +28,38 @@ export interface Provider {
   ): Promise<string>;
 }
 
-const killWithFallback = async (pid: number): Promise<void> => {
+const killProcessGroup = (pid: number, signal: NodeJS.Signals) => {
   try {
-    process.kill(pid, 'SIGTERM');
-  } catch {
-    return;
-  }
-  const deadline = Date.now() + 1000;
-  while (Date.now() < deadline) {
-    await new Promise<void>((r) => setTimeout(r, 100));
-    try {
-      process.kill(pid, 0);
-    } catch {
-      return;
-    }
-  }
-  try {
-    process.kill(pid, 'SIGKILL');
-    console.warn(
-      chalk.yellow('\n⚠ [ai-cc]') +
-        ' opencode server did not shut down cleanly and had to be force-killed.' +
-        chalk.dim(
-          ' Please report this at https://github.com/kud/ai-conventional-commit-cli/issues/new',
-        ),
-    );
-  } catch {
-    // already gone
-  }
+    process.kill(-pid, signal);
+  } catch {}
+};
+
+const gracefulKill = (proc: ChildProcess): Promise<void> => {
+  if (proc.exitCode !== null || !proc.pid) return Promise.resolve();
+  const pgid = proc.pid;
+
+  return new Promise<void>((resolve) => {
+    const onExit = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    proc.once('exit', onExit);
+
+    killProcessGroup(pgid, 'SIGTERM');
+
+    const timer = setTimeout(() => {
+      proc.off('exit', onExit);
+      proc.once('exit', () => resolve());
+      killProcessGroup(pgid, 'SIGKILL');
+      console.warn(
+        chalk.yellow('\n⚠ [ai-cc]') +
+          ' opencode server did not shut down cleanly and had to be force-killed.' +
+          chalk.dim(
+            ' Please report this at https://github.com/kud/ai-conventional-commit-cli/issues/new',
+          ),
+      );
+    }, 1000);
+  });
 };
 
 function findFreePort(): Promise<number> {
@@ -70,7 +75,7 @@ function findFreePort(): Promise<number> {
 
 interface WarmContext {
   client: ReturnType<typeof createOpencodeClient>;
-  server: { url: string; close(): void; closeAsync(): Promise<void> };
+  server: { url: string };
   sessionID: string;
 }
 
@@ -81,7 +86,7 @@ export class OpenCodeProvider implements Provider {
   private readonly debug: boolean;
   private readonly exitHandler: () => void;
   private syncClose: (() => void) | null = null;
-  private serverPid: number | null = null;
+  private serverProc: ChildProcess | null = null;
 
   constructor(private model: string = 'github-copilot/gpt-4.1') {
     this.timeoutMs = parseInt(process.env.AICC_MODEL_TIMEOUT_MS || '120000', 10);
@@ -99,11 +104,12 @@ export class OpenCodeProvider implements Provider {
 
   private async _closeServer(): Promise<void> {
     try {
-      if (this.serverPid !== null) {
-        await killWithFallback(this.serverPid);
-        this.serverPid = null;
+      if (this.serverProc) {
+        await gracefulKill(this.serverProc);
+        this.serverProc = null;
       }
       this.ac.abort();
+      this.warmPromise?.catch(() => {});
     } finally {
       process.off('exit', this.exitHandler);
       process.off('SIGINT', this.exitHandler);
@@ -140,19 +146,12 @@ export class OpenCodeProvider implements Provider {
     process.env.XDG_CONFIG_HOME = join(tmpdir(), `aicc-${process.pid}`);
 
     const proc = spawn('opencode', ['serve', `--hostname=127.0.0.1`, `--port=${port}`], {
+      detached: true,
       env: { ...process.env, OPENCODE_CONFIG_CONTENT: JSON.stringify({ mcp: {} }) },
     });
 
-    // Store PID and set syncClose immediately — proc.pid is available right after
-    // spawn, before the server finishes starting up. This ensures SIGINT during
-    // startup still kills the child.
-    this.serverPid = proc.pid!;
-    const killProc = () => {
-      try {
-        process.kill(proc.pid!, 'SIGTERM');
-      } catch {}
-    };
-    this.syncClose = killProc;
+    this.serverProc = proc;
+    this.syncClose = () => killProcessGroup(proc.pid!, 'SIGKILL');
 
     // Restore env immediately — the child already captured it at spawn time.
     if (originalXDG === undefined) delete process.env.XDG_CONFIG_HOME;
@@ -191,7 +190,7 @@ export class OpenCodeProvider implements Provider {
       });
       this.ac.signal.addEventListener('abort', () => {
         clearTimeout(id);
-        killProc();
+        killProcessGroup(proc.pid!, 'SIGKILL');
         reject(new Error('Aborted'));
       });
     });
@@ -214,7 +213,7 @@ export class OpenCodeProvider implements Provider {
 
     return {
       client,
-      server: { url, close: killProc, closeAsync: () => killWithFallback(proc.pid!) },
+      server: { url },
       sessionID: sessionResult.data.id,
     };
   }
