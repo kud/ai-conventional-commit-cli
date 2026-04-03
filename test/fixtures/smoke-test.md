@@ -5,6 +5,6 @@ Prevent `ContextOverflowError` when committing repos with generated or cache fil
 ## Changes
 
 - Added `.vite/**`, `.nuxt/**`, `.svelte-kit/**`, `.parcel-cache/**`, `.turbo/**`, `.cache/**` to default `skipFilePatterns`
-- Added `MAX_DIFF_CHARS` (80 000) budget in `summarizeDiffForPrompt`
+- Added `MAX_DIFF_CHARS` (100 000) budget in `summarizeDiffForPrompt`
 - Auto-degrade privacy level `low → medium → high` when diff exceeds budget
 - Guard `skipFilePatterns` against `undefined` in `shouldSkipFile`
