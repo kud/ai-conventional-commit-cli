@@ -81,6 +81,7 @@ export class OpenCodeProvider implements Provider {
   private readonly debug: boolean;
   private readonly exitHandler: () => void;
   private syncClose: (() => void) | null = null;
+  private serverPid: number | null = null;
 
   constructor(private model: string = 'github-copilot/gpt-4.1') {
     this.timeoutMs = parseInt(process.env.AICC_MODEL_TIMEOUT_MS || '120000', 10);
@@ -97,13 +98,12 @@ export class OpenCodeProvider implements Provider {
   }
 
   private async _closeServer(): Promise<void> {
-    this.ac.abort(); // triggers AbortSignal on spawned process → guaranteed kill
-    if (!this.warmPromise) return;
     try {
-      const ctx = await this.warmPromise;
-      await ctx.server?.closeAsync();
-    } catch {
-      // server never started or was aborted — nothing to close
+      if (this.serverPid !== null) {
+        await killWithFallback(this.serverPid);
+        this.serverPid = null;
+      }
+      this.ac.abort();
     } finally {
       process.off('exit', this.exitHandler);
       process.off('SIGINT', this.exitHandler);
@@ -143,9 +143,10 @@ export class OpenCodeProvider implements Provider {
       env: { ...process.env, OPENCODE_CONFIG_CONTENT: JSON.stringify({ mcp: {} }) },
     });
 
-    // Set syncClose immediately — proc.pid is available right after spawn,
-    // before the server finishes starting up. This ensures SIGINT during
+    // Store PID and set syncClose immediately — proc.pid is available right after
+    // spawn, before the server finishes starting up. This ensures SIGINT during
     // startup still kills the child.
+    this.serverPid = proc.pid!;
     const killProc = () => {
       try {
         process.kill(proc.pid!, 'SIGTERM');
