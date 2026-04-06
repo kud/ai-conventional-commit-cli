@@ -5,6 +5,7 @@ import { getStagedFilesAndDiff, getRecentCommitMessages, createCommit } from '..
 import { buildStyleProfile } from '../style.js';
 import { buildGenerationMessages } from '../prompt.js';
 import { OpenCodeProvider, extractJSON } from '../model/provider.js';
+import { isTimeoutError, pickModelOnTimeout } from '../model/picker.js';
 import { loadPlugins, applyTransforms, runValidations } from '../plugins.js';
 import { checkCandidate } from '../guardrails.js';
 import { formatCommitTitle } from '../title-format.js';
@@ -32,13 +33,27 @@ export async function runGenerate(config: AppConfig) {
       .join(' ');
     console.error(chalk.dim('[ai-cc]') + chalk.cyan('[generate]'), chalk.white(msg), kvStr || '');
   };
-  const startedAt = Date.now();
-  const provider = new OpenCodeProvider(config.model);
-  provider.warmup();
-  try {
-    await _runGenerate(provider, config, dbg, startedAt);
-  } finally {
-    await provider.close();
+
+  let model = config.model;
+  while (true) {
+    const startedAt = Date.now();
+    const provider = new OpenCodeProvider(model);
+    provider.warmup();
+    try {
+      await _runGenerate(provider, { ...config, model }, dbg, startedAt);
+      return;
+    } catch (e: any) {
+      if (isTimeoutError(e) && process.stdout.isTTY) {
+        const picked = await pickModelOnTimeout(model);
+        if (picked != null) {
+          model = picked;
+          continue;
+        }
+      }
+      throw e;
+    } finally {
+      await provider.close();
+    }
   }
 }
 
