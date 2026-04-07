@@ -1,10 +1,10 @@
-# Fix context overflow on large staged diffs
+# Add retry logic for transient API failures
 
-Prevent `ContextOverflowError` when committing repos with generated or cache files.
+Improve reliability when the upstream model API returns 429 or 503 responses.
 
 ## Changes
 
-- Added `.vite/**`, `.nuxt/**`, `.svelte-kit/**`, `.parcel-cache/**`, `.turbo/**`, `.cache/**` to default `skipFilePatterns`
-- Added `MAX_DIFF_CHARS` (100 000) budget in `summarizeDiffForPrompt`
-- Auto-degrade privacy level `low → medium → high` when diff exceeds budget
-- Guard `skipFilePatterns` against `undefined` in `shouldSkipFile`
+- Added exponential backoff with jitter in `callModelWithRetry`
+- Cap retries at 3 attempts with a max delay of 8 seconds
+- Surface a human-readable error after exhausting retries instead of throwing raw
+- Log each retry attempt at `debug` level for easier diagnostics
