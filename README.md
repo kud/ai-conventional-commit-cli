@@ -19,6 +19,13 @@
 
 > TL;DR: Stage your changes, run `ai-conventional-commit` (or `split` for multiple commits), accept, done. Add `--style gitmoji` if you like emoji. Refine later with `refine`.
 
+<p align="center">
+  🧠 &nbsp;Reads your diff &nbsp;·&nbsp;
+  🎨 &nbsp;Mirrors your style &nbsp;·&nbsp;
+  ✂️ &nbsp;Splits logically &nbsp;·&nbsp;
+  ✅ &nbsp;One command
+</p>
+
 ---
 
 ## Table of Contents
