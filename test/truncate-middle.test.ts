@@ -105,12 +105,14 @@ describe('truncateMiddle', () => {
       }
     });
 
-    it('long fixture paths preserve their filename after truncation', () => {
+    it('long fixture paths preserve their filename when it fits in the tail budget', () => {
+      const tailBudget = Math.ceil((MAX - 1) / 2);
       const long = FIXTURE_PATHS.filter((p) => p.length > MAX);
       for (const path of long) {
         const filename = path.split('/').at(-1)!;
-        const result = truncateMiddle(path, MAX);
-        expect(result.endsWith(filename)).toBe(true);
+        if (filename.length <= tailBudget) {
+          expect(truncateMiddle(path, MAX).endsWith(filename)).toBe(true);
+        }
       }
     });
 
