@@ -1,7 +1,7 @@
 # ai-conventional-commit
 
 <p align="center">
-  <img src="assets/icon.png" alt="ai-conventional-commit icon" width="120" />
+  <img src="assets/icon.png" alt="ai-conventional-commit icon" width="240" />
 </p>
 
 <p align="center">
