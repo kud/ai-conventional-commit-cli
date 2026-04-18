@@ -9,6 +9,7 @@ import { isTimeoutError, pickModelOnTimeout } from '../model/picker.js';
 import { loadPlugins, applyTransforms, runValidations } from '../plugins.js';
 import { checkCandidate } from '../guardrails.js';
 import { formatCommitTitle } from '../title-format.js';
+import { truncateMiddle } from './util.js';
 import { CommitCandidate, CommitPlan } from '../types.js';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -101,7 +102,7 @@ async function _runGenerate(
       totalAdd += add;
       totalDel += del;
 
-      const name = f.file.length > maxName ? f.file.slice(0, maxName - 1) + '…' : f.file;
+      const name = truncateMiddle(f.file, maxName);
       let line = name.padEnd(maxName) + ' | ';
 
       if ((f as any).deleted) {

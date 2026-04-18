@@ -1,0 +1,1 @@
+# Standup template fixture

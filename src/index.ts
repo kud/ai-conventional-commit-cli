@@ -309,8 +309,7 @@ class ConfigGetCommand extends Command {
     const key = this.key as keyof typeof config;
     if (!(key in config)) {
       this.context.stderr.write(`Unknown config key: ${this.key}\n`);
-      process.exitCode = 1;
-      return;
+      return 1;
     }
     if (this.withSource) {
       const src = (config as any)._sources?.[key];

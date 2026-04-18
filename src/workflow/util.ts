@@ -11,6 +11,13 @@ export const prompt = async (question: string, defaultValue?: string): Promise<s
   });
 };
 
+export const truncateMiddle = (s: string, max: number): string => {
+  if (s.length <= max) return s;
+  const tail = Math.ceil((max - 1) / 2);
+  const head = Math.floor((max - 1) / 2);
+  return s.slice(0, head) + '…' + s.slice(s.length - tail);
+};
+
 export const chooseIndex = (len: number): Promise<number> =>
   prompt(`Select index 0..${len - 1} (default 0): `, '0').then((a) =>
     Math.min(len - 1, Math.max(0, parseInt(a, 10) || 0)),
