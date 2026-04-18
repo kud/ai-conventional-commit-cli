@@ -1,6 +1,10 @@
 # ai-conventional-commit
 
 <p align="center">
+  <img src="assets/icon.png" alt="ai-conventional-commit icon" width="120" />
+</p>
+
+<p align="center">
   <b>AI‑assisted, style‑aware Conventional Commit generator & splitter</b><br/>
   Opinionated CLI that learns your repo's commit style and produces polished single or multi commits – safely, quickly, repeatably.
 </p>
@@ -47,17 +51,17 @@ Manual commit messages are often noisy, inconsistent, and context‑poor. This t
 
 ## Features
 
-| Category           | Highlights                                                               |
-| ------------------ | ------------------------------------------------------------------------ |
-| Style Intelligence | Style fingerprint (avg length, scope ratio, gitmoji usage, top prefixes) |
-| Generation Modes   | Single, multi‑commit planning (`split`), iterative refinement (`refine`) |
-| Commit Splitting   | Real selective staging per proposed commit (no fake plan output)         |
-| Gitmoji            | Standard / emoji+type / pure emoji modes                                 |
-| Guardrails         | Title normalization, Conventional syntax enforcement, length checks      |
-| Privacy            | Tiered diff detail (low / medium / high)                                 |
-| Plugins            | Transform & validate hooks over candidates                               |
-| Determinism        | Mock provider for CI & tests (`AICC_DEBUG_PROVIDER=mock`)                |
-| UX                 | Timing output, scoped prompts, animated header (optional)                |
+| Category           | Highlights                                                                |
+| ------------------ | ------------------------------------------------------------------------- |
+| Style Intelligence | Style fingerprint (avg length, scope ratio, gitmoji usage, top prefixes)  |
+| Generation Modes   | Single, multi‑commit planning (`split`), iterative refinement (`refine`)  |
+| Commit Splitting   | Real selective staging per proposed commit (no fake plan output)          |
+| Gitmoji            | Standard / emoji+type / pure emoji modes                                  |
+| Guardrails         | Title normalization, Conventional syntax enforcement, length checks       |
+| Privacy            | Tiered diff detail (low / medium / high)                                  |
+| Plugins            | Transform & validate hooks over candidates                                |
+| Determinism        | Mock provider for CI & tests (`AICC_DEBUG_PROVIDER=mock`)                 |
+| UX                 | Timing output, scoped prompts, animated header (optional)                 |
 | Performance        | MCP servers auto-disconnected — model focuses solely on commit generation |
 
 ## Install
