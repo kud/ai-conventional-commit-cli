@@ -194,8 +194,9 @@ nav.scrolled {
   font-family: var(--mono);
   font-size: 13.5px;
   cursor: default;
-  max-width: 480px;
+  max-width: 600px;
   width: 100%;
+  white-space: nowrap;
 }
 
 .hero-command .prompt {
