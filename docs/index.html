@@ -6,710 +6,245 @@
     <title>ai-conventional-commit — AI-assisted git commits</title>
     <meta
       name="description"
-      content="AI-assisted git commits that follow the Conventional Commits spec and match your repo's style. Stage your changes, run one command, done."
+      content="Opinionated, style-aware AI assistant for crafting and splitting git commits. Provider-agnostic — supports OpenCode-routed models and direct Claude CLI."
     />
     <meta property="og:title" content="ai-conventional-commit" />
     <meta
       property="og:description"
-      content="AI-assisted git commits that follow the Conventional Commits spec."
+      content="Opinionated, style-aware AI assistant for crafting and splitting git commits. Provider-agnostic."
     />
-    <style>
-      :root {
-        --bg: #0b0b0e;
-        --bg-2: #111116;
-        --bg-3: #18181f;
-        --border: #252530;
-        --text: #e2e8f0;
-        --muted: #6b7280;
-        --accent: #7c6bff;
-        --accent-2: #a78bfa;
-        --green: #4ade80;
-        --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
-        --sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-        --r: 8px;
-      }
-
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      html {
-        scroll-behavior: smooth;
-      }
-
-      body {
-        background: var(--bg);
-        color: var(--text);
-        font-family: var(--sans);
-        line-height: 1.65;
-        font-size: 15px;
-        -webkit-font-smoothing: antialiased;
-      }
-
-      /* ── Nav ── */
-      nav {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 2rem;
-        height: 56px;
-        background: rgba(11, 11, 14, 0.82);
-        backdrop-filter: blur(14px);
-        border-bottom: 1px solid var(--border);
-      }
-
-      .nav-brand {
-        font-family: var(--mono);
-        font-size: 13px;
-        color: var(--accent);
-        text-decoration: none;
-        letter-spacing: 0.02em;
-      }
-
-      .nav-links {
-        display: flex;
-        gap: 1.75rem;
-        list-style: none;
-      }
-
-      .nav-links a {
-        color: var(--muted);
-        text-decoration: none;
-        font-size: 13px;
-        transition: color 0.15s;
-      }
-      .nav-links a:hover {
-        color: var(--text);
-      }
-
-      /* ── Hero ── */
-      .hero {
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 8rem 2rem 6rem;
-        gap: 1.75rem;
-      }
-
-      .hero::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image: radial-gradient(
-          circle at 1px 1px,
-          rgba(124, 107, 255, 0.06) 1px,
-          transparent 0
-        );
-        background-size: 28px 28px;
-        mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black, transparent);
-      }
-
-      .hero-glow {
-        position: absolute;
-        top: -60px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 600px;
-        height: 300px;
-        background: radial-gradient(ellipse, rgba(124, 107, 255, 0.12) 0%, transparent 70%);
-        pointer-events: none;
-      }
-
-      .hero-badge {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.3rem 0.85rem;
-        background: rgba(124, 107, 255, 0.08);
-        border: 1px solid rgba(124, 107, 255, 0.25);
-        border-radius: 9999px;
-        font-size: 12px;
-        color: var(--accent-2);
-        font-family: var(--mono);
-        letter-spacing: 0.03em;
-      }
-
-      .hero h1 {
-        position: relative;
-        font-size: clamp(2.25rem, 6vw, 3.75rem);
-        font-family: var(--mono);
-        font-weight: 700;
-        letter-spacing: -0.025em;
-        line-height: 1.1;
-      }
-
-      .hero h1 em {
-        font-style: normal;
-        background: linear-gradient(135deg, var(--accent), var(--accent-2) 60%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-
-      .hero-sub {
-        position: relative;
-        font-size: 1.1rem;
-        color: var(--muted);
-        max-width: 480px;
-        line-height: 1.7;
-      }
-
-      .install {
-        position: relative;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        background: var(--bg-3);
-        border: 1px solid var(--border);
-        border-radius: var(--r);
-        padding: 0.8rem 1.25rem;
-        font-family: var(--mono);
-        font-size: 13.5px;
-        cursor: default;
-      }
-
-      .install .p {
-        color: var(--accent);
-        user-select: none;
-      }
-      .install .cmd {
-        color: var(--text);
-      }
-
-      .copy-btn {
-        margin-left: auto;
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: var(--muted);
-        padding: 0 0.25rem;
-        font-size: 12px;
-        font-family: var(--sans);
-        transition: color 0.15s;
-      }
-      .copy-btn:hover {
-        color: var(--text);
-      }
-
-      .hero-cta {
-        position: relative;
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.6rem 1.25rem;
-        border-radius: var(--r);
-        font-size: 14px;
-        font-weight: 500;
-        text-decoration: none;
-        transition: all 0.15s;
-        border: 1px solid transparent;
-      }
-
-      .btn-primary {
-        background: var(--accent);
-        color: #fff;
-      }
-      .btn-primary:hover {
-        background: #6b5ce7;
-      }
-
-      .btn-outline {
-        border-color: var(--border);
-        color: var(--muted);
-      }
-      .btn-outline:hover {
-        border-color: var(--muted);
-        color: var(--text);
-      }
-
-      /* ── Sections ── */
-      .section {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 5rem 2rem;
-        border-top: 1px solid var(--border);
-      }
-
-      .label {
-        font-size: 11px;
-        font-family: var(--mono);
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        color: var(--accent);
-        margin-bottom: 0.6rem;
-      }
-
-      h2 {
-        font-size: 1.8rem;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        margin-bottom: 0.5rem;
-      }
-
-      .lead {
-        color: var(--muted);
-        margin-bottom: 2.5rem;
-      }
-
-      /* ── Features ── */
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 1px;
-        background: var(--border);
-        border: 1px solid var(--border);
-        border-radius: var(--r);
-        overflow: hidden;
-      }
-
-      .card {
-        background: var(--bg-2);
-        padding: 1.5rem;
-        transition: background 0.15s;
-      }
-      .card:hover {
-        background: var(--bg-3);
-      }
-
-      .card-icon {
-        font-size: 1.35rem;
-        margin-bottom: 0.9rem;
-      }
-
-      .card h3 {
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 0.35rem;
-      }
-
-      .card p {
-        font-size: 13px;
-        color: var(--muted);
-        line-height: 1.55;
-      }
-
-      .card code {
-        font-family: var(--mono);
-        font-size: 12px;
-        background: var(--bg-3);
-        padding: 0.1em 0.35em;
-        border-radius: 4px;
-        color: var(--accent-2);
-      }
-
-      /* ── Code blocks ── */
-      pre {
-        background: var(--bg-2);
-        border: 1px solid var(--border);
-        border-radius: var(--r);
-        padding: 1.5rem;
-        overflow-x: auto;
-        font-family: var(--mono);
-        font-size: 13px;
-        line-height: 1.75;
-      }
-
-      .c {
-        color: #3d3d52;
-      }
-      .k {
-        color: var(--muted);
-      }
-      .s {
-        color: var(--green);
-        opacity: 0.85;
-      }
-      .o {
-        color: var(--muted);
-        opacity: 0.7;
-        font-style: italic;
-      }
-
-      /* ── Commands ── */
-      .commands {
-        display: flex;
-        flex-direction: column;
-        gap: 1px;
-      }
-
-      .cmd-row {
-        display: grid;
-        grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-        gap: 2rem;
-        align-items: center;
-        padding: 1rem 1.25rem;
-        background: var(--bg-2);
-        border: 1px solid var(--border);
-        border-radius: 0;
-        transition: background 0.15s;
-      }
-      .cmd-row:first-child {
-        border-radius: var(--r) var(--r) 0 0;
-      }
-      .cmd-row:last-child {
-        border-radius: 0 0 var(--r) var(--r);
-      }
-      .cmd-row + .cmd-row {
-        border-top: none;
-      }
-      .cmd-row:hover {
-        background: var(--bg-3);
-      }
-
-      .cmd-name {
-        font-family: var(--mono);
-        font-size: 12.5px;
-        color: var(--accent);
-        line-height: 1.5;
-      }
-
-      .cmd-row p {
-        font-size: 13px;
-        color: var(--muted);
-      }
-
-      .cmd-row code {
-        font-family: var(--mono);
-        font-size: 12px;
-        color: var(--accent-2);
-      }
-
-      /* ── Config table ── */
-      .table-wrap {
-        background: var(--bg-2);
-        border: 1px solid var(--border);
-        border-radius: var(--r);
-        overflow: hidden;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 13px;
-      }
-
-      th {
-        text-align: left;
-        padding: 0.7rem 1.1rem;
-        background: var(--bg-3);
-        color: var(--muted);
-        font-weight: 500;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        border-bottom: 1px solid var(--border);
-      }
-
-      td {
-        padding: 0.8rem 1.1rem;
-        border-bottom: 1px solid var(--border);
-        vertical-align: top;
-      }
-      tr:last-child td {
-        border-bottom: none;
-      }
-      tr:hover td {
-        background: var(--bg-3);
-      }
-
-      td code {
-        font-family: var(--mono);
-        font-size: 12px;
-        color: var(--accent);
-      }
-
-      .tag {
-        display: inline-block;
-        padding: 0.15rem 0.5rem;
-        background: var(--bg-3);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        font-family: var(--mono);
-        font-size: 11px;
-        color: var(--muted);
-        white-space: nowrap;
-      }
-
-      /* ── Env vars ── */
-      .env-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 0.5rem;
-        margin-top: 1.5rem;
-      }
-
-      .env-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.6rem 0.9rem;
-        background: var(--bg-2);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-      }
-
-      .env-item code {
-        font-family: var(--mono);
-        font-size: 11.5px;
-        color: var(--accent-2);
-      }
-
-      /* ── Footer ── */
-      footer {
-        text-align: center;
-        padding: 2.5rem 2rem;
-        border-top: 1px solid var(--border);
-        color: var(--muted);
-        font-size: 13px;
-      }
-
-      footer a {
-        color: var(--accent);
-        text-decoration: none;
-      }
-      footer a:hover {
-        text-decoration: underline;
-      }
-
-      /* ── Responsive ── */
-      @media (max-width: 640px) {
-        .grid {
-          grid-template-columns: 1fr;
-        }
-        .cmd-row {
-          grid-template-columns: 1fr;
-          gap: 0.35rem;
-        }
-        .nav-links {
-          display: none;
-        }
-        .hero {
-          padding: 5rem 1.5rem 4rem;
-        }
-        .section {
-          padding: 3.5rem 1.5rem;
-        }
-      }
-    </style>
+    <meta property="og:image" content="./icon.png" />
+    <link rel="icon" href="./icon.png" type="image/png" />
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <nav>
+    <nav id="nav">
       <a class="nav-brand" href="#">ai-conventional-commit</a>
       <ul class="nav-links">
         <li><a href="#features">Features</a></li>
-        <li><a href="#usage">Usage</a></li>
+        <li><a href="#quickstart">Quick start</a></li>
         <li><a href="#commands">Commands</a></li>
+        <li><a href="#providers">Providers</a></li>
         <li><a href="#config">Config</a></li>
-        <li><a href="https://github.com/kud/ai-conventional-commit-cli">GitHub ↗</a></li>
+        <li>
+          <a href="https://github.com/kud/ai-conventional-commit-cli" target="_blank" rel="noopener"
+            >GitHub ↗</a
+          >
+        </li>
       </ul>
     </nav>
 
-    <!-- Hero -->
+    <!-- ── Hero ── -->
     <section class="hero">
       <div class="hero-glow"></div>
-      <img
-        src="icon.png"
-        alt="ai-conventional-commit icon"
-        width="384"
-        height="384"
-        style="position: relative; border-radius: 22px"
-      />
-      <span class="hero-badge">__VERSION__ &nbsp;·&nbsp; MIT &nbsp;·&nbsp; Node ≥ 20</span>
-      <h1>ai-conventional-<em>commit</em></h1>
-      <p class="hero-sub">
-        AI-assisted git commits that match your repo's style. Stage your changes, run one command,
-        done.
-      </p>
-      <div class="install">
-        <span class="p">$</span>
-        <span class="cmd">npm install -g @kud/ai-conventional-commit-cli</span>
-        <button
-          class="copy-btn"
-          onclick="
-            navigator.clipboard
-              .writeText('npm install -g @kud/ai-conventional-commit-cli')
-              .then(() => {
-                this.textContent = 'copied';
-                setTimeout(() => (this.textContent = 'copy'), 1500);
-              })
-          "
-        >
-          copy
-        </button>
+
+      <div class="hero-icon reveal">
+        <img src="./icon.png" alt="ai-conventional-commit icon" width="192" height="192" />
       </div>
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="#usage">Get started</a>
-        <a class="btn btn-outline" href="https://github.com/kud/ai-conventional-commit-cli"
+
+      <span class="hero-badge reveal">v3.4.3 &nbsp;·&nbsp; MIT &nbsp;·&nbsp; Node ≥ 20</span>
+
+      <h1 class="reveal">ai-conventional-<em>commit</em></h1>
+
+      <p class="hero-sub reveal">
+        Opinionated, style-aware AI assistant for crafting and splitting git commits.
+        Provider-agnostic — supports OpenCode-routed models and direct Claude CLI.
+      </p>
+
+      <div class="hero-cta reveal">
+        <a class="btn btn-primary" href="#quickstart">Get started</a>
+        <a
+          class="btn btn-outline"
+          href="https://github.com/kud/ai-conventional-commit-cli"
+          target="_blank"
+          rel="noopener"
           >GitHub →</a
         >
         <a
           class="btn btn-outline"
           href="https://www.npmjs.com/package/@kud/ai-conventional-commit-cli"
+          target="_blank"
+          rel="noopener"
           >npm →</a
         >
       </div>
+
+      <div class="hero-command reveal">
+        <span class="prompt">$</span>
+        <span class="cmd-text">npm install -g @kud/ai-conventional-commit-cli</span>
+        <button class="copy-btn" data-copy="npm install -g @kud/ai-conventional-commit-cli">
+          copy
+        </button>
+      </div>
+
+      <div class="hero-stats reveal">
+        <div class="stat">
+          <span class="stat-value">3.4.3</span>
+          <span class="stat-label">Version</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">6</span>
+          <span class="stat-label">Commands</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">MIT</span>
+          <span class="stat-label">Licence</span>
+        </div>
+      </div>
     </section>
 
-    <!-- Features -->
+    <!-- ── Features ── -->
     <section class="section" id="features">
-      <div class="label">Features</div>
-      <h2>Everything you need</h2>
-      <p class="lead">Opinionated, fast, and batteries-included.</p>
-      <div class="grid">
-        <div class="card">
-          <div class="card-icon">✨</div>
-          <h3>Style Learning</h3>
+      <div class="label reveal">Features</div>
+      <h2 class="reveal">Everything you need</h2>
+      <p class="lead reveal">Opinionated, fast, and batteries-included.</p>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">✨</div>
+          <h3>AI-generated commits</h3>
           <p>
-            Analyses recent commit history and mirrors your team's conventions — emoji ratio, scope
-            usage, title length, and more.
+            Reads your staged diff and produces a Conventional Commits-compliant message in one
+            command. Mirrors your repo's style automatically.
           </p>
         </div>
-        <div class="card">
-          <div class="card-icon">✂️</div>
-          <h3>Smart Splitting</h3>
+        <div class="feature-card reveal">
+          <div class="feature-icon">✂️</div>
+          <h3>Smart splitting</h3>
           <p>
-            The <code>split</code> command plans and stages multiple atomic commits from a single
-            dirty working tree.
+            The <code>split</code> command clusters hunks semantically and proposes multiple atomic
+            commits, each selectively staged and executed.
           </p>
         </div>
-        <div class="card">
-          <div class="card-icon">🔁</div>
-          <h3>Refine &amp; Reword</h3>
+        <div class="feature-card reveal">
+          <div class="feature-icon">🎨</div>
+          <h3>Gitmoji style support</h3>
           <p>
-            Iteratively shorten, expand, or change scope. <code>reword</code> any commit in history
-            with an interactive picker.
+            Three modes out of the box: <code>standard</code>, <code>gitmoji</code> (emoji + type),
+            and <code>gitmoji-pure</code> (emoji only).
           </p>
         </div>
-        <div class="card">
-          <div class="card-icon">😜</div>
-          <h3>Gitmoji Modes</h3>
+        <div class="feature-card reveal">
+          <div class="feature-icon">✏️</div>
+          <h3>Refine &amp; reword</h3>
           <p>
-            Three styles: <code>standard</code>, <code>gitmoji</code> (emoji + type), or
-            <code>gitmoji-pure</code> (emoji replaces type).
+            Iteratively reshape the last commit's wording or reword any past commit using
+            natural-language instructions with an interactive picker.
           </p>
         </div>
-        <div class="card">
-          <div class="card-icon">🔒</div>
-          <h3>Privacy Tiers</h3>
+        <div class="feature-card reveal">
+          <div class="feature-icon">🔒</div>
+          <h3>Privacy-aware filtering</h3>
           <p>
-            Three diff-detail levels control how much context is sent to the AI — ideal for
-            sensitive codebases.
+            Three tiers — <code>low</code>, <code>medium</code>, <code>high</code> — control exactly
+            how much code is sent to the model. Ideal for sensitive repos.
           </p>
         </div>
-        <div class="card">
-          <div class="card-icon">🔌</div>
-          <h3>Plugin System</h3>
+        <div class="feature-card reveal">
+          <div class="feature-icon">🔌</div>
+          <h3>Plugin system</h3>
           <p>
-            Transform and validate commit candidates with custom plugins. Register via the
-            <code>plugins</code> config key.
+            Register custom <code>transform</code> and <code>validate</code> hooks to enforce team
+            conventions or post-process candidates before the commit runs.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- Usage -->
-    <section class="section" id="usage">
-      <div class="label">Usage</div>
-      <h2>Quick start</h2>
-      <p class="lead">Stage your changes and let it do the rest.</p>
-      <pre><code><span class="c"># Install globally</span>
+    <!-- ── Quick start ── -->
+    <section class="section" id="quickstart">
+      <div class="label reveal">Quick start</div>
+      <h2 class="reveal">Up and running in seconds</h2>
+      <p class="lead reveal">Stage your changes and let AI do the rest.</p>
+      <div class="code-block reveal">
+        <button
+          class="copy-btn"
+          data-copy="npm install -g @kud/ai-conventional-commit-cli
+git add .
+ai-conventional-commit generate"
+        >
+          copy
+        </button>
+        <pre><code><span class="c"># Install globally</span>
 <span class="k">npm install -g @kud/ai-conventional-commit-cli</span>
 
-<span class="c"># Optionally set up an alias</span>
+<span class="c"># Optional shell alias</span>
 <span class="k">alias aicc='ai-conventional-commit'</span>
 
-<span class="c"># Stage your changes, then generate a single commit</span>
+<span class="c"># Stage your changes, then generate a commit</span>
 <span class="k">git add -p</span>
 <span class="k">ai-conventional-commit</span>
 <span class="o">  ✔ feat(api): add pagination metadata to list endpoint</span>
 
-<span class="c"># Or split staged changes into multiple atomic commits</span>
+<span class="c"># Split staged changes into multiple atomic commits</span>
 <span class="k">ai-conventional-commit split</span>
 <span class="o">  1. refactor(parser): simplify token scanning
   2. feat(parser): support negated glob segments
   3. test(parser): add cases for brace + extglob combos</span>
 
-<span class="c"># Refine the last commit message</span>
-<span class="k">ai-conventional-commit refine --shorter --scope cli</span>
-<span class="o">  ✔ feat(cli): add split timing output</span>
+<span class="c"># Use gitmoji style</span>
+<span class="k">ai-conventional-commit --style gitmoji</span>
+<span class="o">  ✨ feat(ui): add dark mode toggle</span>
 
-<span class="c"># Reword an existing commit interactively</span>
-<span class="k">ai-conventional-commit reword</span></code></pre>
+<span class="c"># Skip prompts for CI / scripting</span>
+<span class="k">AICC_YES=true ai-conventional-commit</span>
+
+<span class="c"># Pick and save your preferred model</span>
+<span class="k">ai-conventional-commit models --interactive --save</span></code></pre>
+      </div>
     </section>
 
-    <!-- Commands -->
+    <!-- ── Commands ── -->
     <section class="section" id="commands">
-      <div class="label">Commands</div>
-      <h2>CLI reference</h2>
-      <p class="lead">
-        Global flags:
-        <code style="font-family: var(--mono); font-size: 12px; color: var(--accent-2)"
-          >--model &lt;provider/name&gt;</code
-        >
-        &nbsp;
-        <code style="font-family: var(--mono); font-size: 12px; color: var(--accent-2)"
-          >--style &lt;standard|gitmoji|gitmoji-pure&gt;</code
-        >
-        &nbsp;
-        <code style="font-family: var(--mono); font-size: 12px; color: var(--accent-2)"
-          >-y / --yes</code
-        >
+      <div class="label reveal">Commands</div>
+      <h2 class="reveal">CLI reference</h2>
+      <p class="lead reveal">
+        All commands accept
+        <code>--model &lt;provider/name&gt;</code>,
+        <code>--style &lt;standard|gitmoji|gitmoji-pure&gt;</code>, and <code>-y / --yes</code>.
       </p>
-      <div class="commands">
-        <div class="cmd-row">
-          <div class="cmd-name">generate</div>
-          <p>Generate a single commit from staged changes. This is the default command.</p>
+      <div class="cli-list">
+        <div class="cli-row reveal">
+          <div class="cli-name">generate</div>
+          <p>Generate a single commit suggestion from staged diff. This is the default command.</p>
         </div>
-        <div class="cmd-row">
-          <div class="cmd-name">split</div>
-          <p>Propose multiple atomic commits and execute each one with real selective staging.</p>
+        <div class="cli-row reveal">
+          <div class="cli-name">split [n]</div>
+          <p>
+            Cluster staged changes into <code>n</code> atomic commits and execute each with real
+            selective staging.
+          </p>
         </div>
-        <div class="cmd-row">
-          <div class="cmd-name">
-            refine<br /><code>--shorter / --longer</code><br /><code>--scope &lt;s&gt;</code
-            ><br /><code>--index &lt;n&gt;</code>
+        <div class="cli-row reveal">
+          <div class="cli-name">
+            refine<br />
+            <code>--shorter / --longer</code><br />
+            <code>--scope &lt;s&gt;</code>
           </div>
           <p>
-            Refine the last generated commit. Use <code>--index</code> to target a specific commit
-            from a split run.
+            Refine the last generated commit message. Iteratively shorten, expand, or change scope.
           </p>
         </div>
-        <div class="cmd-row">
-          <div class="cmd-name">reword [&lt;hash&gt;]</div>
+        <div class="cli-row reveal">
+          <div class="cli-name">reword [&lt;hash&gt;]</div>
           <p>
             AI-assisted reword of an existing commit. Omit hash for interactive picker.
-            <code>HEAD</code> auto-amends.
+            <code>HEAD</code> auto-amends in-place.
           </p>
         </div>
-        <div class="cmd-row">
-          <div class="cmd-name">
-            models<br /><code>--interactive / -i</code><br /><code>--save</code><br /><code
-              >--current</code
-            >
+        <div class="cli-row reveal">
+          <div class="cli-name">
+            models<br />
+            <code>--interactive / -i</code><br />
+            <code>--save</code><br />
+            <code>--current</code>
           </div>
           <p>List, pick, and persist your preferred AI model globally.</p>
         </div>
-        <div class="cmd-row">
-          <div class="cmd-name">
-            config show<br />config get &lt;key&gt;<br />config set &lt;key&gt; &lt;val&gt;
+        <div class="cli-row reveal">
+          <div class="cli-name">
+            config show<br />
+            config get &lt;key&gt;<br />
+            config set &lt;key&gt; &lt;val&gt;
           </div>
           <p>
             View merged config with sources, read a single key, or persist a value to your global
@@ -719,149 +254,178 @@
       </div>
     </section>
 
-    <!-- Config -->
-    <section class="section" id="config">
-      <div class="label">Configuration</div>
-      <h2>Configuration</h2>
-      <p class="lead">
-        Place a
-        <code style="font-family: var(--mono); font-size: 12.5px; color: var(--accent-2)"
-          >.aiccrc</code
-        >
-        in your project root, or set values globally at
-        <code style="font-family: var(--mono); font-size: 12.5px; color: var(--accent-2)"
-          >~/.config/ai-conventional-commit-cli/aicc.json</code
-        >. Precedence: built-in defaults → env → global config → project config → CLI flags.
+    <!-- ── Providers ── -->
+    <section class="section" id="providers">
+      <div class="label reveal">Providers</div>
+      <h2 class="reveal">Provider-agnostic</h2>
+      <p class="lead reveal">
+        Works with any OpenCode-supported model or direct Claude CLI — no separate API key required
+        for Claude.
       </p>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Default</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>model</code></td>
-              <td><span class="tag">github-copilot/gpt-4.1</span></td>
-              <td>
-                AI model in
-                <code style="font-family: var(--mono); font-size: 12px; color: var(--accent-2)"
-                  >provider/name</code
-                >
-                format.
-              </td>
-            </tr>
-            <tr>
-              <td><code>style</code></td>
-              <td><span class="tag">standard</span></td>
-              <td>
-                Commit title format:
-                <code style="font-family: var(--mono); font-size: 12px; color: var(--accent-2)"
-                  >standard</code
-                >,
-                <code style="font-family: var(--mono); font-size: 12px; color: var(--accent-2)"
-                  >gitmoji</code
-                >, or
-                <code style="font-family: var(--mono); font-size: 12px; color: var(--accent-2)"
-                  >gitmoji-pure</code
-                >.
-              </td>
-            </tr>
-            <tr>
-              <td><code>privacy</code></td>
-              <td><span class="tag">low</span></td>
-              <td>
-                Diff detail sent to AI.
-                <code style="font-family: var(--mono); font-size: 12px; color: var(--accent-2)"
-                  >low</code
-                >
-                = most context,
-                <code style="font-family: var(--mono); font-size: 12px; color: var(--accent-2)"
-                  >high</code
-                >
-                = filenames only.
-              </td>
-            </tr>
-            <tr>
-              <td><code>styleSamples</code></td>
-              <td><span class="tag">120</span></td>
-              <td>Number of recent commits to sample when building the style fingerprint.</td>
-            </tr>
-            <tr>
-              <td><code>maxTokens</code></td>
-              <td><span class="tag">512</span></td>
-              <td>Maximum completion tokens for the AI model.</td>
-            </tr>
-            <tr>
-              <td><code>maxFileLines</code></td>
-              <td><span class="tag">1000</span></td>
-              <td>Skip a file's diff in the prompt if it exceeds this many lines.</td>
-            </tr>
-            <tr>
-              <td><code>skipFilePatterns</code></td>
-              <td><span class="tag">[]</span></td>
-              <td>
-                Glob patterns for files to exclude from the prompt (lock files, build output, etc.).
-              </td>
-            </tr>
-            <tr>
-              <td><code>plugins</code></td>
-              <td><span class="tag">[]</span></td>
-              <td>
-                Plugin module paths. Each plugin can transform candidates or validate a chosen one.
-              </td>
-            </tr>
-            <tr>
-              <td><code>verbose</code></td>
-              <td><span class="tag">false</span></td>
-              <td>Enable debug logging.</td>
-            </tr>
-            <tr>
-              <td><code>yes</code></td>
-              <td><span class="tag">false</span></td>
-              <td>
-                Auto-confirm without interactive prompts (<code
-                  style="font-family: var(--mono); font-size: 12px; color: var(--accent-2)"
-                  >-y</code
-                >
-                flag).
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="providers-grid">
+        <div class="provider-card reveal">
+          <div class="provider-name">OpenCode</div>
+          <div class="provider-models">
+            <span class="provider-model">github-copilot/gpt-4.1</span>
+            <span class="provider-model">github-copilot/claude-sonnet-4.6</span>
+            <span class="provider-model">opencode/big-pickle</span>
+          </div>
+        </div>
+        <div class="provider-card reveal">
+          <div class="provider-name">Claude CLI</div>
+          <div class="provider-models">
+            <span class="provider-model">claude/sonnet</span>
+            <span class="provider-model">claude/opus</span>
+            <span class="provider-model">claude/haiku</span>
+          </div>
+        </div>
       </div>
-
-      <p style="margin-top: 2rem; color: var(--muted); font-size: 13px">
-        All keys are also available as environment variables prefixed with
-        <code style="font-family: var(--mono); font-size: 12px; color: var(--accent-2)">AICC_</code
+      <p style="margin-top: 1.25rem; color: var(--muted); font-size: 13px">
+        Set once via
+        <code style="font-family: var(--mono); font-size: 12px; color: var(--primary-light)"
+          >AICC_MODEL</code
+        >
+        or interactively with
+        <code style="font-family: var(--mono); font-size: 12px; color: var(--primary-light)"
+          >ai-conventional-commit models --interactive --save</code
         >.
       </p>
+    </section>
+
+    <!-- ── Config ── -->
+    <section class="section" id="config">
+      <div class="label reveal">Configuration</div>
+      <h2 class="reveal">Key environment variables</h2>
+      <p class="lead reveal">
+        Place a
+        <code style="font-family: var(--mono); font-size: 12.5px; color: var(--primary-light)"
+          >.aiccrc</code
+        >
+        in your project root or set values globally at
+        <code style="font-family: var(--mono); font-size: 12.5px; color: var(--primary-light)"
+          >~/.config/ai-conventional-commit-cli/aicc.json</code
+        >. Precedence: defaults → env → global → project → CLI flags.
+      </p>
       <div class="env-grid">
-        <div class="env-item"><code>AICC_MODEL</code></div>
-        <div class="env-item"><code>AICC_STYLE</code></div>
-        <div class="env-item"><code>AICC_PRIVACY</code></div>
-        <div class="env-item"><code>AICC_STYLE_SAMPLES</code></div>
-        <div class="env-item"><code>AICC_MAX_TOKENS</code></div>
-        <div class="env-item"><code>AICC_MAX_FILE_LINES</code></div>
-        <div class="env-item"><code>AICC_VERBOSE</code></div>
-        <div class="env-item"><code>AICC_YES</code></div>
-        <div class="env-item"><code>AICC_DEBUG_PROVIDER=mock</code></div>
+        <div class="env-item reveal">
+          <code>AICC_MODEL</code>
+          <span
+            >Model string, e.g.
+            <code style="font-family: var(--mono); font-size: 11px; color: var(--muted)"
+              >claude/sonnet</code
+            ></span
+          >
+        </div>
+        <div class="env-item reveal">
+          <code>AICC_STYLE</code>
+          <span
+            ><code style="font-family: var(--mono); font-size: 11px; color: var(--muted)"
+              >standard</code
+            >
+            |
+            <code style="font-family: var(--mono); font-size: 11px; color: var(--muted)"
+              >gitmoji</code
+            >
+            |
+            <code style="font-family: var(--mono); font-size: 11px; color: var(--muted)"
+              >gitmoji-pure</code
+            ></span
+          >
+        </div>
+        <div class="env-item reveal">
+          <code>AICC_PRIVACY</code>
+          <span
+            >Diff detail level:
+            <code style="font-family: var(--mono); font-size: 11px; color: var(--muted)">low</code>
+            |
+            <code style="font-family: var(--mono); font-size: 11px; color: var(--muted)"
+              >medium</code
+            >
+            |
+            <code style="font-family: var(--mono); font-size: 11px; color: var(--muted)"
+              >high</code
+            ></span
+          >
+        </div>
+        <div class="env-item reveal">
+          <code>AICC_YES</code>
+          <span
+            >Set to
+            <code style="font-family: var(--mono); font-size: 11px; color: var(--muted)">true</code>
+            to skip all prompts</span
+          >
+        </div>
+        <div class="env-item reveal">
+          <code>AICC_DEBUG</code>
+          <span>Enable verbose provider logs</span>
+        </div>
+        <div class="env-item reveal">
+          <code>AICC_MAX_TOKENS</code>
+          <span>Token limit for model responses (default: 512)</span>
+        </div>
       </div>
     </section>
 
     <footer>
       <p>
         MIT &nbsp;·&nbsp;
-        <a href="https://github.com/kud/ai-conventional-commit-cli"
+        <a href="https://github.com/kud/ai-conventional-commit-cli" target="_blank" rel="noopener"
           >github.com/kud/ai-conventional-commit-cli</a
         >
         &nbsp;·&nbsp;
-        <a href="https://www.npmjs.com/package/@kud/ai-conventional-commit-cli">npm</a>
+        <a
+          href="https://www.npmjs.com/package/@kud/ai-conventional-commit-cli"
+          target="_blank"
+          rel="noopener"
+          >npm</a
+        >
+        &nbsp;·&nbsp;
+        <a
+          href="https://github.com/kud/ai-conventional-commit-cli/blob/main/CHANGELOG.md"
+          target="_blank"
+          rel="noopener"
+          >changelog</a
+        >
       </p>
     </footer>
+
+    <script>
+      // Nav scroll effect
+      const nav = document.getElementById('nav');
+      window.addEventListener(
+        'scroll',
+        () => {
+          nav.classList.toggle('scrolled', window.scrollY > 20);
+        },
+        { passive: true },
+      );
+
+      // Copy buttons
+      document.querySelectorAll('.copy-btn[data-copy]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          navigator.clipboard.writeText(btn.dataset.copy).then(() => {
+            const orig = btn.textContent;
+            btn.textContent = 'copied!';
+            setTimeout(() => {
+              btn.textContent = orig;
+            }, 1500);
+          });
+        });
+      });
+
+      // Scroll reveal
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.1 },
+      );
+      document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+    </script>
   </body>
 </html>

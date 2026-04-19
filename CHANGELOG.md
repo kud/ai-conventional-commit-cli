@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 ---
 
+## [Unreleased] — 2026-04-19
+
+### ✨ Features
+
+- Add ClaudeCliProvider and provider factory ([#bd22d1f](https://github.com/kud/ai-conventional-commit-cli/commit/bd22d1f))
+
+---
+
 ## [3.4.0] — 2026-04-18
 
 ### ✨ Features
@@ -667,4 +675,3 @@ All notable changes to this project are documented here.
 </details>
 
 ---
-
