@@ -6,12 +6,12 @@
     <title>ai-conventional-commit — AI-assisted git commits</title>
     <meta
       name="description"
-      content="Opinionated, style-aware AI assistant for crafting and splitting git commits. Provider-agnostic — supports OpenCode-routed models and direct Claude CLI."
+      content="Provider-agnostic AI assistant for crafting and splitting git commits. Supports GitHub Copilot, Claude CLI, and Anthropic SDK — three provider paths, zero lock-in."
     />
     <meta property="og:title" content="ai-conventional-commit" />
     <meta
       property="og:description"
-      content="Opinionated, style-aware AI assistant for crafting and splitting git commits. Provider-agnostic."
+      content="Provider-agnostic AI assistant for crafting and splitting git commits. Three providers, zero lock-in."
     />
     <meta property="og:image" content="./icon.png" />
     <link rel="icon" href="./icon.png" type="image/png" />
@@ -42,13 +42,13 @@
         <img src="./icon.png" alt="ai-conventional-commit icon" width="192" height="192" />
       </div>
 
-      <span class="hero-badge reveal">v3.4.3 &nbsp;·&nbsp; MIT &nbsp;·&nbsp; Node ≥ 20</span>
+      <span class="hero-badge reveal">v3.5.0 &nbsp;·&nbsp; MIT &nbsp;·&nbsp; Node ≥ 20</span>
 
       <h1 class="reveal">ai-conventional-<em>commit</em></h1>
 
       <p class="hero-sub reveal">
-        Opinionated, style-aware AI assistant for crafting and splitting git commits.
-        Provider-agnostic — supports OpenCode-routed models and direct Claude CLI.
+        Provider-agnostic AI assistant for crafting and splitting git commits. GitHub Copilot,
+        Claude CLI, or Anthropic SDK — pick one, switch any time.
       </p>
 
       <div class="hero-cta reveal">
@@ -79,8 +79,12 @@
 
       <div class="hero-stats reveal">
         <div class="stat">
-          <span class="stat-value">3.4.3</span>
+          <span class="stat-value">3.5.0</span>
           <span class="stat-label">Version</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">3</span>
+          <span class="stat-label">Providers</span>
         </div>
         <div class="stat">
           <span class="stat-value">6</span>
@@ -257,26 +261,46 @@ ai-conventional-commit generate"
     <!-- ── Providers ── -->
     <section class="section" id="providers">
       <div class="label reveal">Providers</div>
-      <h2 class="reveal">Provider-agnostic</h2>
+      <h2 class="reveal">Three provider paths</h2>
       <p class="lead reveal">
-        Works with any OpenCode-supported model or direct Claude CLI — no separate API key required
-        for Claude.
+        Choose the path that suits your setup. Switch any time via <code>AICC_MODEL</code> or the
+        interactive model picker — no code changes required.
       </p>
       <div class="providers-grid">
         <div class="provider-card reveal">
-          <div class="provider-name">OpenCode</div>
+          <div class="provider-name">GitHub Copilot</div>
+          <p style="font-size: 12px; color: var(--muted); margin-bottom: 0.75rem">
+            Requires a Copilot subscription
+          </p>
           <div class="provider-models">
             <span class="provider-model">github-copilot/gpt-4.1</span>
-            <span class="provider-model">github-copilot/claude-sonnet-4.6</span>
-            <span class="provider-model">opencode/big-pickle</span>
+            <span class="provider-model">github-copilot/claude-sonnet-4-5</span>
+            <span class="provider-model">github-copilot/gemini-2.0-flash</span>
           </div>
         </div>
         <div class="provider-card reveal">
           <div class="provider-name">Claude CLI</div>
+          <p style="font-size: 12px; color: var(--muted); margin-bottom: 0.75rem">
+            Uses Claude Code auth — no API key needed
+          </p>
           <div class="provider-models">
             <span class="provider-model">claude/sonnet</span>
             <span class="provider-model">claude/opus</span>
             <span class="provider-model">claude/haiku</span>
+          </div>
+        </div>
+        <div class="provider-card reveal">
+          <div class="provider-name">Anthropic SDK</div>
+          <p style="font-size: 12px; color: var(--muted); margin-bottom: 0.75rem">
+            Requires
+            <code style="font-family: var(--mono); font-size: 11px; color: var(--primary-light)"
+              >ANTHROPIC_API_KEY</code
+            >
+          </p>
+          <div class="provider-models">
+            <span class="provider-model">anthropic/claude-sonnet-4-6</span>
+            <span class="provider-model">anthropic/claude-opus-4-5</span>
+            <span class="provider-model">anthropic/claude-haiku-3-5</span>
           </div>
         </div>
       </div>
@@ -314,6 +338,16 @@ ai-conventional-commit generate"
             <code style="font-family: var(--mono); font-size: 11px; color: var(--muted)"
               >claude/sonnet</code
             ></span
+          >
+        </div>
+        <div class="env-item reveal">
+          <code>ANTHROPIC_API_KEY</code>
+          <span
+            >Required when using the
+            <code style="font-family: var(--mono); font-size: 11px; color: var(--muted)"
+              >anthropic/*</code
+            >
+            provider</span
           >
         </div>
         <div class="env-item reveal">
@@ -358,10 +392,6 @@ ai-conventional-commit generate"
         <div class="env-item reveal">
           <code>AICC_DEBUG</code>
           <span>Enable verbose provider logs</span>
-        </div>
-        <div class="env-item reveal">
-          <code>AICC_MAX_TOKENS</code>
-          <span>Token limit for model responses (default: 512)</span>
         </div>
       </div>
     </section>

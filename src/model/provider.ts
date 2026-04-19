@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createOpencodeClient } from '@opencode-ai/sdk/v2';
+import Anthropic from '@anthropic-ai/sdk';
 import chalk from 'chalk';
 
 const pTag = chalk.dim('[ai-cc]') + chalk.cyan('[provider]');
@@ -32,6 +33,7 @@ export interface Provider {
 
 export const createProvider = (model: string): Provider => {
   if (model.startsWith('claude/')) return new ClaudeCliProvider(model);
+  if (model.startsWith('anthropic/')) return new AnthropicProvider(model);
   return new OpenCodeProvider(model);
 };
 
@@ -382,6 +384,63 @@ export class ClaudeCliProvider implements Provider {
         }
       });
     });
+  }
+}
+
+export class AnthropicProvider implements Provider {
+  private readonly modelID: string;
+  private readonly debug: boolean;
+  private readonly client: Anthropic;
+
+  constructor(model: string = 'anthropic/claude-sonnet-4-6') {
+    const slashIdx = model.indexOf('/');
+    this.modelID = slashIdx !== -1 ? model.slice(slashIdx + 1) : model;
+    this.debug = process.env.AICC_DEBUG === 'true';
+    this.client = new Anthropic();
+  }
+
+  name() {
+    return 'anthropic';
+  }
+
+  warmup(): void {}
+
+  async close(): Promise<void> {}
+
+  async chat(messages: ChatMessage[], opts?: { maxTokens?: number }) {
+    if (process.env.AICC_DEBUG_PROVIDER === 'mock') {
+      return JSON.stringify({
+        commits: [
+          {
+            title: 'chore: mock commit from provider',
+            body: '',
+            score: 80,
+            reasons: ['mock mode'],
+          },
+        ],
+        meta: { splitRecommended: false },
+      });
+    }
+
+    const systemMsg = messages.find((m) => m.role === 'system');
+    const conversationMsgs = messages
+      .filter((m) => m.role !== 'system')
+      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+
+    if (this.debug) pdbg('anthropic call', { model: this.modelID, msgs: conversationMsgs.length });
+
+    const response = await this.client.messages.create({
+      model: this.modelID,
+      max_tokens: opts?.maxTokens ?? 1024,
+      system: systemMsg?.content,
+      messages: conversationMsgs,
+    });
+
+    const text = response.content.find((b) => b.type === 'text')?.text ?? '';
+
+    if (this.debug) pdbg('anthropic response', { chars: text.length });
+
+    return text;
   }
 }
 

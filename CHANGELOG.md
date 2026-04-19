@@ -4,6 +4,17 @@ All notable changes to this project are documented here.
 
 ---
 
+## [Unreleased] — 2026-04-19
+
+<details>
+<summary>🔧 Internal changes (1 commits)</summary>
+
+- style(docs): increase nav max-width and prevent wrap ([#50990cc](https://github.com/kud/ai-conventional-commit-cli/commit/50990cc))
+
+</details>
+
+---
+
 ## [3.5.0] — 2026-04-19
 
 ### ✨ Features

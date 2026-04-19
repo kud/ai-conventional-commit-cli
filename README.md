@@ -11,7 +11,7 @@
 [![npm](https://img.shields.io/npm/v/%40kud%2Fai-conventional-commit-cli?style=flat-square&color=CB3837&logo=npm&logoColor=white)](https://www.npmjs.com/package/@kud/ai-conventional-commit-cli)
 [![MIT](https://img.shields.io/badge/MIT-22C55E?style=flat-square)](LICENSE)
 
-**Opinionated, style-aware AI assistant for crafting and splitting git commits. Provider-agnostic — supports OpenCode-routed models and direct Claude CLI.**
+**Opinionated, style-aware AI assistant for crafting and splitting git commits. Provider-agnostic — supports OpenCode-routed models, direct Claude CLI, and direct Anthropic API.**
 
 [Features](#-features) • [Quick Start](#-quick-start) • [CLI Reference](#-cli-reference) • [Configuration](#-configuration) • [Development](#-development)
 
@@ -24,10 +24,10 @@
 - 🤖 **AI-generated conventional commits** — reads your staged diff and produces a Conventional Commits-compliant message in one command
 - ✂️ **Smart commit splitting** — clusters hunks semantically and proposes multiple atomic commits, each selectively staged and executed
 - 🎨 **Gitmoji style support** — `standard`, `gitmoji` (emoji + type), and `gitmoji-pure` (emoji only) modes out of the box
-- ✏️ **Refine & reword** — iteratively reshape the last commit's wording or reword any past commit using natural language instructions
+- ✏️ **Refine & reword** — iteratively reshape the last commit's wording or reword any past commit using natural-language instructions
 - 🔌 **Plugin system** — register custom `transform` and `validate` hooks to enforce team conventions or post-process candidates
 - 🔒 **Privacy-aware diff filtering** — three tiers (`low` / `medium` / `high`) control exactly how much code is sent to the model
-- 🌐 **Provider-agnostic** — any OpenCode-supported model (`github-copilot/gpt-4.1`, `opencode/big-pickle`, …) or direct Claude CLI (`claude/sonnet`, `claude/opus`) with no separate API key required
+- 🌐 **Provider-agnostic** — any OpenCode-supported model, direct Claude CLI with no API key, or the Anthropic SDK with your own key
 
 ---
 
@@ -65,11 +65,11 @@ ai-conventional-commit split
 **Gitmoji style:**
 
 ```bash
-ai-conventional-commit --style gitmoji
+AICC_STYLE=gitmoji ai-conventional-commit
 # ✨ feat(ui): add dark mode toggle
 ```
 
-**Auto-confirm without prompts (CI/scripting):**
+**Auto-confirm without prompts (CI / scripting):**
 
 ```bash
 AICC_YES=true ai-conventional-commit
@@ -78,7 +78,7 @@ AICC_YES=true ai-conventional-commit
 **Pick and save your preferred model:**
 
 ```bash
-ai-conventional-commit models --interactive --save
+ai-conventional-commit models
 ```
 
 ---
@@ -103,7 +103,7 @@ ai-conventional-commit models --interactive --save
 
 | Flag                                        | Description                                   |
 | ------------------------------------------- | --------------------------------------------- |
-| `--style <standard\|gitmoji\|gitmoji-pure>` | Override the commit style                     |
+| `--style <standard\|gitmoji\|gitmoji-pure>` | Override the commit style for this run        |
 | `--model <provider/name>`                   | Override the active model for this run        |
 | `-y, --yes`                                 | Skip all confirmation prompts                 |
 | `--shorter`                                 | Ask the model to shorten the message (refine) |
@@ -158,21 +158,23 @@ Configuration is resolved via [cosmiconfig](https://github.com/cosmiconfig/cosmi
 
 ### Environment variables
 
-| Variable          | Default                  | Description                                                    |
-| ----------------- | ------------------------ | -------------------------------------------------------------- |
-| `AICC_MODEL`      | `github-copilot/gpt-4.1` | Model string, e.g. `claude/sonnet` or `github-copilot/gpt-4.1` |
-| `AICC_STYLE`      | `standard`               | Commit style: `standard`, `gitmoji`, or `gitmoji-pure`         |
-| `AICC_PRIVACY`    | `low`                    | Diff detail level sent to the model                            |
-| `AICC_YES`        | —                        | Set to `true` to skip all confirmation prompts                 |
-| `AICC_DEBUG`      | —                        | Enable verbose provider logs                                   |
-| `AICC_MAX_TOKENS` | `512`                    | Token limit for model responses                                |
+| Variable            | Default                  | Description                                                         |
+| ------------------- | ------------------------ | ------------------------------------------------------------------- |
+| `AICC_MODEL`        | `github-copilot/gpt-4.1` | Model string, e.g. `claude/sonnet` or `anthropic/claude-sonnet-4-6` |
+| `AICC_STYLE`        | `standard`               | Commit style: `standard`, `gitmoji`, or `gitmoji-pure`              |
+| `AICC_PRIVACY`      | `low`                    | Diff detail level sent to the model                                 |
+| `AICC_YES`          | —                        | Set to `true` to skip all confirmation prompts                      |
+| `AICC_DEBUG`        | —                        | Enable verbose provider logs                                        |
+| `AICC_MAX_TOKENS`   | `512`                    | Token limit for model responses                                     |
+| `ANTHROPIC_API_KEY` | —                        | Required when using `anthropic/*` models                            |
 
 ### Providers and models
 
-| Provider                       | Example model strings                                                               |
-| ------------------------------ | ----------------------------------------------------------------------------------- |
-| OpenCode (any)                 | `github-copilot/gpt-4.1`, `github-copilot/claude-sonnet-4.6`, `opencode/big-pickle` |
-| Claude CLI (no API key needed) | `claude/sonnet`, `claude/opus`, `claude/haiku`                                      |
+| Provider                       | Example model strings                                                               | Auth                        |
+| ------------------------------ | ----------------------------------------------------------------------------------- | --------------------------- |
+| OpenCode (any supported model) | `github-copilot/gpt-4.1`, `github-copilot/claude-sonnet-4.6`, `opencode/big-pickle` | OpenCode session            |
+| Claude CLI (no API key needed) | `claude/sonnet`, `claude/opus`, `claude/haiku`                                      | Claude Code auth            |
+| Anthropic SDK (direct API)     | `anthropic/claude-sonnet-4-6`, `anthropic/claude-opus-4-7`                          | `ANTHROPIC_API_KEY` env var |
 
 ### Gitmoji modes
 
@@ -190,7 +192,7 @@ Configuration is resolved via [cosmiconfig](https://github.com/cosmiconfig/cosmi
 | `medium` | File + hunk hash + line counts + function context only |
 | `high`   | File names + aggregate add/remove counts only          |
 
-Higher privacy reduces stylistic richness. Choose based on your repo's sensitivity.
+Higher privacy reduces stylistic richness. Choose based on your repository's sensitivity.
 
 ### `skipFilePatterns` defaults
 
@@ -262,7 +264,7 @@ Register plugins via the `plugins` array in your `.aiccrc`:
 src/
 ├── index.ts          # CLI entry point (clipanion)
 ├── workflow/         # generate, split, refine, reword flows
-├── providers/        # OpenCode + Claude CLI provider adapters
+├── providers/        # OpenCode, Claude CLI, and Anthropic SDK adapters
 ├── model/            # Model resolution and listing
 ├── config.ts         # Cosmiconfig loader + defaults
 ├── git.ts            # simple-git helpers
@@ -271,6 +273,7 @@ src/
 ├── title-format.ts   # Gitmoji + conventional format helpers
 ├── plugins.ts        # Plugin loader and runner
 ├── prompt.ts         # AI prompt construction
+├── cluster.ts        # Hunk clustering for split
 ├── types.ts          # Shared TypeScript types
 └── sample-plugin/    # Example plugin for reference
 ```
@@ -306,19 +309,20 @@ ai-conventional-commit --help
 
 ## 🏗 Tech Stack
 
-| Package                                                       | Role                                  |
-| ------------------------------------------------------------- | ------------------------------------- |
-| [TypeScript](https://www.typescriptlang.org)                  | Language (ESM, strict)                |
-| [tsup](https://tsup.egoist.dev)                               | ESM bundle compiler                   |
-| [clipanion](https://mael.dev/clipanion/)                      | CLI framework and command routing     |
-| [@opencode-ai/sdk](https://opencode.ai)                       | Provider-agnostic model communication |
-| [@inquirer/prompts](https://github.com/SBoudrias/Inquirer.js) | Interactive terminal prompts          |
-| [simple-git](https://github.com/steveukx/git-js)              | Git operations (diff, stage, commit)  |
-| [cosmiconfig](https://github.com/cosmiconfig/cosmiconfig)     | Config file resolution                |
-| [zod](https://zod.dev)                                        | Runtime schema validation             |
-| [ora](https://github.com/sindresorhus/ora)                    | Terminal spinner                      |
-| [chalk](https://github.com/chalk/chalk)                       | Terminal colour output                |
-| [vitest](https://vitest.dev)                                  | Unit testing                          |
+| Package                                                       | Role                                 |
+| ------------------------------------------------------------- | ------------------------------------ |
+| [TypeScript](https://www.typescriptlang.org)                  | Language (ESM, strict)               |
+| [tsup](https://tsup.egoist.dev)                               | ESM bundle compiler                  |
+| [clipanion](https://mael.dev/clipanion/)                      | CLI framework and command routing    |
+| [@opencode-ai/sdk](https://opencode.ai)                       | OpenCode provider communication      |
+| [@anthropic-ai/sdk](https://github.com/anthropic-ai/sdk-node) | Direct Anthropic API provider        |
+| [@inquirer/prompts](https://github.com/SBoudrias/Inquirer.js) | Interactive terminal prompts         |
+| [simple-git](https://github.com/steveukx/git-js)              | Git operations (diff, stage, commit) |
+| [cosmiconfig](https://github.com/cosmiconfig/cosmiconfig)     | Config file resolution               |
+| [zod](https://zod.dev)                                        | Runtime schema validation            |
+| [ora](https://github.com/sindresorhus/ora)                    | Terminal spinner                     |
+| [chalk](https://github.com/chalk/chalk)                       | Terminal colour output               |
+| [vitest](https://vitest.dev)                                  | Unit testing                         |
 
 ---
 
