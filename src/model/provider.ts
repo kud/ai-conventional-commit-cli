@@ -22,11 +22,18 @@ export interface ChatMessage {
 
 export interface Provider {
   name(): string;
+  warmup(): void;
+  close(): Promise<void>;
   chat(
     messages: ChatMessage[],
     opts?: { maxTokens?: number; temperature?: number },
   ): Promise<string>;
 }
+
+export const createProvider = (model: string): Provider => {
+  if (model.startsWith('claude/')) return new ClaudeCliProvider(model);
+  return new OpenCodeProvider(model);
+};
 
 const killProcessGroup = (pid: number, signal: NodeJS.Signals) => {
   try {
@@ -288,6 +295,93 @@ export class OpenCodeProvider implements Provider {
       if (this.debug) pdbg(chalk.red('call failed'), { error: e.message });
       throw new Error(e.message || 'opencode SDK call failed');
     }
+  }
+}
+
+export class ClaudeCliProvider implements Provider {
+  private readonly modelAlias: string;
+  private readonly debug: boolean;
+
+  constructor(model: string = 'claude/sonnet') {
+    const slashIdx = model.indexOf('/');
+    this.modelAlias = slashIdx !== -1 ? model.slice(slashIdx + 1) : model;
+    this.debug = process.env.AICC_DEBUG === 'true';
+  }
+
+  name() {
+    return 'claude-cli';
+  }
+
+  warmup(): void {}
+
+  async close(): Promise<void> {}
+
+  async chat(messages: ChatMessage[], _opts?: { maxTokens?: number; temperature?: number }) {
+    if (process.env.AICC_DEBUG_PROVIDER === 'mock') {
+      return JSON.stringify({
+        commits: [
+          {
+            title: 'chore: mock commit from provider',
+            body: '',
+            score: 80,
+            reasons: ['mock mode'],
+          },
+        ],
+        meta: { splitRecommended: false },
+      });
+    }
+
+    const prompt = messages.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
+
+    const args = [
+      '-p',
+      '--output-format',
+      'json',
+      '--no-session-persistence',
+      '--model',
+      this.modelAlias,
+    ];
+
+    if (this.debug)
+      pdbg('spawning claude cli', { model: this.modelAlias, promptChars: prompt.length });
+
+    return new Promise<string>((resolve, reject) => {
+      const proc = spawn('claude', args);
+
+      proc.stdin?.write(prompt);
+      proc.stdin?.end();
+
+      let stdout = '';
+      let stderr = '';
+
+      proc.stdout?.on('data', (chunk: Buffer) => {
+        stdout += chunk.toString();
+      });
+      proc.stderr?.on('data', (chunk: Buffer) => {
+        stderr += chunk.toString();
+      });
+
+      proc.on('error', reject);
+      proc.on('exit', (code) => {
+        if (code !== 0) {
+          reject(new Error(`claude cli exited with code ${code}: ${stderr}`));
+          return;
+        }
+        try {
+          const envelope = JSON.parse(stdout);
+          if (envelope.is_error) {
+            reject(new Error(`claude cli error: ${envelope.result}`));
+            return;
+          }
+          const result =
+            typeof envelope.result === 'string' ? envelope.result : JSON.stringify(envelope.result);
+          if (this.debug) pdbg('claude cli response', { resultChars: result.length });
+          resolve(result);
+        } catch (e: any) {
+          reject(new Error(`Failed to parse claude cli output: ${e.message}\n${stdout}`));
+        }
+      });
+    });
   }
 }
 

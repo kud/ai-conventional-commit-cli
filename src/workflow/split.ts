@@ -11,7 +11,7 @@ import {
 import { buildStyleProfile } from '../style.js';
 import { buildGenerationMessages } from '../prompt.js';
 import { clusterHunks } from '../cluster.js';
-import { OpenCodeProvider, extractJSON } from '../model/provider.js';
+import { Provider, createProvider, extractJSON } from '../model/provider.js';
 import { loadPlugins, applyTransforms } from '../plugins.js';
 import { formatCommitTitle } from '../title-format.js';
 import { CommitPlan } from '../types.js';
@@ -31,7 +31,7 @@ import {
 
 export async function runSplit(config: AppConfig, desired?: number) {
   const startedAt = Date.now();
-  const provider = new OpenCodeProvider(config.model);
+  const provider = createProvider(config.model);
   provider.warmup();
   try {
     return await _runSplit(provider, config, desired, startedAt);
@@ -41,7 +41,7 @@ export async function runSplit(config: AppConfig, desired?: number) {
 }
 
 async function _runSplit(
-  provider: OpenCodeProvider,
+  provider: Provider,
   config: AppConfig,
   desired: number | undefined,
   startedAt: number,

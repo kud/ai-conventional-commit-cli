@@ -4,7 +4,7 @@ import inquirer from 'inquirer';
 import { AppConfig } from '../config.js';
 import { buildRefineMessages } from '../prompt.js';
 import { formatCommitTitle } from '../title-format.js';
-import { OpenCodeProvider, extractJSON } from '../model/provider.js';
+import { Provider, createProvider, extractJSON } from '../model/provider.js';
 import { CommitPlan } from '../types.js';
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -90,7 +90,7 @@ export async function runRefine(config: AppConfig, options: any) {
   const phased = createPhasedSpinner(ora);
   const runStep = <T>(label: string, fn: () => Promise<T>) => phased.step(label, fn);
 
-  const provider = new OpenCodeProvider(config.model);
+  const provider = createProvider(config.model);
   try {
     const messages = await runStep('Building prompt', async () =>
       buildRefineMessages({ originalPlan: plan, index, instructions, config }),

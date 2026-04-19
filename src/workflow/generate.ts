@@ -4,7 +4,7 @@ import { AppConfig } from '../config.js';
 import { getStagedFilesAndDiff, getRecentCommitMessages, createCommit } from '../git.js';
 import { buildStyleProfile } from '../style.js';
 import { buildGenerationMessages } from '../prompt.js';
-import { OpenCodeProvider, extractJSON } from '../model/provider.js';
+import { Provider, createProvider, extractJSON } from '../model/provider.js';
 import { isTimeoutError, pickModelOnTimeout } from '../model/picker.js';
 import { loadPlugins, applyTransforms, runValidations } from '../plugins.js';
 import { checkCandidate } from '../guardrails.js';
@@ -38,7 +38,7 @@ export async function runGenerate(config: AppConfig) {
   let model = config.model;
   while (true) {
     const startedAt = Date.now();
-    const provider = new OpenCodeProvider(model);
+    const provider = createProvider(model);
     provider.warmup();
     try {
       await _runGenerate(provider, { ...config, model }, dbg, startedAt);
@@ -59,7 +59,7 @@ export async function runGenerate(config: AppConfig) {
 }
 
 async function _runGenerate(
-  provider: OpenCodeProvider,
+  provider: Provider,
   config: AppConfig,
   dbg: (msg: string, pairs?: Record<string, unknown>) => void,
   startedAt: number,

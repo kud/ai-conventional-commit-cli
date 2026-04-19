@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { AppConfig } from '../config.js';
-import { OpenCodeProvider, extractJSON } from '../model/provider.js';
+import { Provider, createProvider, extractJSON } from '../model/provider.js';
 import { formatCommitTitle } from '../title-format.js';
 import { buildRefineMessages } from '../prompt.js';
 import {
@@ -86,7 +86,7 @@ export async function runReword(config: AppConfig, hash: string) {
     ],
   };
 
-  const provider = new OpenCodeProvider(config.model);
+  const provider = createProvider(config.model);
   const phased = createPhasedSpinner(ora);
   let refined: CommitPlan | null = null;
   try {
