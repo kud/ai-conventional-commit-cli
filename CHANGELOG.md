@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 
 ---
 
-## [Unreleased] — 2026-04-19
+## [3.6.0] — 2026-04-19
 
 <details>
 <summary>🔧 Internal changes (1 commits)</summary>
