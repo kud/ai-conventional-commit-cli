@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
-import { AppConfig } from '../config.js';
+import { AppConfig, getCacheDir } from '../config.js';
 import { buildRefineMessages } from '../prompt.js';
 import { formatCommitTitle } from '../title-format.js';
 import { Provider, createProvider, extractJSON } from '../model/provider.js';
@@ -17,7 +17,7 @@ interface StoredSession {
 }
 
 function loadSession(): StoredSession | null {
-  const path = join('.git/.aicc-cache', 'last-session.json');
+  const path = join(getCacheDir(), 'last-session.json');
   if (!existsSync(path)) return null;
   try {
     return JSON.parse(readFileSync(path, 'utf8'));
@@ -27,7 +27,7 @@ function loadSession(): StoredSession | null {
 }
 
 function saveSession(session: StoredSession) {
-  const dir = '.git/.aicc-cache';
+  const dir = getCacheDir();
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, 'last-session.json'), JSON.stringify(session, null, 2));
 }

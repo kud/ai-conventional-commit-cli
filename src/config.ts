@@ -51,7 +51,7 @@ const DEFAULTS: AppConfig = {
     '**/.turbo/**',
     '**/.cache/**',
   ],
-  cacheDir: '.git/.aicc-cache',
+  cacheDir: getCacheDir(),
   plugins: [],
   verbose: process.env.AICC_VERBOSE === 'true',
   yes: process.env.AICC_YES === 'true',
@@ -59,7 +59,17 @@ const DEFAULTS: AppConfig = {
 
 export function getGlobalConfigPath(): string {
   const base = process.env.XDG_CONFIG_HOME || join(homedir(), '.config');
+  return resolve(base, 'aicc', 'aicc.json');
+}
+
+function getLegacyGlobalConfigPath(): string {
+  const base = process.env.XDG_CONFIG_HOME || join(homedir(), '.config');
   return resolve(base, 'ai-conventional-commit-cli', 'aicc.json');
+}
+
+export function getCacheDir(): string {
+  const base = process.env.XDG_CACHE_HOME || join(homedir(), '.cache');
+  return join(base, 'aicc');
 }
 
 export function saveGlobalConfig(partial: Partial<AppConfig>): string {
@@ -93,12 +103,23 @@ export async function loadConfigDetailed(cwd = process.cwd()): Promise<{
   config: AppConfigWithMeta;
   raw: { defaults: AppConfig; global: Partial<AppConfig>; project: any; env: Partial<AppConfig> };
 }> {
+  const globalPath = getGlobalConfigPath();
+  const legacyPath = getLegacyGlobalConfigPath();
+  const usingLegacy = !existsSync(globalPath) && existsSync(legacyPath);
+  if (usingLegacy) {
+    process.stderr.write(
+      `\n⚠  Deprecated config location: ${legacyPath}\n` +
+        `   Move it to the new location (will be removed in a future version):\n` +
+        `   mv "${legacyPath}" "${globalPath}"\n\n`,
+    );
+  }
+
   // Load global config first (lower precedence than project but above defaults)
   let globalCfg: Partial<AppConfig> = {};
-  const globalPath = getGlobalConfigPath();
-  if (existsSync(globalPath)) {
+  const resolvedGlobalPath = usingLegacy ? legacyPath : globalPath;
+  if (existsSync(resolvedGlobalPath)) {
     try {
-      globalCfg = JSON.parse(readFileSync(globalPath, 'utf8')) || {};
+      globalCfg = JSON.parse(readFileSync(resolvedGlobalPath, 'utf8')) || {};
     } catch (e) {
       if (process.env.AICC_VERBOSE === 'true') {
         console.error('[ai-cc] Failed to parse global config, ignoring.');

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import ora from 'ora';
-import { AppConfig } from '../config.js';
+import { AppConfig, getCacheDir } from '../config.js';
 import { getStagedFilesAndDiff, getRecentCommitMessages, createCommit } from '../git.js';
 import { buildStyleProfile } from '../style.js';
 import { buildGenerationMessages } from '../prompt.js';
@@ -210,7 +210,7 @@ async function _runGenerate(
 }
 
 function saveSession(data: any) {
-  const dir = '.git/.aicc-cache';
+  const dir = getCacheDir();
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, 'last-session.json'), JSON.stringify(data, null, 2));
 }

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import ora from 'ora';
-import { AppConfig } from '../config.js';
+import { AppConfig, getCacheDir } from '../config.js';
 import {
   getStagedFilesAndDiff,
   getRecentCommitMessages,
@@ -226,7 +226,7 @@ async function _runSplit(
 }
 
 function saveSession(data: any) {
-  const dir = '.git/.aicc-cache';
+  const dir = getCacheDir();
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, 'last-session.json'), JSON.stringify(data, null, 2));
 }
