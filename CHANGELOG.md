@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+- **config**: move config and cache to `~/.config/aicc` and `~/.cache/aicc` ([7d18d5f](https://github.com/kud/ai-conventional-commit-cli/commit/7d18d5f))
+
+  Renames config dir from `ai-conventional-commit-cli` → `aicc` for consistency with the established short-form (env vars, cosmiconfig key). Cache moves from `.git/.aicc-cache` → `~/.cache/aicc`, fixing a crash in git worktrees where `.git` is a file rather than a directory. Existing users see a deprecation warning with the exact `mv` command to migrate; the old path remains readable until removed in a future version.
+
+---
+
 All notable changes to this project are documented here.
 
 ---
