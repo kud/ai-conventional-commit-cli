@@ -31,7 +31,23 @@ export interface Provider {
   ): Promise<string>;
 }
 
+export const validateModel = (model: string): void => {
+  if (!model.includes('/')) {
+    throw new Error(
+      `Invalid model format "${model}". Expected "provider/model" (e.g. github-copilot/gpt-4.1, anthropic/claude-sonnet-4-6, claude/sonnet).`,
+    );
+  }
+
+  if (model.startsWith('anthropic/') && !process.env.ANTHROPIC_API_KEY) {
+    throw new Error(
+      `Model "${model}" uses the Anthropic SDK but ANTHROPIC_API_KEY is not set.\n` +
+        `Set it with: export ANTHROPIC_API_KEY=sk-ant-...`,
+    );
+  }
+};
+
 export const createProvider = (model: string): Provider => {
+  validateModel(model);
   if (model.startsWith('claude/')) return new ClaudeCliProvider(model);
   if (model.startsWith('anthropic/')) return new AnthropicProvider(model);
   return new OpenCodeProvider(model);
@@ -92,6 +108,7 @@ export class OpenCodeProvider implements Provider {
   private warmPromise: Promise<WarmContext> | null = null;
   private ac = new AbortController();
   private readonly timeoutMs: number;
+  private readonly startupTimeoutMs: number;
   private readonly debug: boolean;
   private readonly exitHandler: () => void;
   private syncClose: (() => void) | null = null;
@@ -99,6 +116,7 @@ export class OpenCodeProvider implements Provider {
 
   constructor(private model: string = 'github-copilot/gpt-4.1') {
     this.timeoutMs = parseInt(process.env.AICC_MODEL_TIMEOUT_MS || '120000', 10);
+    this.startupTimeoutMs = parseInt(process.env.AICC_OPENCODE_STARTUP_TIMEOUT_MS || '30000', 10);
     this.debug = process.env.AICC_DEBUG === 'true';
     setTimeout(() => this.ac.abort(), this.timeoutMs);
 
@@ -168,8 +186,14 @@ export class OpenCodeProvider implements Provider {
 
     const url = await new Promise<string>((resolve, reject) => {
       const id = setTimeout(
-        () => reject(new Error(`Timeout waiting for opencode server after 10s`)),
-        10_000,
+        () =>
+          reject(
+            new Error(
+              `Timeout waiting for opencode server after ${this.startupTimeoutMs / 1000}s. ` +
+                `Set AICC_OPENCODE_STARTUP_TIMEOUT_MS to increase it (e.g. export AICC_OPENCODE_STARTUP_TIMEOUT_MS=60000).`,
+            ),
+          ),
+        this.startupTimeoutMs,
       );
       let output = '';
       proc.stdout?.on('data', (chunk: Buffer) => {
