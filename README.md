@@ -123,7 +123,7 @@ ai-conventional-commit reword HEAD
 ai-conventional-commit reword <hash>
 
 # With style and model overrides
-ai-conventional-commit reword <hash> --style gitmoji --model github-copilot/gpt-4.1
+ai-conventional-commit reword <hash> --style gitmoji --model github-copilot/claude-sonnet-4.6
 ```
 
 > Merge commits (multiple parents) are rejected. Title formatting — gitmoji, normalisation — matches all other commands.
@@ -134,7 +134,7 @@ ai-conventional-commit reword <hash> --style gitmoji --model github-copilot/gpt-
 
 Configuration is resolved via [cosmiconfig](https://github.com/cosmiconfig/cosmiconfig) in the following precedence order (later wins):
 
-1. Built-in defaults (`github-copilot/gpt-4.1`)
+1. Built-in defaults (`github-copilot/claude-sonnet-4.6`)
 2. `OPENCODE_FREE_MODEL` env var
 3. Global config — `~/.config/ai-conventional-commit-cli/aicc.json`
 4. Project config — `.aiccrc` / `.aiccrc.json` at the repo root
@@ -145,7 +145,7 @@ Configuration is resolved via [cosmiconfig](https://github.com/cosmiconfig/cosmi
 
 ```json
 {
-  "model": "github-copilot/gpt-4.1",
+  "model": "github-copilot/claude-sonnet-4.6",
   "privacy": "low",
   "style": "gitmoji",
   "styleSamples": 120,
@@ -158,23 +158,23 @@ Configuration is resolved via [cosmiconfig](https://github.com/cosmiconfig/cosmi
 
 ### Environment variables
 
-| Variable            | Default                  | Description                                                         |
-| ------------------- | ------------------------ | ------------------------------------------------------------------- |
-| `AICC_MODEL`        | `github-copilot/gpt-4.1` | Model string, e.g. `claude/sonnet` or `anthropic/claude-sonnet-4-6` |
-| `AICC_STYLE`        | `standard`               | Commit style: `standard`, `gitmoji`, or `gitmoji-pure`              |
-| `AICC_PRIVACY`      | `low`                    | Diff detail level sent to the model                                 |
-| `AICC_YES`          | —                        | Set to `true` to skip all confirmation prompts                      |
-| `AICC_DEBUG`        | —                        | Enable verbose provider logs                                        |
-| `AICC_MAX_TOKENS`   | `512`                    | Token limit for model responses                                     |
-| `ANTHROPIC_API_KEY` | —                        | Required when using `anthropic/*` models                            |
+| Variable            | Default                            | Description                                                         |
+| ------------------- | ---------------------------------- | ------------------------------------------------------------------- |
+| `AICC_MODEL`        | `github-copilot/claude-sonnet-4.6` | Model string, e.g. `claude/sonnet` or `anthropic/claude-sonnet-4-6` |
+| `AICC_STYLE`        | `standard`                         | Commit style: `standard`, `gitmoji`, or `gitmoji-pure`              |
+| `AICC_PRIVACY`      | `low`                              | Diff detail level sent to the model                                 |
+| `AICC_YES`          | —                                  | Set to `true` to skip all confirmation prompts                      |
+| `AICC_DEBUG`        | —                                  | Enable verbose provider logs                                        |
+| `AICC_MAX_TOKENS`   | `512`                              | Token limit for model responses                                     |
+| `ANTHROPIC_API_KEY` | —                                  | Required when using `anthropic/*` models                            |
 
 ### Providers and models
 
-| Provider                       | Example model strings                                                               | Auth                        |
-| ------------------------------ | ----------------------------------------------------------------------------------- | --------------------------- |
-| OpenCode (any supported model) | `github-copilot/gpt-4.1`, `github-copilot/claude-sonnet-4.6`, `opencode/big-pickle` | OpenCode session            |
-| Claude CLI (no API key needed) | `claude/sonnet`, `claude/opus`, `claude/haiku`                                      | Claude Code auth            |
-| Anthropic SDK (direct API)     | `anthropic/claude-sonnet-4-6`, `anthropic/claude-opus-4-7`                          | `ANTHROPIC_API_KEY` env var |
+| Provider                       | Example model strings                                                                         | Auth                        |
+| ------------------------------ | --------------------------------------------------------------------------------------------- | --------------------------- |
+| OpenCode (any supported model) | `github-copilot/claude-sonnet-4.6`, `github-copilot/claude-sonnet-4.6`, `opencode/big-pickle` | OpenCode session            |
+| Claude CLI (no API key needed) | `claude/sonnet`, `claude/opus`, `claude/haiku`                                                | Claude Code auth            |
+| Anthropic SDK (direct API)     | `anthropic/claude-sonnet-4-6`, `anthropic/claude-opus-4-7`                                    | `ANTHROPIC_API_KEY` env var |
 
 ### Gitmoji modes
 

@@ -32,7 +32,7 @@ export interface Provider {
 export class GitHubCopilotProvider implements Provider {
   constructor(
     private token: string,
-    private model = 'github-copilot/gpt-4.1',
+    private model = 'github-copilot/claude-sonnet-4.6',
   ) {}
   name() {
     return 'github-copilot';

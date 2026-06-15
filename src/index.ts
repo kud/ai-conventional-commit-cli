@@ -37,7 +37,7 @@ class RootCommand extends Command {
 
   model = Option.String('-m,--model', {
     required: false,
-    description: 'Model provider/name (e.g. github-copilot/gpt-4.1)',
+    description: 'Model provider/name (e.g. github-copilot/claude-sonnet-4.6)',
   });
 
   yes = Option.Boolean('-y,--yes', false, {
@@ -63,7 +63,7 @@ class GenerateCommand extends Command {
       ['Force gitmoji style', 'ai-conventional-commit generate --style gitmoji'],
       [
         'Override model for this run',
-        'ai-conventional-commit generate --model github-copilot/gpt-4.1',
+        'ai-conventional-commit generate --model github-copilot/claude-sonnet-4.6',
       ],
     ],
   });
@@ -75,7 +75,7 @@ class GenerateCommand extends Command {
 
   model = Option.String('-m,--model', {
     required: false,
-    description: 'Model provider/name (e.g. github-copilot/gpt-4.1)',
+    description: 'Model provider/name (e.g. github-copilot/claude-sonnet-4.6)',
   });
 
   yes = Option.Boolean('-y,--yes', false, {
@@ -327,7 +327,10 @@ class ConfigSetCommand extends Command {
     details:
       'Writes to the global aicc.json (XDG config). Accepts JSON for complex values. Only allowed keys: model, style, privacy, styleSamples, maxTokens, verbose, yes.',
     examples: [
-      ['Set default model', 'ai-conventional-commit config set model github-copilot/gpt-4.1'],
+      [
+        'Set default model',
+        'ai-conventional-commit config set model github-copilot/claude-sonnet-4.6',
+      ],
       ['Set style to gitmoji', 'ai-conventional-commit config set style gitmoji'],
       ['Enable verbose mode', 'ai-conventional-commit config set verbose true'],
       ['Auto-confirm commits', 'ai-conventional-commit config set yes true'],

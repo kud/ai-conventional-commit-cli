@@ -19,7 +19,8 @@ export interface AppConfig {
 }
 
 const DEFAULTS: AppConfig = {
-  model: process.env.AICC_MODEL || process.env.OPENCODE_FREE_MODEL || 'github-copilot/gpt-4.1',
+  model:
+    process.env.AICC_MODEL || process.env.OPENCODE_FREE_MODEL || 'github-copilot/claude-sonnet-4.6',
 
   privacy: (process.env.AICC_PRIVACY as any) || 'low',
   style: (process.env.AICC_STYLE as any) || 'standard',

@@ -34,7 +34,7 @@ export interface Provider {
 export const validateModel = (model: string): void => {
   if (!model.includes('/')) {
     throw new Error(
-      `Invalid model format "${model}". Expected "provider/model" (e.g. github-copilot/gpt-4.1, anthropic/claude-sonnet-4-6, claude/sonnet).`,
+      `Invalid model format "${model}". Expected "provider/model" (e.g. github-copilot/claude-sonnet-4.6, anthropic/claude-sonnet-4-6, claude/sonnet).`,
     );
   }
 
@@ -76,13 +76,6 @@ const gracefulKill = (proc: ChildProcess): Promise<void> => {
       proc.off('exit', onExit);
       proc.once('exit', () => resolve());
       killProcessGroup(pgid, 'SIGKILL');
-      console.warn(
-        chalk.yellow('\n⚠ [ai-cc]') +
-          ' opencode server did not shut down cleanly and had to be force-killed.' +
-          chalk.dim(
-            ' Please report this at https://github.com/kud/ai-conventional-commit-cli/issues/new',
-          ),
-      );
     }, 1000);
   });
 };
@@ -114,7 +107,7 @@ export class OpenCodeProvider implements Provider {
   private syncClose: (() => void) | null = null;
   private serverProc: ChildProcess | null = null;
 
-  constructor(private model: string = 'github-copilot/gpt-4.1') {
+  constructor(private model: string = 'github-copilot/claude-sonnet-4.6') {
     this.timeoutMs = parseInt(process.env.AICC_MODEL_TIMEOUT_MS || '120000', 10);
     this.startupTimeoutMs = parseInt(process.env.AICC_OPENCODE_STARTUP_TIMEOUT_MS || '30000', 10);
     this.debug = process.env.AICC_DEBUG === 'true';
@@ -303,13 +296,43 @@ export class OpenCodeProvider implements Provider {
           promptChars: fullPrompt.length,
         });
         pdbg('result.data', { json: JSON.stringify(result.data, null, 2) });
+        if (result.error) pdbg('result.error', { json: JSON.stringify(result.error, null, 2) });
       }
 
-      const structured = (result.data as any)?.info?.structured;
+      if (!result.data) {
+        const error = result.error as any;
+        const errMsg =
+          error?.data?.message ?? error?.message ?? JSON.stringify(error) ?? 'no data returned';
+        const errRef = error?.data?.ref;
+        throw new Error(`opencode prompt failed: ${errMsg}${errRef ? ` (ref: ${errRef})` : ''}`);
+      }
+
+      const info = (result.data as any)?.info;
+      const structured = info?.structured;
+
       if (structured == null) {
-        const err = (result.data as any)?.info?.error;
+        if (this.debug) pdbg('no structured output', { info: JSON.stringify(info, null, 2) });
+
+        const err = info?.error;
+        if (err) throw new Error(`Model error: ${JSON.stringify(err)}`);
+
+        // Some models return text instead of structured output — try to extract JSON from it.
+        const textPart: string | undefined = Array.isArray(info?.parts)
+          ? info.parts.find((p: any) => p.type === 'text')?.text
+          : undefined;
+        if (textPart) {
+          if (this.debug)
+            pdbg('no structured field — falling back to text extraction', {
+              chars: textPart.length,
+            });
+          return textPart;
+        }
+
         throw new Error(
-          err ? `Model error: ${JSON.stringify(err)}` : 'No structured output in response',
+          'No structured output in response.' +
+            (this.debug
+              ? ` result.data=${JSON.stringify(result.data)}`
+              : ' Re-run with AICC_DEBUG=true for the full response.'),
         );
       }
 
