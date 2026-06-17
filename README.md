@@ -11,7 +11,7 @@
 [![npm](https://img.shields.io/npm/v/%40kud%2Fai-conventional-commit-cli?style=flat-square&color=CB3837&logo=npm&logoColor=white)](https://www.npmjs.com/package/@kud/ai-conventional-commit-cli)
 [![MIT](https://img.shields.io/badge/MIT-22C55E?style=flat-square)](LICENSE)
 
-**Opinionated, style-aware AI assistant for crafting and splitting git commits. Provider-agnostic — supports OpenCode-routed models, direct Claude CLI, and direct Anthropic API.**
+**Style-aware AI assistant for crafting and splitting git commits.**
 
 <a href="https://kud.io/projects/ai-conventional-commit-cli">Website</a> · <a href="https://kud.io/projects/ai-conventional-commit-cli/docs">Documentation</a>
 
@@ -19,31 +19,20 @@
 
 ---
 
-An opinionated, style-aware AI assistant for crafting and splitting git commits. Provider-agnostic — supports OpenCode-routed models, direct Claude CLI, and direct Anthropic API.
+Reads your staged diff, learns your repo's commit style, and produces Conventional Commits-compliant messages — one polished commit, or a cleanly split series. Provider-agnostic: OpenCode-routed models, the Claude CLI, or the Anthropic API.
 
-## ✨ Features
+- 🤖 **AI-generated conventional commits** from your staged diff
+- ✂️ **Smart commit splitting** into atomic, selectively-staged commits
+- 🎨 **Gitmoji styles** — `standard`, `gitmoji`, and `gitmoji-pure`
+- 🔒 **Privacy-aware diff filtering** — three tiers control what's sent to the model
 
-- 🤖 **AI-generated conventional commits** — reads your staged diff and produces a Conventional Commits-compliant message in one command
-- ✂️ **Smart commit splitting** — clusters hunks semantically and proposes multiple atomic commits, each selectively staged and executed
-- 🎨 **Gitmoji style support** — `standard`, `gitmoji` (emoji + type), and `gitmoji-pure` (emoji only) modes out of the box
-- ✏️ **Refine & reword** — iteratively reshape the last commit's wording or reword any past commit using natural-language instructions
-- 🔌 **Plugin system** — register custom `transform` and `validate` hooks to enforce team conventions or post-process candidates
-- 🔒 **Privacy-aware diff filtering** — three tiers (`low` / `medium` / `high`) control exactly how much code is sent to the model
-- 🌐 **Provider-agnostic** — any OpenCode-supported model, direct Claude CLI with no API key, or the Anthropic SDK with your own key
-
-## 🚀 Install
+## Install
 
 ```bash
 npm install -g @kud/ai-conventional-commit-cli
 ```
 
-## 📖 Documentation
-
-Full usage, options, and examples live on the docs site:
-
-**→ [kud.io/projects/ai-conventional-commit-cli/docs](https://kud.io/projects/ai-conventional-commit-cli/docs)**
-
-## 🔧 Development
+## Development
 
 ```bash
 git clone https://github.com/kud/ai-conventional-commit-cli.git
@@ -62,3 +51,7 @@ ai-conventional-commit --help
 ## License
 
 MIT © [kud](https://github.com/kud) — Made with ❤️
+
+---
+
+📚 **Full documentation → https://kud.io/projects/ai-conventional-commit-cli/docs**
