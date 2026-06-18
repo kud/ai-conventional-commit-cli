@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
-import { AppConfig } from '../config.js';
-import { Provider, createProvider, extractJSON } from '../model/provider.js';
+import type { AppConfig } from '../config.js';
+import { createProvider, extractJSON } from '../model/provider.js';
 import { formatCommitTitle } from '../title-format.js';
 import { buildRefineMessages } from '../prompt.js';
 import {
@@ -15,7 +15,7 @@ import {
 } from './ui.js';
 import inquirer from 'inquirer';
 import { simpleGit } from 'simple-git';
-import { CommitPlan } from '../types.js';
+import type { CommitPlan } from '../types.js';
 
 const git = simpleGit();
 
@@ -88,7 +88,7 @@ export async function runReword(config: AppConfig, hash: string) {
 
   const provider = createProvider(config.model);
   const phased = createPhasedSpinner(ora);
-  let refined: CommitPlan | null = null;
+  let refined: CommitPlan | null;
   try {
     phased.phase('Preparing prompt');
     const messages = buildRefineMessages({
@@ -185,7 +185,11 @@ export async function runReword(config: AppConfig, hash: string) {
   let mergesRange = '';
   try {
     mergesRange = (await git.raw(['rev-list', '--merges', `${resolvedHash}..HEAD`])).trim();
-  } catch {}
+  } catch (e: any) {
+    if (config.verbose) {
+      console.error('[ai-cc] Merge detection failed; assuming none: ' + (e?.message || e));
+    }
+  }
 
   if (mergesRange) {
     sectionTitle('Unsafe automatic rewrite');

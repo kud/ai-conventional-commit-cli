@@ -81,7 +81,7 @@ export function saveGlobalConfig(partial: Partial<AppConfig>): string {
   if (existsSync(filePath)) {
     try {
       existing = JSON.parse(readFileSync(filePath, 'utf8')) || {};
-    } catch (e) {
+    } catch {
       if (process.env.AICC_VERBOSE === 'true') {
         console.error('[ai-cc] Failed to parse existing global config, overwriting.');
       }
@@ -121,7 +121,7 @@ export async function loadConfigDetailed(cwd = process.cwd()): Promise<{
   if (existsSync(resolvedGlobalPath)) {
     try {
       globalCfg = JSON.parse(readFileSync(resolvedGlobalPath, 'utf8')) || {};
-    } catch (e) {
+    } catch {
       if (process.env.AICC_VERBOSE === 'true') {
         console.error('[ai-cc] Failed to parse global config, ignoring.');
       }
@@ -134,14 +134,27 @@ export async function loadConfigDetailed(cwd = process.cwd()): Promise<{
 
   // Build env overrides explicitly (highest precedence before CLI runtime overrides)
   const envCfg: Partial<AppConfig> = {};
+  const positiveIntEnv = (name: string): number | undefined => {
+    const raw = process.env[name];
+    if (!raw) return undefined;
+    const parsed = parseInt(raw, 10);
+    if (Number.isNaN(parsed) || parsed <= 0) {
+      if (process.env.AICC_VERBOSE === 'true') {
+        console.error(`[ai-cc] Ignoring invalid ${name}="${raw}" (expected a positive integer).`);
+      }
+      return undefined;
+    }
+    return parsed;
+  };
   if (process.env.AICC_MODEL) envCfg.model = process.env.AICC_MODEL;
   if (process.env.AICC_PRIVACY) envCfg.privacy = process.env.AICC_PRIVACY as any;
   if (process.env.AICC_STYLE) envCfg.style = process.env.AICC_STYLE as any;
-  if (process.env.AICC_STYLE_SAMPLES)
-    envCfg.styleSamples = parseInt(process.env.AICC_STYLE_SAMPLES, 10);
-  if (process.env.AICC_MAX_TOKENS) envCfg.maxTokens = parseInt(process.env.AICC_MAX_TOKENS, 10);
-  if (process.env.AICC_MAX_FILE_LINES)
-    envCfg.maxFileLines = parseInt(process.env.AICC_MAX_FILE_LINES, 10);
+  const styleSamples = positiveIntEnv('AICC_STYLE_SAMPLES');
+  if (styleSamples !== undefined) envCfg.styleSamples = styleSamples;
+  const maxTokens = positiveIntEnv('AICC_MAX_TOKENS');
+  if (maxTokens !== undefined) envCfg.maxTokens = maxTokens;
+  const maxFileLines = positiveIntEnv('AICC_MAX_FILE_LINES');
+  if (maxFileLines !== undefined) envCfg.maxFileLines = maxFileLines;
   if (process.env.AICC_VERBOSE) envCfg.verbose = process.env.AICC_VERBOSE === 'true';
   if (process.env.AICC_YES) envCfg.yes = process.env.AICC_YES === 'true';
 

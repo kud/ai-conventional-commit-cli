@@ -83,7 +83,10 @@ const gracefulKill = (proc: ChildProcess): Promise<void> => {
 function findFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createServer();
-    server.on('error', reject);
+    server.on('error', (err) => {
+      server.close();
+      reject(err);
+    });
     server.listen(0, '127.0.0.1', () => {
       const port = (server.address() as AddressInfo).port;
       server.close(() => resolve(port));
@@ -106,12 +109,14 @@ export class OpenCodeProvider implements Provider {
   private readonly exitHandler: () => void;
   private syncClose: (() => void) | null = null;
   private serverProc: ChildProcess | null = null;
+  private abortTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private model: string = 'github-copilot/claude-sonnet-4.6') {
     this.timeoutMs = parseInt(process.env.AICC_MODEL_TIMEOUT_MS || '120000', 10);
     this.startupTimeoutMs = parseInt(process.env.AICC_OPENCODE_STARTUP_TIMEOUT_MS || '30000', 10);
     this.debug = process.env.AICC_DEBUG === 'true';
-    setTimeout(() => this.ac.abort(), this.timeoutMs);
+    this.abortTimer = setTimeout(() => this.ac.abort(), this.timeoutMs);
+    this.abortTimer.unref?.();
 
     this.exitHandler = () => {
       this.syncClose?.();
@@ -124,6 +129,10 @@ export class OpenCodeProvider implements Provider {
 
   private async _closeServer(): Promise<void> {
     try {
+      if (this.abortTimer) {
+        clearTimeout(this.abortTimer);
+        this.abortTimer = null;
+      }
       if (this.serverProc) {
         await gracefulKill(this.serverProc);
         this.serverProc = null;
@@ -148,6 +157,10 @@ export class OpenCodeProvider implements Provider {
   warmup(): void {
     if (!this.warmPromise) {
       this.warmPromise = this._startServer();
+      // Mark the promise handled so an early startup failure never surfaces as an
+      // unhandled rejection. The real error still propagates to chat()/close()
+      // callers that await this.warmPromise.
+      this.warmPromise.catch(() => {});
     }
   }
 
@@ -339,10 +352,10 @@ export class OpenCodeProvider implements Provider {
       return JSON.stringify(structured);
     } catch (e: any) {
       if (this.ac.signal.aborted) {
-        throw new Error(`Model call timed out after ${this.timeoutMs}ms`);
+        throw new Error(`Model call timed out after ${this.timeoutMs}ms`, { cause: e });
       }
       if (this.debug) pdbg(chalk.red('call failed'), { error: e.message });
-      throw new Error(e.message || 'opencode SDK call failed');
+      throw new Error(e.message || 'opencode SDK call failed', { cause: e });
     }
   }
 }

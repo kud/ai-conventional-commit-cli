@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
-import { AppConfig, getCacheDir } from '../config.js';
+import type { AppConfig } from '../config.js';
+import { getCacheDir } from '../config.js';
 import {
   getStagedFilesAndDiff,
   getRecentCommitMessages,
@@ -11,10 +12,11 @@ import {
 import { buildStyleProfile } from '../style.js';
 import { buildGenerationMessages } from '../prompt.js';
 import { clusterHunks } from '../cluster.js';
-import { Provider, createProvider, extractJSON } from '../model/provider.js';
+import type { Provider } from '../model/provider.js';
+import { createProvider, extractJSON } from '../model/provider.js';
 import { loadPlugins, applyTransforms } from '../plugins.js';
 import { formatCommitTitle } from '../title-format.js';
-import { CommitPlan } from '../types.js';
+import type { CommitPlan } from '../types.js';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { select } from '@inquirer/prompts';
@@ -199,13 +201,11 @@ async function _runSplit(
     const buckets: string[][] = candidates.map(() => []);
     allChangedFiles.forEach((f, i) => buckets[i % buckets.length].push(f));
     candidates = candidates.map((c, i) => ({ ...c, files: buckets[i] }));
-    useFiles = true;
   }
 
   // Commit loop with selective staging
   let success = 0;
-  // Snapshot working tree staged files already consumed implicitly; we re-stage subsets each iteration.
-  // fullFiles snapshot not currently used; could restore later
+  const failed: string[] = [];
   for (const candidate of candidates) {
     // reset index (keep worktree)
     await resetIndex();
@@ -214,9 +214,21 @@ async function _runSplit(
     try {
       await createCommit(candidate.title, candidate.body);
       success++;
-    } catch (e) {
-      // skip on failure, continue
+    } catch (e: any) {
+      failed.push(candidate.title);
+      if (config.verbose) {
+        console.error(`[ai-cc] Commit failed for "${candidate.title}": ${e?.message || e}`);
+      }
     }
+  }
+  if (failed.length) {
+    borderLine();
+    console.error(
+      chalk.yellow(
+        `${failed.length} commit(s) failed and were skipped (files remain staged/unstaged): ` +
+          failed.join(', '),
+      ),
+    );
   }
   // After loop, ensure no leftover unstaged changes (stage and append to last commit?) – choose to leave them unstaged so user can run again.
   borderLine();
