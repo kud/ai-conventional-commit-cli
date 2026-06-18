@@ -1,12 +1,22 @@
 # Changelog
 
-## Unreleased
+## [3.8.0] — 2026-06-18
 
-### Features
+A reliability, security, and tooling pass — no changes to everyday usage.
 
-- **config**: move config and cache to `~/.config/aicc` and `~/.cache/aicc` ([7d18d5f](https://github.com/kud/ai-conventional-commit-cli/commit/7d18d5f))
+### Highlights
 
-  Renames config dir from `ai-conventional-commit-cli` → `aicc` for consistency with the established short-form (env vars, cosmiconfig key). Cache moves from `.git/.aicc-cache` → `~/.cache/aicc`, fixing a crash in git worktrees where `.git` is a file rather than a directory. Existing users see a deprecation warning with the exact `mv` command to migrate; the old path remains readable until removed in a future version.
+- **More dependable model sessions.** The opencode provider no longer leaks its startup timer or hangs the process after a commit, and a flaky server start can no longer crash the CLI with an unhandled error. Failed commits during a split and merge-detection problems are now surfaced instead of silently dropped. ([312f49a](https://github.com/kud/ai-conventional-commit-cli/commit/312f49a))
+- **Safer configuration.** A typo in a numeric setting such as `AICC_MAX_TOKENS` now falls back to the default with a warning instead of quietly breaking. ([312f49a](https://github.com/kud/ai-conventional-commit-cli/commit/312f49a))
+- **Config moved to `~/.config/aicc` and `~/.cache/aicc`.** Fixes a crash in git worktrees where `.git` is a file rather than a directory; the old paths still work with a deprecation notice until removed in a future version. ([7d18d5f](https://github.com/kud/ai-conventional-commit-cli/commit/7d18d5f))
+
+### Security
+
+- Updated the opencode and Anthropic SDKs (clearing a published advisory) and refreshed the toolchain. `npm audit` dropped from 13 vulnerabilities to 1 (dev-only). ([0a2f873](https://github.com/kud/ai-conventional-commit-cli/commit/0a2f873))
+
+### Internal
+
+- Restored linting by migrating to the ESLint 10 flat config, and hardened the test suite so it no longer reads or deletes your real config. ([19cc526](https://github.com/kud/ai-conventional-commit-cli/commit/19cc526), [515e095](https://github.com/kud/ai-conventional-commit-cli/commit/515e095))
 
 ---
 
