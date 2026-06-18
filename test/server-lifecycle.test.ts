@@ -22,7 +22,16 @@ const isProcessAlive = (pid: number): boolean => {
   }
 };
 
-describe('opencode server lifecycle', () => {
+const hasOpencode = (): boolean => {
+  try {
+    execSync('command -v opencode', { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+describe.skipIf(!hasOpencode())('opencode server lifecycle', () => {
   it('provider.close() kills the server and all its children', async () => {
     const { OpenCodeProvider } = await import('../src/model/provider.js');
     const provider = new OpenCodeProvider();

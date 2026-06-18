@@ -1,28 +1,27 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { loadConfigDetailed, saveGlobalConfig, getGlobalConfigPath } from '../src/config.js';
-import { existsSync, readFileSync } from 'node:fs';
+import { loadConfigDetailed, saveGlobalConfig } from '../src/config.js';
 
 const tmpDir = join(process.cwd(), 'tmp-config-precedence');
-
-function resetGlobal() {
-  const path = getGlobalConfigPath();
-  try {
-    if (existsSync(path)) rmSync(path);
-  } catch {}
-}
+// Isolate the global config under a temp XDG_CONFIG_HOME so the test never
+// reads or deletes the developer's real ~/.config/aicc/aicc.json.
+const tmpConfigHome = join(tmpDir, 'xdg-config');
+let originalXdg: string | undefined;
 
 describe('config precedence', () => {
   beforeAll(() => {
-    resetGlobal();
+    originalXdg = process.env.XDG_CONFIG_HOME;
+    process.env.XDG_CONFIG_HOME = tmpConfigHome;
+    mkdirSync(tmpConfigHome, { recursive: true });
     if (!existsSync(tmpDir)) mkdirSync(tmpDir, { recursive: true });
   });
   afterAll(() => {
+    if (originalXdg === undefined) delete process.env.XDG_CONFIG_HOME;
+    else process.env.XDG_CONFIG_HOME = originalXdg;
     try {
       rmSync(tmpDir, { recursive: true, force: true });
     } catch {}
-    resetGlobal();
   });
 
   it('defaults apply when nothing else set', async () => {
