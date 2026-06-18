@@ -1,4 +1,4 @@
-import { Plugin } from '../../src/types.js';
+import type { Plugin } from '../../src/types.js';
 
 const examplePlugin: Plugin = {
   name: 'example-plugin',

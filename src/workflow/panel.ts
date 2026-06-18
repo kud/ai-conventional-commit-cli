@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import stripAnsi from 'strip-ansi';
 
 export interface PanelOptions {
   title?: string;
@@ -27,9 +28,4 @@ export function buildPanel(opts: PanelOptions): string {
 
 export function renderPanel(opts: PanelOptions) {
   process.stdout.write(buildPanel(opts) + '\n');
-}
-
-function stripAnsi(str: string) {
-  // minimal ansi stripper for width calc
-  return str.replace(/\u001B\[[0-9;]*m/g, '');
 }

@@ -1,4 +1,4 @@
-import { FileDiff, DiffHunk } from './types.js';
+import type { FileDiff, DiffHunk } from './types.js';
 
 export interface Cluster {
   id: string;

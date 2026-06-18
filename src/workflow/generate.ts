@@ -1,16 +1,17 @@
 import chalk from 'chalk';
 import ora from 'ora';
-import { AppConfig, getCacheDir } from '../config.js';
+import type { AppConfig } from '../config.js';
+import { getCacheDir } from '../config.js';
 import { getStagedFilesAndDiff, getRecentCommitMessages, createCommit } from '../git.js';
 import { buildStyleProfile } from '../style.js';
 import { buildGenerationMessages } from '../prompt.js';
-import { Provider, createProvider, extractJSON } from '../model/provider.js';
+import type { Provider } from '../model/provider.js';
+import { createProvider, extractJSON } from '../model/provider.js';
 import { isTimeoutError, pickModelOnTimeout } from '../model/picker.js';
 import { loadPlugins, applyTransforms, runValidations } from '../plugins.js';
 import { checkCandidate } from '../guardrails.js';
 import { formatCommitTitle } from '../title-format.js';
 import { truncateMiddle } from './util.js';
-import { CommitCandidate, CommitPlan } from '../types.js';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { select } from '@inquirer/prompts';
@@ -135,11 +136,6 @@ async function _runGenerate(
   const phased = createPhasedSpinner(ora);
   const runStep = <T>(label: string, fn: () => Promise<T>) => phased.step(label, fn);
 
-  let messages: any;
-  let raw: string | undefined;
-  let plan: CommitPlan | undefined;
-  let candidates: CommitCandidate[] = [];
-
   const [style, plugins] = await runStep('Profiling style', async () => {
     const t = Date.now();
     const result = await Promise.all([
@@ -149,22 +145,22 @@ async function _runGenerate(
     dbg('profiling done', { ms: Date.now() - t });
     return result;
   });
-  messages = await runStep('Building prompt', async () => {
+  const messages = await runStep('Building prompt', async () => {
     const t = Date.now();
     const result = buildGenerationMessages({ files, style, config, mode: 'single' });
     dbg('prompt built', { ms: Date.now() - t });
     return result;
   });
-  raw = await runStep('Calling model', async () => {
+  const raw = await runStep('Calling model', async () => {
     const t = Date.now();
     dbg('model call start', { model: config.model });
     const result = await provider.chat(messages, { maxTokens: config.maxTokens });
     dbg('model call done', { ms: Date.now() - t, responseChars: result.length });
     return result;
   });
-  plan = await runStep('Parsing response', async () => extractJSON(raw!));
-  candidates = await runStep('Analyzing changes', async () =>
-    applyTransforms(plan!.commits, plugins, { cwd: process.cwd(), env: process.env }),
+  const plan = await runStep('Parsing response', async () => extractJSON(raw));
+  let candidates = await runStep('Analyzing changes', async () =>
+    applyTransforms(plan.commits, plugins, { cwd: process.cwd(), env: process.env }),
   );
 
   // Suggested commit step

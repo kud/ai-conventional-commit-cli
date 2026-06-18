@@ -1,6 +1,6 @@
 import { simpleGit } from 'simple-git';
 import crypto from 'node:crypto';
-import { FileDiff } from './types.js';
+import type { FileDiff } from './types.js';
 
 const git = simpleGit();
 

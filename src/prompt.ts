@@ -1,6 +1,6 @@
-import { AppConfig } from './config.js';
-import { StyleProfile, CommitPlan } from './types.js';
-import { FileDiff } from './types.js';
+import type { AppConfig } from './config.js';
+import type { StyleProfile, CommitPlan } from './types.js';
+import type { FileDiff } from './types.js';
 import chalk from 'chalk';
 
 // Simple glob pattern matcher for file paths

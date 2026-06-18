@@ -1,4 +1,4 @@
-import { StyleProfile } from './types.js';
+import type { StyleProfile } from './types.js';
 
 export const buildStyleProfile = (messages: string[]): StyleProfile => {
   if (!messages.length) {

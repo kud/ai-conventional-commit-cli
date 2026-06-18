@@ -1,5 +1,5 @@
-import { AppConfig } from './config.js';
-import { CommitCandidate, Plugin, PluginContext } from './types.js';
+import type { AppConfig } from './config.js';
+import type { CommitCandidate, Plugin, PluginContext } from './types.js';
 import { resolve } from 'node:path';
 
 export async function loadPlugins(config: AppConfig, cwd = process.cwd()): Promise<Plugin[]> {

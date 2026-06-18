@@ -22,8 +22,6 @@ const EMOJI_MAP: Record<string, string> = {
   release: '🏷️',
 };
 
-// Retained for potential future use; no longer applied automatically.
-const MAX_LEN = 72;
 const EMOJI_TYPE_RE = /^([\p{Emoji}\p{So}\p{Sk}])\s+(\w+)(\(.+\))?:\s+(.*)$/u; // emoji + type
 const TYPE_RE = /^(\w+)(\(.+\))?:\s+(.*)$/; // type only
 

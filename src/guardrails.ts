@@ -1,4 +1,4 @@
-import { CommitCandidate } from './types.js';
+import type { CommitCandidate } from './types.js';
 
 const SECRET_PATTERNS = [
   /AWS_[A-Z0-9_]+/i,
@@ -28,7 +28,7 @@ export const sanitizeTitle = (title: string, allowEmoji: boolean): string => {
 };
 
 export const normalizeConventionalTitle = (title: string): string => {
-  let original = title.trim();
+  const original = title.trim();
   // Capture first emoji (if any) to optionally preserve
   let leadingEmoji = '';
   const emojiCluster = original.match(/^[\p{Emoji}\p{So}\p{Sk}]+/u);

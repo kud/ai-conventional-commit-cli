@@ -1,11 +1,12 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
-import { AppConfig, getCacheDir } from '../config.js';
+import type { AppConfig } from '../config.js';
+import { getCacheDir } from '../config.js';
 import { buildRefineMessages } from '../prompt.js';
 import { formatCommitTitle } from '../title-format.js';
-import { Provider, createProvider, extractJSON } from '../model/provider.js';
-import { CommitPlan } from '../types.js';
+import { createProvider, extractJSON } from '../model/provider.js';
+import type { CommitPlan } from '../types.js';
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { prompt } from './util.js';

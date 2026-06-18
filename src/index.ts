@@ -257,7 +257,7 @@ class ModelsCommand extends Command {
       );
     } catch (e: any) {
       this.context.stderr.write(
-        `Failed to list models via \"opencode models\": ${e?.message || e}\n`,
+        `Failed to list models via "opencode models": ${e?.message || e}\n`,
       );
     }
   }
@@ -356,7 +356,7 @@ class ConfigSetCommand extends Command {
     let parsed: any = this.value;
     if (/^(true|false)$/i.test(this.value)) parsed = this.value.toLowerCase() === 'true';
     else if (/^[0-9]+$/.test(this.value)) parsed = parseInt(this.value, 10);
-    else if (/^[\[{]/.test(this.value)) {
+    else if (/^[[{]/.test(this.value)) {
       try {
         parsed = JSON.parse(this.value);
       } catch {
