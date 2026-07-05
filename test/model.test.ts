@@ -22,7 +22,7 @@ Trailing text`;
 
 describe('createProvider', () => {
   it('routes codex/ models to the Codex CLI provider', () => {
-    const provider = createProvider('codex/gpt-5-codex');
+    const provider = createProvider('codex/gpt-5.5');
     expect(provider).toBeInstanceOf(CodexCliProvider);
     expect(provider.name()).toBe('codex-cli');
   });
@@ -33,7 +33,7 @@ describe('CodexCliProvider', () => {
     const previous = process.env.AICC_DEBUG_PROVIDER;
     process.env.AICC_DEBUG_PROVIDER = 'mock';
     try {
-      const raw = await new CodexCliProvider('codex/gpt-5-codex').chat([
+      const raw = await new CodexCliProvider('codex/gpt-5.5').chat([
         { role: 'user', content: 'diff' },
       ]);
       const plan = extractJSON(raw);

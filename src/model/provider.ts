@@ -34,7 +34,7 @@ export interface Provider {
 export const validateModel = (model: string): void => {
   if (!model.includes('/')) {
     throw new Error(
-      `Invalid model format "${model}". Expected "provider/model" (e.g. github-copilot/claude-sonnet-4.6, anthropic/claude-sonnet-4-6, claude/sonnet, codex/gpt-5-codex).`,
+      `Invalid model format "${model}". Expected "provider/model" (e.g. github-copilot/claude-sonnet-4.6, anthropic/claude-sonnet-4-6, claude/sonnet, codex/gpt-5.5).`,
     );
   }
 
@@ -483,16 +483,17 @@ export class CodexCliProvider implements Provider {
 
     const prompt = messages.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
 
-    // `codex exec` is an agent whose stdout is a live trace, not a clean result.
-    // `--output-schema` pins the final message to the commit-plan shape and
-    // `--output-last-message` writes only that message to a file, so we read the
-    // answer from disk rather than scraping the trace. read-only + ephemeral keep
-    // it a pure completion that never writes to the repo or persists a session.
+    // `codex exec` is an agent whose stdout is a live trace, not a clean result,
+    // so `--output-last-message` writes only the final message to a file and we
+    // read the answer from disk. We deliberately do NOT pass `--output-schema`:
+    // it feeds OpenAI strict structured outputs, which reject our shared schema
+    // (they require additionalProperties:false on every object). Instead we rely
+    // on the system prompt's embedded schema + "Return ONLY the JSON object",
+    // exactly as the `claude` provider does, and let extractJSON parse it.
+    // read-only + ephemeral keep it a pure completion that never writes or persists.
     const dir = join(tmpdir(), `codex-aicc-${process.pid}`);
     mkdirSync(dir, { recursive: true });
-    const schemaPath = join(dir, 'schema.json');
     const outPath = join(dir, 'last-message.txt');
-    writeFileSync(schemaPath, JSON.stringify(COMMIT_PLAN_JSON_SCHEMA));
 
     const args = [
       'exec',
@@ -504,8 +505,6 @@ export class CodexCliProvider implements Provider {
       '--ephemeral',
       '--color',
       'never',
-      '--output-schema',
-      schemaPath,
       '--output-last-message',
       outPath,
       '-', // read the prompt from stdin

@@ -19,14 +19,15 @@ const matchesPattern = (filePath: string, pattern: string): boolean => {
 
 const MAX_DIFF_CHARS = 80_000;
 
-const tag = (module: string) =>
-  chalk.dim('[ai-cc]') + chalk.cyan(`[${module}]`);
+const tag = (module: string) => chalk.dim('[ai-cc]') + chalk.cyan(`[${module}]`);
 
 const kv = (k: string, v: unknown) => chalk.dim(k + '=') + chalk.yellow(String(v));
 
 const dbg = (module: string, msg: string, pairs: Record<string, unknown> = {}) => {
   if (process.env.AICC_DEBUG !== 'true') return;
-  const kvStr = Object.entries(pairs).map(([k, v]) => kv(k, v)).join(' ');
+  const kvStr = Object.entries(pairs)
+    .map(([k, v]) => kv(k, v))
+    .join(' ');
   console.error(tag(module), chalk.white(msg), kvStr || '');
 };
 
@@ -181,6 +182,9 @@ export const buildGenerationMessages = (opts: {
     'Length Rule: Keep titles concise; prefer 50 or fewer chars; MUST be <=72 including type/scope.',
   );
   specLines.push(
+    'Body Rules (REQUIRED for non-trivial changes): Populate "body" with 2-5 concise bullet points (each line starting with "- ") explaining WHAT changed and WHY, citing concrete files/functions. Leave "body" empty ONLY for genuinely trivial one-line changes (typo, version bump, pure formatting). Never omit the body for feat, fix, refactor, or multi-file changes, regardless of the repo\'s prevailing title-only style.',
+  );
+  specLines.push(
     'Emoji Rule: ' +
       (config.style === 'gitmoji' || config.style === 'gitmoji-pure'
         ? 'OPTIONAL single leading gitmoji BEFORE the type only if confidently adds clarity; do not invent or stack; omit if unsure.'
@@ -217,7 +221,11 @@ export const buildGenerationMessages = (opts: {
     },
   ];
 
-  dbg('prompt', 'messages built', { systemChars: messages[0].content.length, userChars: messages[1].content.length, totalChars: messages[0].content.length + messages[1].content.length });
+  dbg('prompt', 'messages built', {
+    systemChars: messages[0].content.length,
+    userChars: messages[1].content.length,
+    totalChars: messages[0].content.length + messages[1].content.length,
+  });
 
   return messages;
 };

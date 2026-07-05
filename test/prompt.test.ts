@@ -42,4 +42,13 @@ describe('prompt generation', () => {
     });
     expect(msgs[0].content).toMatch(/OPTIONAL single leading gitmoji/);
   });
+  it('requires a body for non-trivial changes', () => {
+    const msgs = buildGenerationMessages({
+      files: baseFiles as any,
+      style: style as any,
+      config: cfg('standard'),
+      mode: 'single',
+    });
+    expect(msgs[0].content).toMatch(/Body Rules \(REQUIRED for non-trivial changes\)/);
+  });
 });
