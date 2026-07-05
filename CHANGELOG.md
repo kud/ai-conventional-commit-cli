@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.9.0 — 2026-07-05
+
+### Highlights
+
+- **New Codex CLI provider.** Generate commit messages via OpenAI Codex (`codex/<model>`, default `codex/gpt-5.5`), authenticated through your existing ChatGPT plan — no API key required, since it shells out to `codex exec` under the hood. ([fb70158fd1beffa258e9f5002aff357d7bf8fd77](https://github.com/kud/ai-conventional-commit-cli/commit/fb70158fd1beffa258e9f5002aff357d7bf8fd77))
+- **Commit bodies are no longer optional for real changes.** The shared generation prompt now requires a body for non-trivial diffs (feat/fix/refactor/multi-file), so every provider — not just Codex — reliably writes a description instead of a bare subject line. ([fb70158fd1beffa258e9f5002aff357d7bf8fd77](https://github.com/kud/ai-conventional-commit-cli/commit/fb70158fd1beffa258e9f5002aff357d7bf8fd77))
+
+### Documentation
+
+- README restructured to match the canonical kud-site layout, bringing it in line with docs across other kud projects. ([19afd155384e0f7cbc6acd2b53af792ba3d6d185](https://github.com/kud/ai-conventional-commit-cli/commit/19afd155384e0f7cbc6acd2b53af792ba3d6d185))
+
+<details>
+<summary>Internal (3 commits)</summary>
+
+- Added a CI workflow to run tests, build, and lint on every push and pull request.
+- Fixed the npm OIDC publish pattern in the release workflow.
+- Removed the obsolete GitHub Pages workflow now that docs live on kud.io/projects.
+
+</details>
+
+---
+
 ## [3.8.0] — 2026-06-18
 
 A reliability, security, and tooling pass — no changes to everyday usage.
