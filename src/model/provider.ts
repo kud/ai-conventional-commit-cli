@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createServer, type AddressInfo } from 'node:net';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -34,7 +34,7 @@ export interface Provider {
 export const validateModel = (model: string): void => {
   if (!model.includes('/')) {
     throw new Error(
-      `Invalid model format "${model}". Expected "provider/model" (e.g. github-copilot/claude-sonnet-4.6, anthropic/claude-sonnet-4-6, claude/sonnet).`,
+      `Invalid model format "${model}". Expected "provider/model" (e.g. github-copilot/claude-sonnet-4.6, anthropic/claude-sonnet-4-6, claude/sonnet, codex/gpt-5-codex).`,
     );
   }
 
@@ -49,6 +49,7 @@ export const validateModel = (model: string): void => {
 export const createProvider = (model: string): Provider => {
   validateModel(model);
   if (model.startsWith('claude/')) return new ClaudeCliProvider(model);
+  if (model.startsWith('codex/')) return new CodexCliProvider(model);
   if (model.startsWith('anthropic/')) return new AnthropicProvider(model);
   return new OpenCodeProvider(model);
 };
@@ -441,6 +442,118 @@ export class ClaudeCliProvider implements Provider {
           resolve(result);
         } catch (e: any) {
           reject(new Error(`Failed to parse claude cli output: ${e.message}\n${stdout}`));
+        }
+      });
+    });
+  }
+}
+
+export class CodexCliProvider implements Provider {
+  private readonly modelAlias: string;
+  private readonly debug: boolean;
+
+  constructor(model: string = 'codex/gpt-5.5') {
+    const slashIdx = model.indexOf('/');
+    this.modelAlias = slashIdx !== -1 ? model.slice(slashIdx + 1) : model;
+    this.debug = process.env.AICC_DEBUG === 'true';
+  }
+
+  name() {
+    return 'codex-cli';
+  }
+
+  warmup(): void {}
+
+  async close(): Promise<void> {}
+
+  async chat(messages: ChatMessage[], _opts?: { maxTokens?: number; temperature?: number }) {
+    if (process.env.AICC_DEBUG_PROVIDER === 'mock') {
+      return JSON.stringify({
+        commits: [
+          {
+            title: 'chore: mock commit from provider',
+            body: '',
+            score: 80,
+            reasons: ['mock mode'],
+          },
+        ],
+        meta: { splitRecommended: false },
+      });
+    }
+
+    const prompt = messages.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
+
+    // `codex exec` is an agent whose stdout is a live trace, not a clean result.
+    // `--output-schema` pins the final message to the commit-plan shape and
+    // `--output-last-message` writes only that message to a file, so we read the
+    // answer from disk rather than scraping the trace. read-only + ephemeral keep
+    // it a pure completion that never writes to the repo or persists a session.
+    const dir = join(tmpdir(), `codex-aicc-${process.pid}`);
+    mkdirSync(dir, { recursive: true });
+    const schemaPath = join(dir, 'schema.json');
+    const outPath = join(dir, 'last-message.txt');
+    writeFileSync(schemaPath, JSON.stringify(COMMIT_PLAN_JSON_SCHEMA));
+
+    const args = [
+      'exec',
+      '--model',
+      this.modelAlias,
+      '--sandbox',
+      'read-only',
+      '--skip-git-repo-check',
+      '--ephemeral',
+      '--color',
+      'never',
+      '--output-schema',
+      schemaPath,
+      '--output-last-message',
+      outPath,
+      '-', // read the prompt from stdin
+    ];
+
+    if (this.debug)
+      pdbg('spawning codex cli', { model: this.modelAlias, promptChars: prompt.length });
+
+    return new Promise<string>((resolve, reject) => {
+      const cleanup = () => {
+        try {
+          rmSync(dir, { recursive: true, force: true });
+        } catch {}
+      };
+
+      const proc = spawn('codex', args);
+
+      proc.stdin?.write(prompt);
+      proc.stdin?.end();
+
+      let stderr = '';
+      // stdout is the agent's live trace — ignored in favour of --output-last-message.
+      proc.stderr?.on('data', (chunk: Buffer) => {
+        stderr += chunk.toString();
+      });
+
+      proc.on('error', (err) => {
+        cleanup();
+        reject(err);
+      });
+      proc.on('exit', (code) => {
+        if (code !== 0) {
+          cleanup();
+          reject(new Error(`codex cli exited with code ${code}: ${stderr}`));
+          return;
+        }
+        try {
+          const result = readFileSync(outPath, 'utf8').trim();
+          if (!result) {
+            reject(new Error(`codex cli produced no final message.\n${stderr}`));
+            return;
+          }
+          if (this.debug) pdbg('codex cli response', { resultChars: result.length });
+          resolve(result);
+        } catch (e: any) {
+          reject(new Error(`Failed to read codex cli output: ${e.message}\n${stderr}`));
+        } finally {
+          cleanup();
         }
       });
     });
