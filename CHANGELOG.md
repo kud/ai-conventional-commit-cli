@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 
 ---
 
+## 4.0.1 — 2026-07-31
+
+Documentation-only release — `CHANGELOG.md` isn't part of the published npm package, so the 4.0.1 tarball is identical to 4.0.0.
+
+### Documentation
+
+- Backfilled ten previously undocumented releases — 0.7.0, 0.7.3, 0.12.5, 3.4.1, 3.4.2, 3.4.3, 3.6.1, 3.6.2, 3.7.0, and 3.7.1 — so the changelog now covers all 78 tags. ([ce1b992](https://github.com/kud/ai-conventional-commit-cli/commit/ce1b992c665ca05dc232b6308ba5d332f931e6d2))
+- Fixed a dead commit link in the 3.8.0 entry: it cited a hash that doesn't exist in this repository. The work it described — moving config to `~/.config/aicc` and cache to `~/.cache/aicc` — actually shipped in 3.6.1, so that bullet moved there with the correct hash. ([ce1b992](https://github.com/kud/ai-conventional-commit-cli/commit/ce1b992c665ca05dc232b6308ba5d332f931e6d2))
+- Unified three divergent heading styles into one (`## X.Y.Z — YYYY-MM-DD`), dropped emoji from section headings, renamed "Bug Fixes" to "Fixes", shortened hash link labels to 7 characters, stripped a stray `#` prefix from 150 commit links that made them read as issue references, and moved the "All notable changes…" preamble back under the title after successive prepends had buried it mid-file. ([ce1b992](https://github.com/kud/ai-conventional-commit-cli/commit/ce1b992c665ca05dc232b6308ba5d332f931e6d2))
+
+---
+
 ## 4.0.0 — 2026-07-31
 
 ### Breaking Changes
@@ -104,7 +116,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 <details>
 <summary>Internal (1 commits)</summary>
 
-- style(docs): increase nav max-width and prevent wrap ([#50990cc](https://github.com/kud/ai-conventional-commit-cli/commit/50990cc))
+- style(docs): increase nav max-width and prevent wrap ([50990cc](https://github.com/kud/ai-conventional-commit-cli/commit/50990cc))
 
 </details>
 
@@ -114,7 +126,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Add ClaudeCliProvider and provider factory ([#bd22d1f](https://github.com/kud/ai-conventional-commit-cli/commit/bd22d1f))
+- Add ClaudeCliProvider and provider factory ([bd22d1f](https://github.com/kud/ai-conventional-commit-cli/commit/bd22d1f))
 
 ---
 
@@ -146,13 +158,13 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Add truncateMiddle and tests for mid-string truncation ([#4b39e39](https://github.com/kud/ai-conventional-commit-cli/commit/4b39e39))
+- Add truncateMiddle and tests for mid-string truncation ([4b39e39](https://github.com/kud/ai-conventional-commit-cli/commit/4b39e39))
 
 <details>
 <summary>Internal (2 commits)</summary>
 
-- test(truncate-middle): refine fixture path tail case ([#90a1272](https://github.com/kud/ai-conventional-commit-cli/commit/90a1272))
-- 🏗️ build(pages): add version injection to docs and release trigger ([#d7817b1](https://github.com/kud/ai-conventional-commit-cli/commit/d7817b1))
+- test(truncate-middle): refine fixture path tail case ([90a1272](https://github.com/kud/ai-conventional-commit-cli/commit/90a1272))
+- 🏗️ build(pages): add version injection to docs and release trigger ([d7817b1](https://github.com/kud/ai-conventional-commit-cli/commit/d7817b1))
 
 </details>
 
@@ -162,96 +174,96 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Add retry logic for transient errors ([#e9c05a9](https://github.com/kud/ai-conventional-commit-cli/commit/e9c05a9))
-- Add picker for model timeout recovery ([#a713940](https://github.com/kud/ai-conventional-commit-cli/commit/a713940))
-- Add robust killWithFallback for server shutdown ([#ee37ab1](https://github.com/kud/ai-conventional-commit-cli/commit/ee37ab1))
-- Gracefully close server on process exit ([#e6d4588](https://github.com/kud/ai-conventional-commit-cli/commit/e6d4588))
-- Expand skipFilePatterns defaults ([#023a82e](https://github.com/kud/ai-conventional-commit-cli/commit/023a82e))
-- Parallelise git diff and style profile ([#763dcc8](https://github.com/kud/ai-conventional-commit-cli/commit/763dcc8))
-- Add debug logs for MCP disconnect ([#67e2555](https://github.com/kud/ai-conventional-commit-cli/commit/67e2555))
-- Expand .env.example and update model provider logic ([#c124d4e](https://github.com/kud/ai-conventional-commit-cli/commit/c124d4e))
-- Replace inquirer with @inquirer/prompts select ([#bf761d1](https://github.com/kud/ai-conventional-commit-cli/commit/bf761d1))
-- Update dependencies and provider logic ([#9ef52bd](https://github.com/kud/ai-conventional-commit-cli/commit/9ef52bd))
-- Add provider re-export file ([#6603270](https://github.com/kud/ai-conventional-commit-cli/commit/6603270))
-- Reuse running opencode server if available ([#ad46c3c](https://github.com/kud/ai-conventional-commit-cli/commit/ad46c3c))
-- Migrate to opencode SDK provider ([#14865e6](https://github.com/kud/ai-conventional-commit-cli/commit/14865e6))
-- Switch to @opencode-ai/sdk for OpenCodeProvider ([#9542714](https://github.com/kud/ai-conventional-commit-cli/commit/9542714))
-- Support OPENCODE_FREE_MODEL as default ([#f5ffa8f](https://github.com/kud/ai-conventional-commit-cli/commit/f5ffa8f))
-- Document --yes flag for auto-confirm ([#23b4a6b](https://github.com/kud/ai-conventional-commit-cli/commit/23b4a6b))
-- Add @inquirer/prompts for improved selection ([#0e0c61a](https://github.com/kud/ai-conventional-commit-cli/commit/0e0c61a))
-- Replace confirm with list for yes/no prompts ([#5efee79](https://github.com/kud/ai-conventional-commit-cli/commit/5efee79))
-- Simplify yes/no prompt to confirm ([#6324a64](https://github.com/kud/ai-conventional-commit-cli/commit/6324a64))
-- Improve diff summary for deleted files ([#033e9c7](https://github.com/kud/ai-conventional-commit-cli/commit/033e9c7))
-- Handle renamed files in staged status ([#9d55ed0](https://github.com/kud/ai-conventional-commit-cli/commit/9d55ed0))
-- Handle renamed files in diff parsing ([#e7c7328](https://github.com/kud/ai-conventional-commit-cli/commit/e7c7328))
-- Handle zero-diff files in summary bar ([#f0bf4e5](https://github.com/kud/ai-conventional-commit-cli/commit/f0bf4e5))
-- Improve commit reword output formatting ([#b6166da](https://github.com/kud/ai-conventional-commit-cli/commit/b6166da))
-- Load package version at runtime ([#b178594](https://github.com/kud/ai-conventional-commit-cli/commit/b178594))
-- Add style and model override options to RewordCommand ([#67de645](https://github.com/kud/ai-conventional-commit-cli/commit/67de645))
-- Add reword command for AI-assisted commit message updates ([#966ba8b](https://github.com/kud/ai-conventional-commit-cli/commit/966ba8b))
-- Enforce required scope in title format ([#c1d0a0c](https://github.com/kud/ai-conventional-commit-cli/commit/c1d0a0c))
-- Add diffstat bar chart to file summary ([#9942b54](https://github.com/kud/ai-conventional-commit-cli/commit/9942b54))
-- Handle staged files with no diff output ([#f5ae952](https://github.com/kud/ai-conventional-commit-cli/commit/f5ae952))
-- Improve commit block description formatting ([#13f7281](https://github.com/kud/ai-conventional-commit-cli/commit/13f7281))
-- Update default model to github-copilot/gpt-4.1 ([#ef10bc7](https://github.com/kud/ai-conventional-commit-cli/commit/ef10bc7))
-- Display model name in animated header ([#a861378](https://github.com/kud/ai-conventional-commit-cli/commit/a861378))
-- Add help/version commands, files field, new UI; remove reasoning ([#aa07e2e](https://github.com/kud/ai-conventional-commit-cli/commit/aa07e2e))
-- Add animated header and improve generate CLI output ([#3f9ca7f](https://github.com/kud/ai-conventional-commit-cli/commit/3f9ca7f))
-- TypeScript CLI with plugin system and split/refine workflows ([#ab8ca1e](https://github.com/kud/ai-conventional-commit-cli/commit/ab8ca1e))
+- Add retry logic for transient errors ([e9c05a9](https://github.com/kud/ai-conventional-commit-cli/commit/e9c05a9))
+- Add picker for model timeout recovery ([a713940](https://github.com/kud/ai-conventional-commit-cli/commit/a713940))
+- Add robust killWithFallback for server shutdown ([ee37ab1](https://github.com/kud/ai-conventional-commit-cli/commit/ee37ab1))
+- Gracefully close server on process exit ([e6d4588](https://github.com/kud/ai-conventional-commit-cli/commit/e6d4588))
+- Expand skipFilePatterns defaults ([023a82e](https://github.com/kud/ai-conventional-commit-cli/commit/023a82e))
+- Parallelise git diff and style profile ([763dcc8](https://github.com/kud/ai-conventional-commit-cli/commit/763dcc8))
+- Add debug logs for MCP disconnect ([67e2555](https://github.com/kud/ai-conventional-commit-cli/commit/67e2555))
+- Expand .env.example and update model provider logic ([c124d4e](https://github.com/kud/ai-conventional-commit-cli/commit/c124d4e))
+- Replace inquirer with @inquirer/prompts select ([bf761d1](https://github.com/kud/ai-conventional-commit-cli/commit/bf761d1))
+- Update dependencies and provider logic ([9ef52bd](https://github.com/kud/ai-conventional-commit-cli/commit/9ef52bd))
+- Add provider re-export file ([6603270](https://github.com/kud/ai-conventional-commit-cli/commit/6603270))
+- Reuse running opencode server if available ([ad46c3c](https://github.com/kud/ai-conventional-commit-cli/commit/ad46c3c))
+- Migrate to opencode SDK provider ([14865e6](https://github.com/kud/ai-conventional-commit-cli/commit/14865e6))
+- Switch to @opencode-ai/sdk for OpenCodeProvider ([9542714](https://github.com/kud/ai-conventional-commit-cli/commit/9542714))
+- Support OPENCODE_FREE_MODEL as default ([f5ffa8f](https://github.com/kud/ai-conventional-commit-cli/commit/f5ffa8f))
+- Document --yes flag for auto-confirm ([23b4a6b](https://github.com/kud/ai-conventional-commit-cli/commit/23b4a6b))
+- Add @inquirer/prompts for improved selection ([0e0c61a](https://github.com/kud/ai-conventional-commit-cli/commit/0e0c61a))
+- Replace confirm with list for yes/no prompts ([5efee79](https://github.com/kud/ai-conventional-commit-cli/commit/5efee79))
+- Simplify yes/no prompt to confirm ([6324a64](https://github.com/kud/ai-conventional-commit-cli/commit/6324a64))
+- Improve diff summary for deleted files ([033e9c7](https://github.com/kud/ai-conventional-commit-cli/commit/033e9c7))
+- Handle renamed files in staged status ([9d55ed0](https://github.com/kud/ai-conventional-commit-cli/commit/9d55ed0))
+- Handle renamed files in diff parsing ([e7c7328](https://github.com/kud/ai-conventional-commit-cli/commit/e7c7328))
+- Handle zero-diff files in summary bar ([f0bf4e5](https://github.com/kud/ai-conventional-commit-cli/commit/f0bf4e5))
+- Improve commit reword output formatting ([b6166da](https://github.com/kud/ai-conventional-commit-cli/commit/b6166da))
+- Load package version at runtime ([b178594](https://github.com/kud/ai-conventional-commit-cli/commit/b178594))
+- Add style and model override options to RewordCommand ([67de645](https://github.com/kud/ai-conventional-commit-cli/commit/67de645))
+- Add reword command for AI-assisted commit message updates ([966ba8b](https://github.com/kud/ai-conventional-commit-cli/commit/966ba8b))
+- Enforce required scope in title format ([c1d0a0c](https://github.com/kud/ai-conventional-commit-cli/commit/c1d0a0c))
+- Add diffstat bar chart to file summary ([9942b54](https://github.com/kud/ai-conventional-commit-cli/commit/9942b54))
+- Handle staged files with no diff output ([f5ae952](https://github.com/kud/ai-conventional-commit-cli/commit/f5ae952))
+- Improve commit block description formatting ([13f7281](https://github.com/kud/ai-conventional-commit-cli/commit/13f7281))
+- Update default model to github-copilot/gpt-4.1 ([ef10bc7](https://github.com/kud/ai-conventional-commit-cli/commit/ef10bc7))
+- Display model name in animated header ([a861378](https://github.com/kud/ai-conventional-commit-cli/commit/a861378))
+- Add help/version commands, files field, new UI; remove reasoning ([aa07e2e](https://github.com/kud/ai-conventional-commit-cli/commit/aa07e2e))
+- Add animated header and improve generate CLI output ([3f9ca7f](https://github.com/kud/ai-conventional-commit-cli/commit/3f9ca7f))
+- TypeScript CLI with plugin system and split/refine workflows ([ab8ca1e](https://github.com/kud/ai-conventional-commit-cli/commit/ab8ca1e))
 
 ### Fixes
 
-- Ensure server process group killed reliably ([#da1cc3a](https://github.com/kud/ai-conventional-commit-cli/commit/da1cc3a))
-- Ensure tidy kill of server process on close ([#6b7062d](https://github.com/kud/ai-conventional-commit-cli/commit/6b7062d))
-- Ensure opencode server closes on exit ([#3d39a4f](https://github.com/kud/ai-conventional-commit-cli/commit/3d39a4f))
-- Abort process and close server cleanly ([#9c760bb](https://github.com/kud/ai-conventional-commit-cli/commit/9c760bb))
-- Prevent context overflow on large diffs ([#1da34df](https://github.com/kud/ai-conventional-commit-cli/commit/1da34df))
-- Reattach branch after rebase if detached ([#e9ed56b](https://github.com/kud/ai-conventional-commit-cli/commit/e9ed56b))
-- Prevent detached HEAD after reword rebase ([#5c19afd](https://github.com/kud/ai-conventional-commit-cli/commit/5c19afd))
-- Update default model timeout to 120000ms ([#50b3081](https://github.com/kud/ai-conventional-commit-cli/commit/50b3081))
+- Ensure server process group killed reliably ([da1cc3a](https://github.com/kud/ai-conventional-commit-cli/commit/da1cc3a))
+- Ensure tidy kill of server process on close ([6b7062d](https://github.com/kud/ai-conventional-commit-cli/commit/6b7062d))
+- Ensure opencode server closes on exit ([3d39a4f](https://github.com/kud/ai-conventional-commit-cli/commit/3d39a4f))
+- Abort process and close server cleanly ([9c760bb](https://github.com/kud/ai-conventional-commit-cli/commit/9c760bb))
+- Prevent context overflow on large diffs ([1da34df](https://github.com/kud/ai-conventional-commit-cli/commit/1da34df))
+- Reattach branch after rebase if detached ([e9ed56b](https://github.com/kud/ai-conventional-commit-cli/commit/e9ed56b))
+- Prevent detached HEAD after reword rebase ([5c19afd](https://github.com/kud/ai-conventional-commit-cli/commit/5c19afd))
+- Update default model timeout to 120000ms ([50b3081](https://github.com/kud/ai-conventional-commit-cli/commit/50b3081))
 
 ### Refactoring
 
-- Extract code generation logic ([#ab9c145](https://github.com/kud/ai-conventional-commit-cli/commit/ab9c145))
-- Improve error handling for commit workflow ([#a33928d](https://github.com/kud/ai-conventional-commit-cli/commit/a33928d))
-- Launch OpenCode server via child process ([#9fbd432](https://github.com/kud/ai-conventional-commit-cli/commit/9fbd432))
-- Streamline file summary line construction ([#7fc5de4](https://github.com/kud/ai-conventional-commit-cli/commit/7fc5de4))
-- Remove zero-change file borderLine output ([#9f5d9f2](https://github.com/kud/ai-conventional-commit-cli/commit/9f5d9f2))
-- Remove programmatic title length enforcement ([#761924e](https://github.com/kud/ai-conventional-commit-cli/commit/761924e))
+- Extract code generation logic ([ab9c145](https://github.com/kud/ai-conventional-commit-cli/commit/ab9c145))
+- Improve error handling for commit workflow ([a33928d](https://github.com/kud/ai-conventional-commit-cli/commit/a33928d))
+- Launch OpenCode server via child process ([9fbd432](https://github.com/kud/ai-conventional-commit-cli/commit/9fbd432))
+- Streamline file summary line construction ([7fc5de4](https://github.com/kud/ai-conventional-commit-cli/commit/7fc5de4))
+- Remove zero-change file borderLine output ([9f5d9f2](https://github.com/kud/ai-conventional-commit-cli/commit/9f5d9f2))
+- Remove programmatic title length enforcement ([761924e](https://github.com/kud/ai-conventional-commit-cli/commit/761924e))
 
 ### Documentation
 
-- Update smoke test for MAX_DIFF_CHARS budget ([#3edef75](https://github.com/kud/ai-conventional-commit-cli/commit/3edef75))
-- Document OpenCode MCP disconnection behaviour ([#cd977c7](https://github.com/kud/ai-conventional-commit-cli/commit/cd977c7))
-- Document maxFileLines and skipFilePatterns ([#f941438](https://github.com/kud/ai-conventional-commit-cli/commit/f941438))
-- Clarify reword command usage examples ([#0e5112f](https://github.com/kud/ai-conventional-commit-cli/commit/0e5112f))
-- Add reword command usage and details ([#a4058c9](https://github.com/kud/ai-conventional-commit-cli/commit/a4058c9))
-- Update CLI flags and config instructions for style option ([#268d0fc](https://github.com/kud/ai-conventional-commit-cli/commit/268d0fc))
-- Enrich README with badges, TOC, plugin example & workflow ([#01257df](https://github.com/kud/ai-conventional-commit-cli/commit/01257df))
-- Update README for ai-conventional-commit rename and alias ([#71581c5](https://github.com/kud/ai-conventional-commit-cli/commit/71581c5))
+- Update smoke test for MAX_DIFF_CHARS budget ([3edef75](https://github.com/kud/ai-conventional-commit-cli/commit/3edef75))
+- Document OpenCode MCP disconnection behaviour ([cd977c7](https://github.com/kud/ai-conventional-commit-cli/commit/cd977c7))
+- Document maxFileLines and skipFilePatterns ([f941438](https://github.com/kud/ai-conventional-commit-cli/commit/f941438))
+- Clarify reword command usage examples ([0e5112f](https://github.com/kud/ai-conventional-commit-cli/commit/0e5112f))
+- Add reword command usage and details ([a4058c9](https://github.com/kud/ai-conventional-commit-cli/commit/a4058c9))
+- Update CLI flags and config instructions for style option ([268d0fc](https://github.com/kud/ai-conventional-commit-cli/commit/268d0fc))
+- Enrich README with badges, TOC, plugin example & workflow ([01257df](https://github.com/kud/ai-conventional-commit-cli/commit/01257df))
+- Update README for ai-conventional-commit rename and alias ([71581c5](https://github.com/kud/ai-conventional-commit-cli/commit/71581c5))
 
 ### Other
 
-- Bump version to 0.7.0 ([#a965dae](https://github.com/kud/ai-conventional-commit-cli/commit/a965dae))
-- Add trailing blank line after final success/abort messages ([#241197b](https://github.com/kud/ai-conventional-commit-cli/commit/241197b))
+- Bump version to 0.7.0 ([a965dae](https://github.com/kud/ai-conventional-commit-cli/commit/a965dae))
+- Add trailing blank line after final success/abort messages ([241197b](https://github.com/kud/ai-conventional-commit-cli/commit/241197b))
 
 <details>
 <summary>Internal (14 commits)</summary>
 
-- 🧹 chore(package): update homepage URL ([#e6a1f29](https://github.com/kud/ai-conventional-commit-cli/commit/e6a1f29))
-- 🤖 ci(pages): add GitHub Pages deploy workflow and docs ([#3569cfc](https://github.com/kud/ai-conventional-commit-cli/commit/3569cfc))
-- 🤖 ci(github-actions): add release pipeline for tag publishing ([#1dd8d46](https://github.com/kud/ai-conventional-commit-cli/commit/1dd8d46))
-- chore(debug): add structured debug logging utilities ([#6fcd8a0](https://github.com/kud/ai-conventional-commit-cli/commit/6fcd8a0))
-- 🎨 style(index): improve formatting and exit handling ([#3d00df6](https://github.com/kud/ai-conventional-commit-cli/commit/3d00df6))
-- 🧹 chore: feat/git: indicate deleted files in diff summary ([#5c5eb77](https://github.com/kud/ai-conventional-commit-cli/commit/5c5eb77))
-- 🧹 chore: update minimum Node.js version to 20.0.0 ([#a647202](https://github.com/kud/ai-conventional-commit-cli/commit/a647202))
-- 🧹 chore: bump zod dependency to 4.1.8 ([#d121375](https://github.com/kud/ai-conventional-commit-cli/commit/d121375))
-- 🧹 chore: update dependencies for inquirer, chalk, keyv, strip-ansi, zod ([#0787184](https://github.com/kud/ai-conventional-commit-cli/commit/0787184))
-- 🏗️ build: remove deprecated aicc CLI alias ([#9a11f94](https://github.com/kud/ai-conventional-commit-cli/commit/9a11f94))
-- 🧹 chore: add repository, bugs and homepage fields to package.json ([#530aad4](https://github.com/kud/ai-conventional-commit-cli/commit/530aad4))
-- 🧹 chore: remove legacy aicc alias references and align binary/log namin ([#9773929](https://github.com/kud/ai-conventional-commit-cli/commit/9773929))
-- 📦 build: add prepublish script, restrict files, drop aicc binary ([#6477e45](https://github.com/kud/ai-conventional-commit-cli/commit/6477e45))
-- 🧪 test: add coverage for diff parsing, normalization, prompt messages ([#92779af](https://github.com/kud/ai-conventional-commit-cli/commit/92779af))
+- 🧹 chore(package): update homepage URL ([e6a1f29](https://github.com/kud/ai-conventional-commit-cli/commit/e6a1f29))
+- 🤖 ci(pages): add GitHub Pages deploy workflow and docs ([3569cfc](https://github.com/kud/ai-conventional-commit-cli/commit/3569cfc))
+- 🤖 ci(github-actions): add release pipeline for tag publishing ([1dd8d46](https://github.com/kud/ai-conventional-commit-cli/commit/1dd8d46))
+- chore(debug): add structured debug logging utilities ([6fcd8a0](https://github.com/kud/ai-conventional-commit-cli/commit/6fcd8a0))
+- 🎨 style(index): improve formatting and exit handling ([3d00df6](https://github.com/kud/ai-conventional-commit-cli/commit/3d00df6))
+- 🧹 chore: feat/git: indicate deleted files in diff summary ([5c5eb77](https://github.com/kud/ai-conventional-commit-cli/commit/5c5eb77))
+- 🧹 chore: update minimum Node.js version to 20.0.0 ([a647202](https://github.com/kud/ai-conventional-commit-cli/commit/a647202))
+- 🧹 chore: bump zod dependency to 4.1.8 ([d121375](https://github.com/kud/ai-conventional-commit-cli/commit/d121375))
+- 🧹 chore: update dependencies for inquirer, chalk, keyv, strip-ansi, zod ([0787184](https://github.com/kud/ai-conventional-commit-cli/commit/0787184))
+- 🏗️ build: remove deprecated aicc CLI alias ([9a11f94](https://github.com/kud/ai-conventional-commit-cli/commit/9a11f94))
+- 🧹 chore: add repository, bugs and homepage fields to package.json ([530aad4](https://github.com/kud/ai-conventional-commit-cli/commit/530aad4))
+- 🧹 chore: remove legacy aicc alias references and align binary/log namin ([9773929](https://github.com/kud/ai-conventional-commit-cli/commit/9773929))
+- 📦 build: add prepublish script, restrict files, drop aicc binary ([6477e45](https://github.com/kud/ai-conventional-commit-cli/commit/6477e45))
+- 🧪 test: add coverage for diff parsing, normalization, prompt messages ([92779af](https://github.com/kud/ai-conventional-commit-cli/commit/92779af))
 
 </details>
 
@@ -262,7 +274,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 <details>
 <summary>Internal (1 commits)</summary>
 
-- 🧹 chore(package): update homepage URL ([#e6a1f29](https://github.com/kud/ai-conventional-commit-cli/commit/e6a1f29))
+- 🧹 chore(package): update homepage URL ([e6a1f29](https://github.com/kud/ai-conventional-commit-cli/commit/e6a1f29))
 
 </details>
 
@@ -272,12 +284,12 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Add retry logic for transient errors ([#e9c05a9](https://github.com/kud/ai-conventional-commit-cli/commit/e9c05a9))
+- Add retry logic for transient errors ([e9c05a9](https://github.com/kud/ai-conventional-commit-cli/commit/e9c05a9))
 
 <details>
 <summary>Internal (1 commits)</summary>
 
-- 🤖 ci(pages): add GitHub Pages deploy workflow and docs ([#3569cfc](https://github.com/kud/ai-conventional-commit-cli/commit/3569cfc))
+- 🤖 ci(pages): add GitHub Pages deploy workflow and docs ([3569cfc](https://github.com/kud/ai-conventional-commit-cli/commit/3569cfc))
 
 </details>
 
@@ -287,7 +299,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Add picker for model timeout recovery ([#a713940](https://github.com/kud/ai-conventional-commit-cli/commit/a713940))
+- Add picker for model timeout recovery ([a713940](https://github.com/kud/ai-conventional-commit-cli/commit/a713940))
 
 ---
 
@@ -296,7 +308,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 <details>
 <summary>Internal (1 commits)</summary>
 
-- 🤖 ci(github-actions): add release pipeline for tag publishing ([#1dd8d46](https://github.com/kud/ai-conventional-commit-cli/commit/1dd8d46))
+- 🤖 ci(github-actions): add release pipeline for tag publishing ([1dd8d46](https://github.com/kud/ai-conventional-commit-cli/commit/1dd8d46))
 
 </details>
 
@@ -306,11 +318,11 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Fixes
 
-- Ensure server process group killed reliably ([#da1cc3a](https://github.com/kud/ai-conventional-commit-cli/commit/da1cc3a))
+- Ensure server process group killed reliably ([da1cc3a](https://github.com/kud/ai-conventional-commit-cli/commit/da1cc3a))
 
 ### Documentation
 
-- Update smoke test for MAX_DIFF_CHARS budget ([#3edef75](https://github.com/kud/ai-conventional-commit-cli/commit/3edef75))
+- Update smoke test for MAX_DIFF_CHARS budget ([3edef75](https://github.com/kud/ai-conventional-commit-cli/commit/3edef75))
 
 ---
 
@@ -318,7 +330,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Fixes
 
-- Ensure tidy kill of server process on close ([#6b7062d](https://github.com/kud/ai-conventional-commit-cli/commit/6b7062d))
+- Ensure tidy kill of server process on close ([6b7062d](https://github.com/kud/ai-conventional-commit-cli/commit/6b7062d))
 
 ---
 
@@ -326,7 +338,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Add robust killWithFallback for server shutdown ([#ee37ab1](https://github.com/kud/ai-conventional-commit-cli/commit/ee37ab1))
+- Add robust killWithFallback for server shutdown ([ee37ab1](https://github.com/kud/ai-conventional-commit-cli/commit/ee37ab1))
 
 ---
 
@@ -334,7 +346,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Refactoring
 
-- Extract code generation logic ([#ab9c145](https://github.com/kud/ai-conventional-commit-cli/commit/ab9c145))
+- Extract code generation logic ([ab9c145](https://github.com/kud/ai-conventional-commit-cli/commit/ab9c145))
 
 ---
 
@@ -342,7 +354,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Refactoring
 
-- Improve error handling for commit workflow ([#a33928d](https://github.com/kud/ai-conventional-commit-cli/commit/a33928d))
+- Improve error handling for commit workflow ([a33928d](https://github.com/kud/ai-conventional-commit-cli/commit/a33928d))
 
 ---
 
@@ -350,7 +362,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Refactoring
 
-- Launch OpenCode server via child process ([#9fbd432](https://github.com/kud/ai-conventional-commit-cli/commit/9fbd432))
+- Launch OpenCode server via child process ([9fbd432](https://github.com/kud/ai-conventional-commit-cli/commit/9fbd432))
 
 ---
 
@@ -358,7 +370,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Fixes
 
-- Ensure opencode server closes on exit ([#3d39a4f](https://github.com/kud/ai-conventional-commit-cli/commit/3d39a4f))
+- Ensure opencode server closes on exit ([3d39a4f](https://github.com/kud/ai-conventional-commit-cli/commit/3d39a4f))
 
 ---
 
@@ -366,7 +378,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Fixes
 
-- Abort process and close server cleanly ([#9c760bb](https://github.com/kud/ai-conventional-commit-cli/commit/9c760bb))
+- Abort process and close server cleanly ([9c760bb](https://github.com/kud/ai-conventional-commit-cli/commit/9c760bb))
 
 ---
 
@@ -374,12 +386,12 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Fixes
 
-- Prevent context overflow on large diffs ([#1da34df](https://github.com/kud/ai-conventional-commit-cli/commit/1da34df))
+- Prevent context overflow on large diffs ([1da34df](https://github.com/kud/ai-conventional-commit-cli/commit/1da34df))
 
 <details>
 <summary>Internal (1 commits)</summary>
 
-- chore(debug): add structured debug logging utilities ([#6fcd8a0](https://github.com/kud/ai-conventional-commit-cli/commit/6fcd8a0))
+- chore(debug): add structured debug logging utilities ([6fcd8a0](https://github.com/kud/ai-conventional-commit-cli/commit/6fcd8a0))
 
 </details>
 
@@ -389,7 +401,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Gracefully close server on process exit ([#e6d4588](https://github.com/kud/ai-conventional-commit-cli/commit/e6d4588))
+- Gracefully close server on process exit ([e6d4588](https://github.com/kud/ai-conventional-commit-cli/commit/e6d4588))
 
 ---
 
@@ -397,7 +409,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Expand skipFilePatterns defaults ([#023a82e](https://github.com/kud/ai-conventional-commit-cli/commit/023a82e))
+- Expand skipFilePatterns defaults ([023a82e](https://github.com/kud/ai-conventional-commit-cli/commit/023a82e))
 
 ---
 
@@ -405,7 +417,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Parallelise git diff and style profile ([#763dcc8](https://github.com/kud/ai-conventional-commit-cli/commit/763dcc8))
+- Parallelise git diff and style profile ([763dcc8](https://github.com/kud/ai-conventional-commit-cli/commit/763dcc8))
 
 ---
 
@@ -413,7 +425,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Add debug logs for MCP disconnect ([#67e2555](https://github.com/kud/ai-conventional-commit-cli/commit/67e2555))
+- Add debug logs for MCP disconnect ([67e2555](https://github.com/kud/ai-conventional-commit-cli/commit/67e2555))
 
 ---
 
@@ -421,7 +433,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Documentation
 
-- Document OpenCode MCP disconnection behaviour ([#cd977c7](https://github.com/kud/ai-conventional-commit-cli/commit/cd977c7))
+- Document OpenCode MCP disconnection behaviour ([cd977c7](https://github.com/kud/ai-conventional-commit-cli/commit/cd977c7))
 
 ---
 
@@ -429,8 +441,8 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Expand .env.example and update model provider logic ([#c124d4e](https://github.com/kud/ai-conventional-commit-cli/commit/c124d4e))
-- Replace inquirer with @inquirer/prompts select ([#bf761d1](https://github.com/kud/ai-conventional-commit-cli/commit/bf761d1))
+- Expand .env.example and update model provider logic ([c124d4e](https://github.com/kud/ai-conventional-commit-cli/commit/c124d4e))
+- Replace inquirer with @inquirer/prompts select ([bf761d1](https://github.com/kud/ai-conventional-commit-cli/commit/bf761d1))
 
 ---
 
@@ -438,7 +450,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Update dependencies and provider logic ([#9ef52bd](https://github.com/kud/ai-conventional-commit-cli/commit/9ef52bd))
+- Update dependencies and provider logic ([9ef52bd](https://github.com/kud/ai-conventional-commit-cli/commit/9ef52bd))
 
 ---
 
@@ -447,7 +459,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 <details>
 <summary>Internal (1 commits)</summary>
 
-- 🎨 style(index): improve formatting and exit handling ([#3d00df6](https://github.com/kud/ai-conventional-commit-cli/commit/3d00df6))
+- 🎨 style(index): improve formatting and exit handling ([3d00df6](https://github.com/kud/ai-conventional-commit-cli/commit/3d00df6))
 
 </details>
 
@@ -457,7 +469,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Add provider re-export file ([#6603270](https://github.com/kud/ai-conventional-commit-cli/commit/6603270))
+- Add provider re-export file ([6603270](https://github.com/kud/ai-conventional-commit-cli/commit/6603270))
 
 ---
 
@@ -465,9 +477,9 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Reuse running opencode server if available ([#ad46c3c](https://github.com/kud/ai-conventional-commit-cli/commit/ad46c3c))
-- Migrate to opencode SDK provider ([#14865e6](https://github.com/kud/ai-conventional-commit-cli/commit/14865e6))
-- Switch to @opencode-ai/sdk for OpenCodeProvider ([#9542714](https://github.com/kud/ai-conventional-commit-cli/commit/9542714))
+- Reuse running opencode server if available ([ad46c3c](https://github.com/kud/ai-conventional-commit-cli/commit/ad46c3c))
+- Migrate to opencode SDK provider ([14865e6](https://github.com/kud/ai-conventional-commit-cli/commit/14865e6))
+- Switch to @opencode-ai/sdk for OpenCodeProvider ([9542714](https://github.com/kud/ai-conventional-commit-cli/commit/9542714))
 
 ---
 
@@ -475,7 +487,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Support OPENCODE_FREE_MODEL as default ([#f5ffa8f](https://github.com/kud/ai-conventional-commit-cli/commit/f5ffa8f))
+- Support OPENCODE_FREE_MODEL as default ([f5ffa8f](https://github.com/kud/ai-conventional-commit-cli/commit/f5ffa8f))
 
 ---
 
@@ -483,7 +495,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Document --yes flag for auto-confirm ([#23b4a6b](https://github.com/kud/ai-conventional-commit-cli/commit/23b4a6b))
+- Document --yes flag for auto-confirm ([23b4a6b](https://github.com/kud/ai-conventional-commit-cli/commit/23b4a6b))
 
 ---
 
@@ -491,8 +503,8 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Add @inquirer/prompts for improved selection ([#0e0c61a](https://github.com/kud/ai-conventional-commit-cli/commit/0e0c61a))
-- Replace confirm with list for yes/no prompts ([#5efee79](https://github.com/kud/ai-conventional-commit-cli/commit/5efee79))
+- Add @inquirer/prompts for improved selection ([0e0c61a](https://github.com/kud/ai-conventional-commit-cli/commit/0e0c61a))
+- Replace confirm with list for yes/no prompts ([5efee79](https://github.com/kud/ai-conventional-commit-cli/commit/5efee79))
 
 ---
 
@@ -500,8 +512,8 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Simplify yes/no prompt to confirm ([#6324a64](https://github.com/kud/ai-conventional-commit-cli/commit/6324a64))
-- Improve diff summary for deleted files ([#033e9c7](https://github.com/kud/ai-conventional-commit-cli/commit/033e9c7))
+- Simplify yes/no prompt to confirm ([6324a64](https://github.com/kud/ai-conventional-commit-cli/commit/6324a64))
+- Improve diff summary for deleted files ([033e9c7](https://github.com/kud/ai-conventional-commit-cli/commit/033e9c7))
 
 ---
 
@@ -509,7 +521,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Handle renamed files in staged status ([#9d55ed0](https://github.com/kud/ai-conventional-commit-cli/commit/9d55ed0))
+- Handle renamed files in staged status ([9d55ed0](https://github.com/kud/ai-conventional-commit-cli/commit/9d55ed0))
 
 ---
 
@@ -517,7 +529,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Handle renamed files in diff parsing ([#e7c7328](https://github.com/kud/ai-conventional-commit-cli/commit/e7c7328))
+- Handle renamed files in diff parsing ([e7c7328](https://github.com/kud/ai-conventional-commit-cli/commit/e7c7328))
 
 ---
 
@@ -525,7 +537,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Documentation
 
-- Document maxFileLines and skipFilePatterns ([#f941438](https://github.com/kud/ai-conventional-commit-cli/commit/f941438))
+- Document maxFileLines and skipFilePatterns ([f941438](https://github.com/kud/ai-conventional-commit-cli/commit/f941438))
 
 ---
 
@@ -533,7 +545,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Support OPENCODE_FREE_MODEL as default ([#2c9308d](https://github.com/kud/ai-conventional-commit-cli/commit/2c9308d))
+- Support OPENCODE_FREE_MODEL as default ([2c9308d](https://github.com/kud/ai-conventional-commit-cli/commit/2c9308d))
 
 ---
 
@@ -541,7 +553,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Handle zero-diff files in summary bar ([#f0bf4e5](https://github.com/kud/ai-conventional-commit-cli/commit/f0bf4e5))
+- Handle zero-diff files in summary bar ([f0bf4e5](https://github.com/kud/ai-conventional-commit-cli/commit/f0bf4e5))
 
 ---
 
@@ -549,7 +561,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Refactoring
 
-- Streamline file summary line construction ([#7fc5de4](https://github.com/kud/ai-conventional-commit-cli/commit/7fc5de4))
+- Streamline file summary line construction ([7fc5de4](https://github.com/kud/ai-conventional-commit-cli/commit/7fc5de4))
 
 ---
 
@@ -558,7 +570,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 <details>
 <summary>Internal (1 commits)</summary>
 
-- 🧹 chore: feat/git: indicate deleted files in diff summary ([#5c5eb77](https://github.com/kud/ai-conventional-commit-cli/commit/5c5eb77))
+- 🧹 chore: feat/git: indicate deleted files in diff summary ([5c5eb77](https://github.com/kud/ai-conventional-commit-cli/commit/5c5eb77))
 
 </details>
 
@@ -568,7 +580,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Refactoring
 
-- Remove zero-change file borderLine output ([#9f5d9f2](https://github.com/kud/ai-conventional-commit-cli/commit/9f5d9f2))
+- Remove zero-change file borderLine output ([9f5d9f2](https://github.com/kud/ai-conventional-commit-cli/commit/9f5d9f2))
 
 ---
 
@@ -576,7 +588,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Fixes
 
-- Reattach branch after rebase if detached ([#e9ed56b](https://github.com/kud/ai-conventional-commit-cli/commit/e9ed56b))
+- Reattach branch after rebase if detached ([e9ed56b](https://github.com/kud/ai-conventional-commit-cli/commit/e9ed56b))
 
 ---
 
@@ -584,7 +596,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Fixes
 
-- Prevent detached HEAD after reword rebase ([#5c19afd](https://github.com/kud/ai-conventional-commit-cli/commit/5c19afd))
+- Prevent detached HEAD after reword rebase ([5c19afd](https://github.com/kud/ai-conventional-commit-cli/commit/5c19afd))
 
 ---
 
@@ -600,7 +612,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Improve commit reword output formatting ([#b6166da](https://github.com/kud/ai-conventional-commit-cli/commit/b6166da))
+- Improve commit reword output formatting ([b6166da](https://github.com/kud/ai-conventional-commit-cli/commit/b6166da))
 
 ---
 
@@ -608,7 +620,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Documentation
 
-- Clarify reword command usage examples ([#0e5112f](https://github.com/kud/ai-conventional-commit-cli/commit/0e5112f))
+- Clarify reword command usage examples ([0e5112f](https://github.com/kud/ai-conventional-commit-cli/commit/0e5112f))
 
 ---
 
@@ -616,7 +628,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Load package version at runtime ([#b178594](https://github.com/kud/ai-conventional-commit-cli/commit/b178594))
+- Load package version at runtime ([b178594](https://github.com/kud/ai-conventional-commit-cli/commit/b178594))
 
 ---
 
@@ -624,7 +636,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Documentation
 
-- Add reword command usage and details ([#a4058c9](https://github.com/kud/ai-conventional-commit-cli/commit/a4058c9))
+- Add reword command usage and details ([a4058c9](https://github.com/kud/ai-conventional-commit-cli/commit/a4058c9))
 
 ---
 
@@ -632,7 +644,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Add style and model override options to RewordCommand ([#67de645](https://github.com/kud/ai-conventional-commit-cli/commit/67de645))
+- Add style and model override options to RewordCommand ([67de645](https://github.com/kud/ai-conventional-commit-cli/commit/67de645))
 
 ---
 
@@ -640,7 +652,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Add reword command for AI-assisted commit message updates ([#966ba8b](https://github.com/kud/ai-conventional-commit-cli/commit/966ba8b))
+- Add reword command for AI-assisted commit message updates ([966ba8b](https://github.com/kud/ai-conventional-commit-cli/commit/966ba8b))
 
 ---
 
@@ -648,7 +660,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Enforce required scope in title format ([#c1d0a0c](https://github.com/kud/ai-conventional-commit-cli/commit/c1d0a0c))
+- Enforce required scope in title format ([c1d0a0c](https://github.com/kud/ai-conventional-commit-cli/commit/c1d0a0c))
 
 ---
 
@@ -657,7 +669,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 <details>
 <summary>Internal (1 commits)</summary>
 
-- 🧹 chore: update minimum Node.js version to 20.0.0 ([#a647202](https://github.com/kud/ai-conventional-commit-cli/commit/a647202))
+- 🧹 chore: update minimum Node.js version to 20.0.0 ([a647202](https://github.com/kud/ai-conventional-commit-cli/commit/a647202))
 
 </details>
 
@@ -667,7 +679,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Add diffstat bar chart to file summary ([#9942b54](https://github.com/kud/ai-conventional-commit-cli/commit/9942b54))
+- Add diffstat bar chart to file summary ([9942b54](https://github.com/kud/ai-conventional-commit-cli/commit/9942b54))
 
 ---
 
@@ -675,7 +687,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Refactoring
 
-- Remove programmatic title length enforcement ([#761924e](https://github.com/kud/ai-conventional-commit-cli/commit/761924e))
+- Remove programmatic title length enforcement ([761924e](https://github.com/kud/ai-conventional-commit-cli/commit/761924e))
 
 ---
 
@@ -683,7 +695,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 
 ### Features
 
-- Handle staged files with no diff output ([#f5ae952](https://github.com/kud/ai-conventional-commit-cli/commit/f5ae952))
+- Handle staged files with no diff output ([f5ae952](https://github.com/kud/ai-conventional-commit-cli/commit/f5ae952))
 
 ---
 
@@ -692,7 +704,7 @@ Version bump only — no functional changes. Tagged the same day as 3.6.2.
 <details>
 <summary>Internal (1 commits)</summary>
 
-- 🧹 chore: bump zod dependency to 4.1.8 ([#d121375](https://github.com/kud/ai-conventional-commit-cli/commit/d121375))
+- 🧹 chore: bump zod dependency to 4.1.8 ([d121375](https://github.com/kud/ai-conventional-commit-cli/commit/d121375))
 
 </details>
 
@@ -709,7 +721,7 @@ Version bump only — no functional changes.
 <details>
 <summary>Internal (1 commits)</summary>
 
-- 🧹 chore: update dependencies for inquirer, chalk, keyv, strip-ansi, zod ([#0787184](https://github.com/kud/ai-conventional-commit-cli/commit/0787184))
+- 🧹 chore: update dependencies for inquirer, chalk, keyv, strip-ansi, zod ([0787184](https://github.com/kud/ai-conventional-commit-cli/commit/0787184))
 
 </details>
 
@@ -719,7 +731,7 @@ Version bump only — no functional changes.
 
 ### Fixes
 
-- Update default model timeout to 120000ms ([#50b3081](https://github.com/kud/ai-conventional-commit-cli/commit/50b3081))
+- Update default model timeout to 120000ms ([50b3081](https://github.com/kud/ai-conventional-commit-cli/commit/50b3081))
 
 ---
 
@@ -735,15 +747,15 @@ Version bump only — no functional changes.
 
 ### Features
 
-- Improve commit block description formatting ([#13f7281](https://github.com/kud/ai-conventional-commit-cli/commit/13f7281))
+- Improve commit block description formatting ([13f7281](https://github.com/kud/ai-conventional-commit-cli/commit/13f7281))
 
 ### Documentation
 
-- Update CLI flags and config instructions for style option ([#268d0fc](https://github.com/kud/ai-conventional-commit-cli/commit/268d0fc))
+- Update CLI flags and config instructions for style option ([268d0fc](https://github.com/kud/ai-conventional-commit-cli/commit/268d0fc))
 
 ### Other
 
-- Bump version to 0.7.0 ([#a965dae](https://github.com/kud/ai-conventional-commit-cli/commit/a965dae))
+- Bump version to 0.7.0 ([a965dae](https://github.com/kud/ai-conventional-commit-cli/commit/a965dae))
 
 ---
 
@@ -751,7 +763,7 @@ Version bump only — no functional changes.
 
 ### Features
 
-- Update default model to github-copilot/gpt-4.1 ([#ef10bc7](https://github.com/kud/ai-conventional-commit-cli/commit/ef10bc7))
+- Update default model to github-copilot/gpt-4.1 ([ef10bc7](https://github.com/kud/ai-conventional-commit-cli/commit/ef10bc7))
 
 ---
 
@@ -759,7 +771,7 @@ Version bump only — no functional changes.
 
 ### Features
 
-- Display model name in animated header ([#a861378](https://github.com/kud/ai-conventional-commit-cli/commit/a861378))
+- Display model name in animated header ([a861378](https://github.com/kud/ai-conventional-commit-cli/commit/a861378))
 
 ---
 
@@ -768,7 +780,7 @@ Version bump only — no functional changes.
 <details>
 <summary>Internal (1 commits)</summary>
 
-- 🏗️ build: remove deprecated aicc CLI alias ([#9a11f94](https://github.com/kud/ai-conventional-commit-cli/commit/9a11f94))
+- 🏗️ build: remove deprecated aicc CLI alias ([9a11f94](https://github.com/kud/ai-conventional-commit-cli/commit/9a11f94))
 
 </details>
 
@@ -778,7 +790,7 @@ Version bump only — no functional changes.
 
 ### Other
 
-- Add trailing blank line after final success/abort messages ([#241197b](https://github.com/kud/ai-conventional-commit-cli/commit/241197b))
+- Add trailing blank line after final success/abort messages ([241197b](https://github.com/kud/ai-conventional-commit-cli/commit/241197b))
 
 ---
 
@@ -786,7 +798,7 @@ Version bump only — no functional changes.
 
 ### Documentation
 
-- Enrich README with badges, TOC, plugin example & workflow ([#01257df](https://github.com/kud/ai-conventional-commit-cli/commit/01257df))
+- Enrich README with badges, TOC, plugin example & workflow ([01257df](https://github.com/kud/ai-conventional-commit-cli/commit/01257df))
 
 ---
 
@@ -795,7 +807,7 @@ Version bump only — no functional changes.
 <details>
 <summary>Internal (1 commits)</summary>
 
-- 🧹 chore: add repository, bugs and homepage fields to package.json ([#530aad4](https://github.com/kud/ai-conventional-commit-cli/commit/530aad4))
+- 🧹 chore: add repository, bugs and homepage fields to package.json ([530aad4](https://github.com/kud/ai-conventional-commit-cli/commit/530aad4))
 
 </details>
 
@@ -805,7 +817,7 @@ Version bump only — no functional changes.
 
 ### Features
 
-- Add help/version commands, files field, new UI; remove reasoning ([#aa07e2e](https://github.com/kud/ai-conventional-commit-cli/commit/aa07e2e))
+- Add help/version commands, files field, new UI; remove reasoning ([aa07e2e](https://github.com/kud/ai-conventional-commit-cli/commit/aa07e2e))
 
 ---
 
@@ -813,7 +825,7 @@ Version bump only — no functional changes.
 
 ### Features
 
-- Add animated header and improve generate CLI output ([#3f9ca7f](https://github.com/kud/ai-conventional-commit-cli/commit/3f9ca7f))
+- Add animated header and improve generate CLI output ([3f9ca7f](https://github.com/kud/ai-conventional-commit-cli/commit/3f9ca7f))
 
 ---
 
@@ -822,7 +834,7 @@ Version bump only — no functional changes.
 <details>
 <summary>Internal (1 commits)</summary>
 
-- 🧹 chore: remove legacy aicc alias references and align binary/log namin ([#9773929](https://github.com/kud/ai-conventional-commit-cli/commit/9773929))
+- 🧹 chore: remove legacy aicc alias references and align binary/log namin ([9773929](https://github.com/kud/ai-conventional-commit-cli/commit/9773929))
 
 </details>
 
