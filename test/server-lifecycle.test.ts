@@ -34,7 +34,7 @@ const hasOpencode = (): boolean => {
 describe.skipIf(!hasOpencode())('opencode server lifecycle', () => {
   it('provider.close() kills the server and all its children', async () => {
     const { OpenCodeProvider } = await import('../src/model/provider.js');
-    const provider = new OpenCodeProvider();
+    const provider = new OpenCodeProvider('github-copilot/claude-sonnet-4.6');
     provider.warmup();
 
     await new Promise((r) => setTimeout(r, 3000));

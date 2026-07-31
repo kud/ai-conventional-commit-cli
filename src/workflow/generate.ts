@@ -6,7 +6,7 @@ import { getStagedFilesAndDiff, getRecentCommitMessages, createCommit } from '..
 import { buildStyleProfile } from '../style.js';
 import { buildGenerationMessages } from '../prompt.js';
 import type { Provider } from '../model/provider.js';
-import { createProvider, extractJSON } from '../model/provider.js';
+import { createProvider, extractJSON, validateModel } from '../model/provider.js';
 import { isTimeoutError, pickModelOnTimeout } from '../model/picker.js';
 import { loadPlugins, applyTransforms, runValidations } from '../plugins.js';
 import { checkCandidate } from '../guardrails.js';
@@ -36,7 +36,7 @@ export async function runGenerate(config: AppConfig) {
     console.error(chalk.dim('[ai-cc]') + chalk.cyan('[generate]'), chalk.white(msg), kvStr || '');
   };
 
-  let model = config.model;
+  let model = validateModel(config.model);
   while (true) {
     const startedAt = Date.now();
     const provider = createProvider(model);

@@ -31,27 +31,49 @@ export interface Provider {
   ): Promise<string>;
 }
 
-export const validateModel = (model: string): void => {
+// Clipanion prints an error carrying this marker as plain usage text and takes the
+// heading from `name`; without both, a misconfiguration surfaces as "Internal Error"
+// plus a stack trace. Importing its UsageError instead would pull the CLI framework
+// into the model layer, and clipanion's ESM build then fails to resolve when the
+// tests import this module.
+const configError = (message: string) =>
+  Object.assign(new Error(message), {
+    name: 'ConfigurationError',
+    clipanion: { type: 'usage' as const },
+  });
+
+export const validateModel = (model: string | undefined): string => {
+  if (!model) {
+    throw configError(
+      'No model configured. Set one with any of:\n' +
+        '  ai-conventional-commit --model claude/sonnet\n' +
+        '  export AICC_MODEL=claude/sonnet\n' +
+        '  ai-conventional-commit config set model claude/sonnet',
+    );
+  }
+
   if (!model.includes('/')) {
-    throw new Error(
+    throw configError(
       `Invalid model format "${model}". Expected "provider/model" (e.g. github-copilot/claude-sonnet-4.6, anthropic/claude-sonnet-4-6, claude/sonnet, codex/gpt-5.5).`,
     );
   }
 
   if (model.startsWith('anthropic/') && !process.env.ANTHROPIC_API_KEY) {
-    throw new Error(
+    throw configError(
       `Model "${model}" uses the Anthropic SDK but ANTHROPIC_API_KEY is not set.\n` +
         `Set it with: export ANTHROPIC_API_KEY=sk-ant-...`,
     );
   }
+
+  return model;
 };
 
-export const createProvider = (model: string): Provider => {
-  validateModel(model);
-  if (model.startsWith('claude/')) return new ClaudeCliProvider(model);
-  if (model.startsWith('codex/')) return new CodexCliProvider(model);
-  if (model.startsWith('anthropic/')) return new AnthropicProvider(model);
-  return new OpenCodeProvider(model);
+export const createProvider = (model: string | undefined): Provider => {
+  const resolved = validateModel(model);
+  if (resolved.startsWith('claude/')) return new ClaudeCliProvider(resolved);
+  if (resolved.startsWith('codex/')) return new CodexCliProvider(resolved);
+  if (resolved.startsWith('anthropic/')) return new AnthropicProvider(resolved);
+  return new OpenCodeProvider(resolved);
 };
 
 const killProcessGroup = (pid: number, signal: NodeJS.Signals) => {
@@ -112,7 +134,7 @@ export class OpenCodeProvider implements Provider {
   private serverProc: ChildProcess | null = null;
   private abortTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private model: string = 'github-copilot/claude-sonnet-4.6') {
+  constructor(private model: string) {
     this.timeoutMs = parseInt(process.env.AICC_MODEL_TIMEOUT_MS || '120000', 10);
     this.startupTimeoutMs = parseInt(process.env.AICC_OPENCODE_STARTUP_TIMEOUT_MS || '30000', 10);
     this.debug = process.env.AICC_DEBUG === 'true';
@@ -361,6 +383,14 @@ export class OpenCodeProvider implements Provider {
   }
 }
 
+const parseResultEnvelope = (raw: string): any | null => {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
 export class ClaudeCliProvider implements Provider {
   private readonly modelAlias: string;
   private readonly debug: boolean;
@@ -426,23 +456,27 @@ export class ClaudeCliProvider implements Provider {
 
       proc.on('error', reject);
       proc.on('exit', (code) => {
-        if (code !== 0) {
-          reject(new Error(`claude cli exited with code ${code}: ${stderr}`));
+        const envelope = parseResultEnvelope(stdout);
+
+        if (envelope?.is_error) {
+          reject(new Error(`claude cli error: ${envelope.result}`));
           return;
         }
-        try {
-          const envelope = JSON.parse(stdout);
-          if (envelope.is_error) {
-            reject(new Error(`claude cli error: ${envelope.result}`));
-            return;
-          }
-          const result =
-            typeof envelope.result === 'string' ? envelope.result : JSON.stringify(envelope.result);
-          if (this.debug) pdbg('claude cli response', { resultChars: result.length });
-          resolve(result);
-        } catch (e: any) {
-          reject(new Error(`Failed to parse claude cli output: ${e.message}\n${stdout}`));
+        if (code !== 0) {
+          reject(
+            new Error(`claude cli exited with code ${code}: ${stderr || stdout || '(no output)'}`),
+          );
+          return;
         }
+        if (!envelope) {
+          reject(new Error(`Failed to parse claude cli output:\n${stdout}`));
+          return;
+        }
+
+        const result =
+          typeof envelope.result === 'string' ? envelope.result : JSON.stringify(envelope.result);
+        if (this.debug) pdbg('claude cli response', { resultChars: result.length });
+        resolve(result);
       });
     });
   }
@@ -564,7 +598,7 @@ export class AnthropicProvider implements Provider {
   private readonly debug: boolean;
   private readonly client: Anthropic;
 
-  constructor(model: string = 'anthropic/claude-sonnet-4-6') {
+  constructor(model: string) {
     const slashIdx = model.indexOf('/');
     this.modelID = slashIdx !== -1 ? model.slice(slashIdx + 1) : model;
     this.debug = process.env.AICC_DEBUG === 'true';

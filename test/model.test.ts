@@ -26,6 +26,11 @@ describe('createProvider', () => {
     expect(provider).toBeInstanceOf(CodexCliProvider);
     expect(provider.name()).toBe('codex-cli');
   });
+
+  it('refuses to pick a model on the caller behalf', () => {
+    expect(() => createProvider(undefined)).toThrow(/No model configured/);
+    expect(() => createProvider('')).toThrow(/No model configured/);
+  });
 });
 
 describe('CodexCliProvider', () => {

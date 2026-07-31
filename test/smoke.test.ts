@@ -6,7 +6,19 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLI = join(__dirname, '..', 'src', 'index.ts');
 
-const run = (...args: string[]) => execa('npx', ['tsx', CLI, ...args], { reject: false });
+// AICC_MODEL is a config layer, so a developer machine that exports it would make
+// the "no model configured" cases pass for the wrong reason.
+const run = (...args: string[]) =>
+  execa('npx', ['tsx', CLI, ...args], {
+    reject: false,
+    env: { ...process.env, AICC_MODEL: undefined },
+  });
+
+const runWithModel = (model: string, ...args: string[]) =>
+  execa('npx', ['tsx', CLI, ...args], {
+    reject: false,
+    env: { ...process.env, AICC_MODEL: model },
+  });
 
 describe('CLI smoke tests', () => {
   describe('--version', () => {
@@ -45,10 +57,16 @@ describe('CLI smoke tests', () => {
       expect(parsed).toHaveProperty('config');
     });
 
-    it('config object has a model field', async () => {
+    it('omits model when nothing configures it', async () => {
       const { stdout } = await run('config', 'show', '--json');
       const { config } = JSON.parse(stdout);
-      expect(config).toHaveProperty('model');
+      expect(config).not.toHaveProperty('model');
+    });
+
+    it('reports model once configured', async () => {
+      const { stdout } = await runWithModel('claude/sonnet', 'config', 'show', '--json');
+      const { config } = JSON.parse(stdout);
+      expect(config.model).toBe('claude/sonnet');
     });
 
     it('config object has a style field', async () => {
@@ -70,9 +88,15 @@ describe('CLI smoke tests', () => {
       expect(exitCode).toBe(0);
     });
 
-    it('prints a non-empty value for model', async () => {
-      const { stdout } = await run('config', 'get', 'model');
-      expect(stdout.trim().length).toBeGreaterThan(0);
+    it('prints nothing for model when it is unset', async () => {
+      const { stdout, exitCode } = await run('config', 'get', 'model');
+      expect(exitCode).toBe(0);
+      expect(stdout.trim()).toBe('');
+    });
+
+    it('prints the value for model once configured', async () => {
+      const { stdout } = await runWithModel('claude/sonnet', 'config', 'get', 'model');
+      expect(stdout.trim()).toBe('"claude/sonnet"');
     });
 
     it('prints a non-empty value for style', async () => {

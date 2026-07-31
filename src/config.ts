@@ -4,7 +4,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 
 export interface AppConfig {
-  model: string;
+  model?: string;
 
   privacy: 'low' | 'medium' | 'high';
   style: 'standard' | 'gitmoji' | 'gitmoji-pure';
@@ -19,9 +19,6 @@ export interface AppConfig {
 }
 
 const DEFAULTS: AppConfig = {
-  model:
-    process.env.AICC_MODEL || process.env.OPENCODE_FREE_MODEL || 'github-copilot/claude-sonnet-4.6',
-
   privacy: (process.env.AICC_PRIVACY as any) || 'low',
   style: (process.env.AICC_STYLE as any) || 'standard',
   styleSamples: parseInt(process.env.AICC_STYLE_SAMPLES || '120', 10),
@@ -57,6 +54,13 @@ const DEFAULTS: AppConfig = {
   verbose: process.env.AICC_VERBOSE === 'true',
   yes: process.env.AICC_YES === 'true',
 };
+
+// `model` has no default, so it is absent from a merged config until something sets
+// it — which makes a plain `key in config` test report it as an unknown key.
+export const CONFIG_KEYS: (keyof AppConfig)[] = [
+  'model',
+  ...(Object.keys(DEFAULTS) as (keyof AppConfig)[]),
+];
 
 export function getGlobalConfigPath(): string {
   const base = process.env.XDG_CONFIG_HOME || join(homedir(), '.config');

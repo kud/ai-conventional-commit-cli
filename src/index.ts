@@ -304,18 +304,20 @@ class ConfigGetCommand extends Command {
   key = Option.String();
   withSource = Option.Boolean('--with-source', false, { description: 'Append source label' });
   async execute() {
-    const { loadConfigDetailed } = await import('./config.js');
+    const { loadConfigDetailed, CONFIG_KEYS } = await import('./config.js');
     const { config } = await loadConfigDetailed();
     const key = this.key as keyof typeof config;
-    if (!(key in config)) {
+    if (!CONFIG_KEYS.includes(key as any)) {
       this.context.stderr.write(`Unknown config key: ${this.key}\n`);
       return 1;
     }
+    const value = (config as any)[key];
+    const rendered = value === undefined ? '' : JSON.stringify(value);
     if (this.withSource) {
-      const src = (config as any)._sources?.[key];
-      this.context.stdout.write(`${JSON.stringify((config as any)[key])} (${src})\n`);
+      const src = (config as any)._sources?.[key] ?? 'unset';
+      this.context.stdout.write(`${rendered} (${src})\n`.trimStart());
     } else {
-      this.context.stdout.write(JSON.stringify((config as any)[key]) + '\n');
+      this.context.stdout.write(rendered + '\n');
     }
   }
 }
