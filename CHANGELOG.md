@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.0.0 — 2026-07-31
+
+### Breaking Changes
+
+- **The built-in default model has been removed.** The CLI used to silently fall back to `github-copilot/claude-sonnet-4.6` whenever no model was configured; `model` is now optional in config and nothing is chosen on your behalf. Running without a configured model fails fast with a usage error listing the three ways to set one — a config file, `AICC_MODEL`, or `--model`. **Before upgrading**, set a model explicitly: `ai-conventional-commit config set model <provider>/<model>`, `export AICC_MODEL=<provider>/<model>`, or pass `--model <provider>/<model>` on each run. `OPENCODE_FREE_MODEL` is also no longer consulted — it was tied to the removed default and has no replacement. ([ad97bb3](https://github.com/kud/ai-conventional-commit-cli/commit/ad97bb367877cf960cbcaa270a89cb13d7d050f6))
+
+### Fixes
+
+- Claude CLI failures now surface their real error message instead of a bare exit code — the provider parses the JSON error envelope before deciding whether the run failed. ([ad97bb3](https://github.com/kud/ai-conventional-commit-cli/commit/ad97bb367877cf960cbcaa270a89cb13d7d050f6))
+- A missing or invalid model configuration now prints clean usage text instead of "Internal Error" and a stack trace. ([ad97bb3](https://github.com/kud/ai-conventional-commit-cli/commit/ad97bb367877cf960cbcaa270a89cb13d7d050f6))
+
+---
+
 ## 3.9.0 — 2026-07-05
 
 ### Highlights
