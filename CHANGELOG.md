@@ -4,6 +4,21 @@ All notable changes to this project are documented here.
 
 ---
 
+## 4.0.2 — 2026-08-13
+
+### Fixes
+
+- A git hook refusing a commit is now reported as what it is, rather than as a fault in this tool. It previously printed `Internal Error` followed by a `simple-git` stack trace, which buried the hook's own message — the only part you can act on. The hook's output now passes through untouched, followed by a plain line saying a hook refused the commit, and the run exits non-zero with no stack trace. ([eb02d38](https://github.com/kud/ai-conventional-commit-cli/commit/eb02d38fb0221650cd93d1721396fdf4ff4bfab2))
+- Genuine git failures — a held `index.lock`, a bad ref — stay loud, and are no longer indistinguishable from a hook doing its job. ([eb02d38](https://github.com/kud/ai-conventional-commit-cli/commit/eb02d38fb0221650cd93d1721396fdf4ff4bfab2))
+- `split` no longer hides a failed commit's explanation behind `--verbose`. A hook that refuses every proposed commit now explains itself once instead of once per commit. ([eb02d38](https://github.com/kud/ai-conventional-commit-cli/commit/eb02d38fb0221650cd93d1721396fdf4ff4bfab2))
+- Rewording a commit no longer collapses a multi-line hook report into a single truncated line. ([eb02d38](https://github.com/kud/ai-conventional-commit-cli/commit/eb02d38fb0221650cd93d1721396fdf4ff4bfab2))
+
+### Notes
+
+- The CLI now exits non-zero whenever a commit fails, where some of these cases previously exited 0. Anything scripting `ai-conventional-commit` and checking its exit status will start seeing failures it was silently ignoring. ([eb02d38](https://github.com/kud/ai-conventional-commit-cli/commit/eb02d38fb0221650cd93d1721396fdf4ff4bfab2))
+
+---
+
 ## 4.0.1 — 2026-07-31
 
 Documentation-only release — `CHANGELOG.md` isn't part of the published npm package, so the 4.0.1 tarball is identical to 4.0.0.
