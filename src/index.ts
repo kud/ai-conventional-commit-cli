@@ -49,7 +49,7 @@ class RootCommand extends Command {
     if (this.style) config.style = this.style as any;
     if (this.model) config.model = this.model;
     if (this.yes) config.yes = this.yes;
-    await runGenerate(config);
+    return runGenerate(config);
   }
 }
 
@@ -90,7 +90,7 @@ class GenerateCommand extends Command {
 
     if (this.model) config.model = this.model;
     if (this.yes) config.yes = this.yes;
-    await runGenerate(config);
+    return runGenerate(config);
   }
 }
 
@@ -128,7 +128,7 @@ class SplitCommand extends Command {
 
     if (this.model) config.model = this.model;
     if (this.yes) config.yes = this.yes;
-    await runSplit(config, this.max ? parseInt(this.max, 10) : undefined);
+    return runSplit(config, this.max ? parseInt(this.max, 10) : undefined);
   }
 }
 
@@ -426,7 +426,7 @@ class RewordCommand extends Command {
         return;
       }
     }
-    await runReword(config, target!);
+    return runReword(config, target!);
   }
 }
 

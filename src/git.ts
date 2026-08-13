@@ -1,4 +1,5 @@
 import { simpleGit } from 'simple-git';
+import { execa } from 'execa';
 import crypto from 'node:crypto';
 import type { FileDiff } from './types.js';
 
@@ -123,13 +124,52 @@ export const getRecentCommitMessages = async (limit: number): Promise<string[]> 
   return log.all.map((e) => e.message);
 };
 
-export const createCommit = async (title: string, body?: string) => {
-  if (body) {
-    await git.commit([title, body].join('\n\n'));
-  } else {
-    await git.commit(title);
+// Commits run through execa rather than simple-git. simple-git's error-detection plugin
+// collapses a failed command into `new GitError(undefined, stdout + stderr)` and discards
+// the exit code, but the exit code is what separates a hook refusing the commit (git
+// collapses any non-zero hook exit to 1) from git itself failing (128, always with a
+// `fatal:` line). Losing that made a working guard read as a fault in this tool.
+const GIT_FATAL_EXIT_CODE = 128;
+const GIT_FATAL_LINE = /^fatal: /m;
+
+export type CommitFailure = {
+  output: string;
+  exitCode: number;
+  rejectedByHook: boolean;
+};
+
+export type CommitResult = { ok: true } | { ok: false; failure: CommitFailure };
+
+const isHookRejection = (exitCode: number, output: string) =>
+  exitCode !== GIT_FATAL_EXIT_CODE && !GIT_FATAL_LINE.test(output);
+
+const runCommit = async (args: string[]): Promise<CommitResult> => {
+  try {
+    await execa('git', ['commit', ...args]);
+    return { ok: true };
+  } catch (e: any) {
+    // No exit code means git never ran (missing binary, spawn failure) — a genuine fault,
+    // so let it propagate rather than dressing it up as a rejected commit.
+    if (typeof e?.exitCode !== 'number') throw e;
+    // git forwards a hook's stdout onto its own stderr, so stderr carries the whole hook
+    // report; stdout is appended only for the rare git message that lands there.
+    const output = [e.stderr, e.stdout].filter(Boolean).join('\n').trimEnd();
+    return {
+      ok: false,
+      failure: {
+        output,
+        exitCode: e.exitCode,
+        rejectedByHook: isHookRejection(e.exitCode, output),
+      },
+    };
   }
 };
+
+export const createCommit = async (title: string, body?: string): Promise<CommitResult> =>
+  runCommit(['-m', body ? [title, body].join('\n\n') : title]);
+
+export const amendCommit = async (message: string): Promise<CommitResult> =>
+  runCommit(['--amend', '-m', message]);
 
 // Helpers for multi-commit split staging
 export const resetIndex = async () => {

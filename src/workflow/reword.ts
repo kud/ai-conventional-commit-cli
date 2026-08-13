@@ -12,8 +12,10 @@ import {
   abortMessage,
   finalSuccess,
   createPhasedSpinner,
+  commitFailed,
 } from './ui.js';
 import inquirer from 'inquirer';
+import { amendCommit } from '../git.js';
 import { simpleGit } from 'simple-git';
 import type { CommitPlan } from '../types.js';
 
@@ -47,7 +49,7 @@ async function isAncestor(ancestor: string, head: string): Promise<boolean> {
   }
 }
 
-export async function runReword(config: AppConfig, hash: string) {
+export async function runReword(config: AppConfig, hash: string): Promise<number | void> {
   const startedAt = Date.now();
   const commit = await getCommitMessage(hash);
   if (!commit) {
@@ -158,13 +160,11 @@ export async function runReword(config: AppConfig, hash: string) {
   const full = candidate.body ? `${candidate.title}\n\n${candidate.body}` : candidate.title;
 
   if (isHead) {
-    try {
-      await git.commit(full, { '--amend': null });
-    } catch (e: any) {
-      borderLine('Failed to amend HEAD: ' + (e?.message || e));
+    const amended = await amendCommit(full);
+    if (!amended.ok) {
       borderLine();
-      abortMessage();
-      return;
+      commitFailed(amended.failure);
+      return amended.failure.exitCode;
     }
     borderLine();
     finalSuccess({ count: 1, startedAt });

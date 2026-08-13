@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import type { CommitFailure } from '../git.js';
 
 export function animateHeaderBase(text = 'ai-conventional-commit', modelSegment?: string) {
   const mainText = text;
@@ -45,6 +46,26 @@ export function sectionTitle(label: string) {
 export function abortMessage() {
   console.log('└ 🙅‍♀️ No commit created.');
   console.log();
+}
+
+export function commitFailureOutput(failure: CommitFailure) {
+  // Hooks format and colour their own output, so it goes out untouched rather than
+  // re-wrapped in a border that would mangle it.
+  if (failure.output) process.stderr.write(failure.output + '\n');
+}
+
+export function commitFailureMessage(failure: CommitFailure) {
+  if (failure.rejectedByHook) {
+    console.log('└ 🙅‍♀️ A git hook refused the commit. Nothing was committed.');
+  } else {
+    console.log(`└ 💥 git commit failed (exit ${failure.exitCode}). Nothing was committed.`);
+  }
+  console.log();
+}
+
+export function commitFailed(failure: CommitFailure) {
+  commitFailureOutput(failure);
+  commitFailureMessage(failure);
 }
 
 export function finalSuccess(opts: { count: number; startedAt: number }) {

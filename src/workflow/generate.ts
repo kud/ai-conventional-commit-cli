@@ -24,9 +24,10 @@ import {
   createPhasedSpinner,
   renderCommitBlock,
   finalSuccess,
+  commitFailed,
 } from './ui.js';
 
-export async function runGenerate(config: AppConfig) {
+export async function runGenerate(config: AppConfig): Promise<number | void> {
   const debug = process.env.AICC_DEBUG === 'true';
   const dbg = (msg: string, pairs: Record<string, unknown> = {}) => {
     if (!debug) return;
@@ -42,8 +43,7 @@ export async function runGenerate(config: AppConfig) {
     const provider = createProvider(model);
     provider.warmup();
     try {
-      await _runGenerate(provider, { ...config, model }, dbg, startedAt);
-      return;
+      return await _runGenerate(provider, { ...config, model }, dbg, startedAt);
     } catch (e: any) {
       if (isTimeoutError(e) && process.stdout.isTTY) {
         const picked = await pickModelOnTimeout(model);
@@ -64,7 +64,7 @@ async function _runGenerate(
   config: AppConfig,
   dbg: (msg: string, pairs?: Record<string, unknown>) => void,
   startedAt: number,
-) {
+): Promise<number | void> {
   const { files, hasStagedChanges } = await getStagedFilesAndDiff();
   dbg('staged files', { files: files.length, hasStagedChanges });
   if (!hasStagedChanges) {
@@ -199,7 +199,12 @@ async function _runGenerate(
     abortMessage();
     return;
   }
-  await createCommit(chosen.title, chosen.body);
+  const commit = await createCommit(chosen.title, chosen.body);
+  if (!commit.ok) {
+    borderLine();
+    commitFailed(commit.failure);
+    return commit.failure.exitCode;
+  }
   saveSession({ plan, chosen, mode: 'single' });
   borderLine();
   finalSuccess({ count: 1, startedAt });

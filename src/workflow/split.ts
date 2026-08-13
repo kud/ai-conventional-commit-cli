@@ -9,6 +9,7 @@ import {
   resetIndex,
   stageFiles,
 } from '../git.js';
+import type { CommitFailure } from '../git.js';
 import { buildStyleProfile } from '../style.js';
 import { buildGenerationMessages } from '../prompt.js';
 import { clusterHunks } from '../cluster.js';
@@ -29,9 +30,11 @@ import {
   createPhasedSpinner,
   renderCommitBlock,
   finalSuccess,
+  commitFailureOutput,
+  commitFailureMessage,
 } from './ui.js';
 
-export async function runSplit(config: AppConfig, desired?: number) {
+export async function runSplit(config: AppConfig, desired?: number): Promise<number | void> {
   const startedAt = Date.now();
   const provider = createProvider(config.model);
   provider.warmup();
@@ -47,7 +50,7 @@ async function _runSplit(
   config: AppConfig,
   desired: number | undefined,
   startedAt: number,
-) {
+): Promise<number | void> {
   const { files, hasStagedChanges } = await getStagedFilesAndDiff();
   if (!hasStagedChanges) {
     console.log('No staged changes.');
@@ -206,19 +209,25 @@ async function _runSplit(
   // Commit loop with selective staging
   let success = 0;
   const failed: string[] = [];
+  let lastFailure: CommitFailure | undefined;
+  // A hook rejects every candidate for the same reason, so its report is printed once
+  // per distinct message rather than once per commit.
+  const reportedOutput = new Set<string>();
   for (const candidate of candidates) {
     // reset index (keep worktree)
     await resetIndex();
     if (!candidate.files?.length) continue;
     await stageFiles(candidate.files);
-    try {
-      await createCommit(candidate.title, candidate.body);
+    const commit = await createCommit(candidate.title, candidate.body);
+    if (commit.ok) {
       success++;
-    } catch (e: any) {
-      failed.push(candidate.title);
-      if (config.verbose) {
-        console.error(`[ai-cc] Commit failed for "${candidate.title}": ${e?.message || e}`);
-      }
+      continue;
+    }
+    failed.push(candidate.title);
+    lastFailure = commit.failure;
+    if (!reportedOutput.has(commit.failure.output)) {
+      reportedOutput.add(commit.failure.output);
+      commitFailureOutput(commit.failure);
     }
   }
   if (failed.length) {
@@ -232,9 +241,11 @@ async function _runSplit(
   }
   // After loop, ensure no leftover unstaged changes (stage and append to last commit?) – choose to leave them unstaged so user can run again.
   borderLine();
-  finalSuccess({ count: success, startedAt });
+  if (lastFailure) commitFailureMessage(lastFailure);
+  if (success) finalSuccess({ count: success, startedAt });
 
   saveSession({ plan, chosen: candidates, mode: 'split' });
+  if (lastFailure) return lastFailure.exitCode;
 }
 
 function saveSession(data: any) {
