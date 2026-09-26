@@ -10,6 +10,16 @@ const SECRET_PATTERNS = [
 const CONVENTIONAL_RE =
   /^(?:([\p{Emoji}\p{So}\p{Sk}]+)\s+(feat|fix|chore|docs|refactor|test|ci|perf|style|build|revert|merge|security|release)(\(.+\))?:\s|([\p{Emoji}\p{So}\p{Sk}]+):\s.*|([\p{Emoji}\p{So}\p{Sk}]+):\s*$|(feat|fix|chore|docs|refactor|test|ci|perf|style|build|revert|merge|security|release)(\(.+\))?:\s)/u;
 
+const TICKET_PREFIX_RE = /^([A-Za-z][A-Za-z0-9]*-\d+):\s+(.+)$/;
+
+// Repos that prefix subjects with a ticket key (`ABC-123: feat: …`) keep the key
+// outside the conventional title, so it must be peeled off before normalisation.
+export const splitTicketPrefix = (title: string): { ticket: string | null; rest: string } => {
+  const m = title.trim().match(TICKET_PREFIX_RE);
+  if (!m) return { ticket: null, rest: title };
+  return { ticket: m[1].toUpperCase(), rest: m[2] };
+};
+
 export const sanitizeTitle = (title: string, allowEmoji: boolean): string => {
   let t = title.trim();
   if (allowEmoji) {
@@ -65,7 +75,7 @@ export const normalizeConventionalTitle = (title: string): string => {
 export const checkCandidate = (candidate: CommitCandidate): string[] => {
   const errs: string[] = [];
   // Length not programmatically enforced; rely on prompt guidance (50/72 convention).
-  if (!CONVENTIONAL_RE.test(candidate.title)) {
+  if (!CONVENTIONAL_RE.test(splitTicketPrefix(candidate.title).rest)) {
     errs.push('Not a valid conventional commit title.');
   }
   if (/^[A-Z]/.test(candidate.title)) {

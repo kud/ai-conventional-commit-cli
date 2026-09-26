@@ -37,4 +37,32 @@ describe('formatCommitTitle', () => {
     // Accept any emoji: subject lowercased
     expect(out.toLowerCase()).toMatch(/: something random$/);
   });
+
+  describe('ticket-prefixed titles', () => {
+    const gitmoji = { allowGitmoji: true, mode: 'gitmoji' as const };
+
+    it('keeps an already-formatted prefixed title intact instead of wrapping it in chore', () => {
+      expect(formatCommitTitle('ABC-1234: ✨ feat(launcher): add preview panel', gitmoji)).toBe(
+        'ABC-1234: ✨ feat(launcher): add preview panel',
+      );
+    });
+
+    it('adds the gitmoji after the ticket key', () => {
+      expect(formatCommitTitle('ABC-1234: feat(launcher): add preview panel', gitmoji)).toBe(
+        'ABC-1234: ✨ feat(launcher): add preview panel',
+      );
+    });
+
+    it('restores the key case', () => {
+      expect(formatCommitTitle('abc-1234: fix: handle empty list', gitmoji)).toBe(
+        'ABC-1234: 🐛 fix: handle empty list',
+      );
+    });
+
+    it('keeps the prefix when gitmoji is disabled', () => {
+      expect(
+        formatCommitTitle('ABC-1234: feat: add thing', { allowGitmoji: false, mode: 'standard' }),
+      ).toBe('ABC-1234: feat: add thing');
+    });
+  });
 });

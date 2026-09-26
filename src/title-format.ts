@@ -1,4 +1,4 @@
-import { sanitizeTitle, normalizeConventionalTitle } from './guardrails.js';
+import { sanitizeTitle, normalizeConventionalTitle, splitTicketPrefix } from './guardrails.js';
 
 export interface GitmojiFormatOptions {
   allowGitmoji: boolean;
@@ -26,6 +26,12 @@ const EMOJI_TYPE_RE = /^([\p{Emoji}\p{So}\p{Sk}])\s+(\w+)(\(.+\))?:\s+(.*)$/u; /
 const TYPE_RE = /^(\w+)(\(.+\))?:\s+(.*)$/; // type only
 
 export const formatCommitTitle = (raw: string, opts: GitmojiFormatOptions): string => {
+  const { ticket, rest } = splitTicketPrefix(raw);
+  if (ticket) return `${ticket}: ${formatConventionalTitle(rest, opts)}`;
+  return formatConventionalTitle(raw, opts);
+};
+
+const formatConventionalTitle = (raw: string, opts: GitmojiFormatOptions): string => {
   const { allowGitmoji, mode = 'standard' } = opts;
   let norm = normalizeConventionalTitle(sanitizeTitle(raw, allowGitmoji));
 
