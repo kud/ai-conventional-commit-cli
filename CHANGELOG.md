@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 ---
 
+## 4.0.3 — 2026-09-28
+
+### Fixes
+
+- A commit title led by a tracker key — `SHOP-1234: ✨ feat(cart): …` or `SHOP-1 / SHOP-2: …` — was being mangled into `🧹 chore: sHOP-1234: …`: the ticket prefix got folded into the type/subject and the original glyph and type were lost. The conventional-title guard now recognises the ticket prefix, strips it before validating the rest of the title, and passes it through unchanged, so the key, glyph and type all survive. ([e30e8d5](https://github.com/kud/ai-conventional-commit-cli/commit/e30e8d56e135209ab747c42263b3a33f48e00a17))
+
+---
+
 ## 4.0.2 — 2026-08-13
 
 ### Fixes
