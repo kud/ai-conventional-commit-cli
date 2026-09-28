@@ -4,6 +4,19 @@ All notable changes to this project are documented here.
 
 ---
 
+## 4.1.0 — 2026-09-28
+
+### Highlights
+
+- `models` now discovers models across providers instead of only OpenCode's list: it adds the `claude/fable`, `claude/opus` and `claude/sonnet` aliases when the Claude CLI is on `PATH`, and lists `anthropic/*` model ids straight from the Anthropic API when `ANTHROPIC_API_KEY` is set. Each id still prints one per line, and a provider that can't be reached (no CLI, no key, a failed call) is skipped silently on stdout and reported on stderr instead of breaking the list. ([28721ea](https://github.com/kud/ai-conventional-commit-cli/commit/28721ea38abb8e91789fe8dbdcf580d16d3018c5))
+- The model pickers no longer drop ids with extra structure: nested ids like `openrouter/<vendor>/<model>` and version-tagged ids like `<provider>/<model>@<version>` were filtered out entirely, which on a well-stocked OpenCode setup was most of the list. The timeout fallback picker now draws from the same provider-aware list as `models`. ([28721ea](https://github.com/kud/ai-conventional-commit-cli/commit/28721ea38abb8e91789fe8dbdcf580d16d3018c5))
+
+### Docs
+
+- The environment-variable table no longer claims `AICC_MODEL` defaults to `github-copilot/claude-sonnet-4.6`. The CLI never had a built-in model default; the table now matches the code and the provider docs. ([5942a1b](https://github.com/kud/ai-conventional-commit-cli/commit/5942a1b3b84380cdada1433b3da11d4de006689b))
+
+---
+
 ## 4.0.3 — 2026-09-28
 
 ### Fixes
