@@ -7,7 +7,6 @@ import { loadConfig } from './config.js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { execa } from 'execa';
 import { select } from '@inquirer/prompts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -182,8 +181,8 @@ class RefineCommand extends Command {
 class ModelsCommand extends Command {
   static paths = [[`models`]];
   static usage = Command.Usage({
-    description: 'List available models via opencode CLI.',
-    details: `Wrapper around "opencode models". Use --interactive (or -i) for a picker; prints the selected model id for piping or quick copy. Add --save with --interactive to persist globally in aicc.json (XDG config).`,
+    description: 'List models from every available provider, or pick one.',
+    details: `Prints one provider/model id per line, gathered from each provider that is available here: OpenCode ("opencode models"), the Claude CLI aliases, and the Anthropic API (when ANTHROPIC_API_KEY is set). Providers that are unavailable or cannot be listed (codex/* takes free-text names) are skipped, with one line on stderr saying why. Use --interactive (or -i) for a picker; add --save to persist the choice globally in aicc.json (XDG config).`,
     examples: [
       ['List models', 'ai-conventional-commit models'],
       ['Interactively pick a model', 'ai-conventional-commit models --interactive'],
@@ -207,59 +206,36 @@ class ModelsCommand extends Command {
       this.context.stdout.write(`${config.model} (source: ${config._sources.model})` + '\n');
       return;
     }
-    try {
-      const { stdout } = await execa('opencode', ['models']).catch(async (err) => {
-        if (err.shortMessage && /ENOENT/.test(err.shortMessage)) {
-          this.context.stderr.write(
-            'opencode CLI not found in PATH. Install it from https://github.com/opencodejs/opencode or ensure the binary is available.\n',
-          );
-        }
-        throw err;
-      });
-      const useInteractive = this.interactive;
-      if (!useInteractive) {
-        this.context.stdout.write(stdout.trim() + '\n');
-        return;
-      }
-      if (!process.stdout.isTTY) {
-        this.context.stdout.write(stdout.trim() + '\n');
-        return;
-      }
-      // Extract candidate model identifiers of the form provider/model
-      const candidates = Array.from(
-        new Set(
-          stdout
-            .split('\n')
-            .map((l) => l.trim())
-            .filter((l) => /^[a-z0-9_.-]+\/[A-Za-z0-9_.:-]+$/.test(l)),
-        ),
-      );
-      if (candidates.length === 0) {
-        this.context.stdout.write(stdout.trim() + '\n');
-        return;
-      }
-      const model = await select({
-        message: 'Select a model',
-        choices: candidates.map((c: string) => ({ name: c, value: c })),
-      });
-      this.context.stdout.write(model + '\n');
-      if (this.save) {
-        try {
-          const { saveGlobalConfig } = await import('./config.js');
-          const path = saveGlobalConfig({ model });
-          this.context.stdout.write(`Saved as default model in ${path}\n`);
-        } catch (e: any) {
-          this.context.stderr.write(`Failed to save global config: ${e?.message || e}\n`);
-        }
-      }
-      this.context.stdout.write(
-        `\nUse it now:\n  ai-conventional-commit generate --model ${model}\n`,
-      );
-    } catch (e: any) {
-      this.context.stderr.write(
-        `Failed to list models via "opencode models": ${e?.message || e}\n`,
-      );
+    const { discoverModels, formatSkipped } = await import('./model/discovery.js');
+    const { models, skipped } = await discoverModels();
+    const skippedLine = formatSkipped(skipped);
+    if (skippedLine) this.context.stderr.write(skippedLine + '\n');
+
+    if (models.length === 0) {
+      this.context.stderr.write('No models found from any provider.\n');
+      return 1;
     }
+    if (!this.interactive || !process.stdout.isTTY) {
+      this.context.stdout.write(models.join('\n') + '\n');
+      return;
+    }
+    const model = await select({
+      message: 'Select a model',
+      choices: models.map((m) => ({ name: m, value: m })),
+    });
+    this.context.stdout.write(model + '\n');
+    if (this.save) {
+      try {
+        const { saveGlobalConfig } = await import('./config.js');
+        const path = saveGlobalConfig({ model });
+        this.context.stdout.write(`Saved as default model in ${path}\n`);
+      } catch (e: any) {
+        this.context.stderr.write(`Failed to save global config: ${e?.message || e}\n`);
+      }
+    }
+    this.context.stdout.write(
+      `\nUse it now:\n  ai-conventional-commit generate --model ${model}\n`,
+    );
   }
 }
 
