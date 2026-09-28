@@ -10,6 +10,16 @@ const SECRET_PATTERNS = [
 const CONVENTIONAL_RE =
   /^(?:([\p{Emoji}\p{So}\p{Sk}]+)\s+(feat|fix|chore|docs|refactor|test|ci|perf|style|build|revert|merge|security|release)(\(.+\))?:\s|([\p{Emoji}\p{So}\p{Sk}]+):\s.*|([\p{Emoji}\p{So}\p{Sk}]+):\s*$|(feat|fix|chore|docs|refactor|test|ci|perf|style|build|revert|merge|security|release)(\(.+\))?:\s)/u;
 
+// A leading tracker key, as in `SHOP-4518: ✨ feat(auth): …` or `SHOP-1 / SHOP-2: …`. It is not a
+// conventional type, so normalisation must carry it through untouched rather than read it as one.
+const TICKET_PREFIX_RE = /^([A-Z][A-Z0-9]+-\d+(?:\s*\/\s*[A-Z][A-Z0-9]+-\d+)*):\s+/;
+
+export const splitTicketPrefix = (title: string): { prefix: string; rest: string } => {
+  const m = title.trim().match(TICKET_PREFIX_RE);
+  if (!m) return { prefix: '', rest: title.trim() };
+  return { prefix: `${m[1]}: `, rest: title.trim().slice(m[0].length) };
+};
+
 export const sanitizeTitle = (title: string, allowEmoji: boolean): string => {
   let t = title.trim();
   if (allowEmoji) {
@@ -65,7 +75,7 @@ export const normalizeConventionalTitle = (title: string): string => {
 export const checkCandidate = (candidate: CommitCandidate): string[] => {
   const errs: string[] = [];
   // Length not programmatically enforced; rely on prompt guidance (50/72 convention).
-  if (!CONVENTIONAL_RE.test(candidate.title)) {
+  if (!CONVENTIONAL_RE.test(splitTicketPrefix(candidate.title).rest)) {
     errs.push('Not a valid conventional commit title.');
   }
   if (/^[A-Z]/.test(candidate.title)) {

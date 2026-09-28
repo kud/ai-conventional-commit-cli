@@ -37,4 +37,20 @@ describe('formatCommitTitle', () => {
     // Accept any emoji: subject lowercased
     expect(out.toLowerCase()).toMatch(/: something random$/);
   });
+
+  it('keeps a leading ticket key instead of reading it as the type', () => {
+    const out = formatCommitTitle('SHOP-1234: ✨ feat(cart): add saved baskets', {
+      allowGitmoji: true,
+      mode: 'gitmoji',
+    });
+    expect(out).toBe('SHOP-1234: ✨ feat(cart): add saved baskets');
+  });
+
+  it('keeps a multi-ticket key and still adds the glyph after it', () => {
+    const out = formatCommitTitle('SHOP-1234 / SHOP-1240: feat(cart): centre the spinner', {
+      allowGitmoji: true,
+      mode: 'gitmoji',
+    });
+    expect(out).toBe('SHOP-1234 / SHOP-1240: ✨ feat(cart): centre the spinner');
+  });
 });
