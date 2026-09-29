@@ -303,7 +303,7 @@ class ConfigSetCommand extends Command {
   static usage = Command.Usage({
     description: 'Set and persist a global configuration key.',
     details:
-      'Writes to the global aicc.json (XDG config). Accepts JSON for complex values. Only allowed keys: model, style, privacy, styleSamples, maxTokens, verbose, yes.',
+      'Writes to the global aicc.json (XDG config). Accepts JSON for complex values. Only allowed keys: model, style, privacy, styleSamples, maxTokens, verbose, yes, ticketFromBranch.',
     examples: [
       [
         'Set default model',
@@ -312,6 +312,7 @@ class ConfigSetCommand extends Command {
       ['Set style to gitmoji', 'ai-conventional-commit config set style gitmoji'],
       ['Enable verbose mode', 'ai-conventional-commit config set verbose true'],
       ['Auto-confirm commits', 'ai-conventional-commit config set yes true'],
+      ['Derive ticket from branch', 'ai-conventional-commit config set ticketFromBranch true'],
     ],
   });
   key = Option.String();
@@ -325,6 +326,7 @@ class ConfigSetCommand extends Command {
       'maxTokens',
       'verbose',
       'yes',
+      'ticketFromBranch',
     ]);
     if (!allowed.has(this.key)) {
       this.context.stderr.write(`Cannot set key: ${this.key}\n`);

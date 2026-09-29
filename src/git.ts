@@ -185,3 +185,20 @@ export const getStagedFiles = async (): Promise<string[]> => {
   const status = await git.status();
   return [...status.staged, ...status.renamed.map((r) => r.to)];
 };
+
+// Extract ticket prefix from branch name (e.g., "SHOP-1234/feature" -> "SHOP-1234")
+const BRANCH_TICKET_RE = /^([A-Z][A-Z0-9]+-\d+)(?:\/|$)/;
+
+export const getBranchTicketPrefix = async (cwd?: string): Promise<string | null> => {
+  try {
+    const g = cwd ? simpleGit(cwd) : git;
+    const branch = (await g.revparse(['--abbrev-ref', 'HEAD'])).trim();
+    const match = branch.match(BRANCH_TICKET_RE);
+    if (match) {
+      return match[1];
+    }
+  } catch {
+    // Ignore errors (not a git repo, etc.)
+  }
+  return null;
+};

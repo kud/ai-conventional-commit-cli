@@ -2,14 +2,14 @@ import chalk from 'chalk';
 import ora from 'ora';
 import type { AppConfig } from '../config.js';
 import { getCacheDir } from '../config.js';
-import { getStagedFilesAndDiff, getRecentCommitMessages, createCommit } from '../git.js';
+import { getStagedFilesAndDiff, getRecentCommitMessages, createCommit, getBranchTicketPrefix } from '../git.js';
 import { buildStyleProfile } from '../style.js';
 import { buildGenerationMessages } from '../prompt.js';
 import type { Provider } from '../model/provider.js';
 import { createProvider, extractJSON, validateModel } from '../model/provider.js';
 import { isTimeoutError, pickModelOnTimeout } from '../model/picker.js';
 import { loadPlugins, applyTransforms, runValidations } from '../plugins.js';
-import { checkCandidate } from '../guardrails.js';
+import { checkCandidate, splitTicketPrefix } from '../guardrails.js';
 import { formatCommitTitle } from '../title-format.js';
 import { truncateMiddle } from './util.js';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -175,6 +175,22 @@ async function _runGenerate(
       mode: config.style,
     }),
   }));
+
+  // Prepend ticket prefix from branch if enabled
+  if (config.ticketFromBranch) {
+    const branchTicket = await getBranchTicketPrefix(process.cwd());
+    if (branchTicket) {
+      const prefix = `${branchTicket}: `;
+      candidates = candidates.map((c) => {
+        const { prefix: existingPrefix } = splitTicketPrefix(c.title);
+        if (!existingPrefix) {
+          return { ...c, title: prefix + c.title };
+        }
+        return c;
+      });
+    }
+  }
+
   const chosen = candidates[0];
 
   renderCommitBlock({ title: chosen.title, body: chosen.body });
