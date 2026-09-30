@@ -4,6 +4,15 @@ All notable changes to this project are documented here.
 
 ---
 
+## 4.2.1 — 2026-09-30
+
+### Fixes
+
+- Running the tool in a repository with no commits yet no longer crashes. It used to die with `Internal Error: fatal: your current branch 'main' does not have any commits yet` and a stack trace, because style profiling ran `git log` on an unborn branch. Profiling is now skipped and the default style is used, so the first commit in a fresh repo works. ([a5604d8](https://github.com/kud/ai-conventional-commit-cli/commit/a5604d851b115f52b6f8c9e74836f0a462fc84b6))
+- Gitmoji titles whose emoji is more than one codepoint (♻️, ⚡️, 🏗️, 🏷️, each an emoji plus the U+FE0F variation selector) are no longer mangled. The emoji lost its selector and a spurious `chore:` type was injected, giving titles like `♻ chore: ️ refactor(x): …`. This was deterministic, not model flakiness. Emoji are now handled as whole graphemes, with regression tests added. Fixes [#7](https://github.com/kud/ai-conventional-commit-cli/issues/7). ([13e3e58](https://github.com/kud/ai-conventional-commit-cli/commit/13e3e58a7d4cb6e67ea6d53108635643dd4cc24a))
+
+---
+
 ## 4.2.0 — 2026-09-30
 
 ### Highlights
