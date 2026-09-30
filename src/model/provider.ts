@@ -713,7 +713,6 @@ const COMMIT_PLAN_JSON_SCHEMA = {
           title: { type: 'string' },
           body: { type: 'string' },
           score: { type: 'number', minimum: 0, maximum: 100 },
-          reasons: { type: 'array', items: { type: 'string' } },
           files: { type: 'array', items: { type: 'string' } },
         },
       },
