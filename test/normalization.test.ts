@@ -15,3 +15,11 @@ describe('normalizeConventionalTitle', () => {
     expect(normalizeConventionalTitle('✨ Feat: Add X.')).toBe('✨ feat: add X');
   });
 });
+
+describe('normalizeConventionalTitle with multi-codepoint emoji', () => {
+  it('keeps a variation-selector emoji whole instead of falling back to chore', () => {
+    expect(normalizeConventionalTitle('♻️ refactor(api): split handler')).toBe(
+      '♻️ refactor(api): split handler',
+    );
+  });
+});

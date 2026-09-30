@@ -54,3 +54,34 @@ describe('formatCommitTitle', () => {
     expect(out).toBe('SHOP-1234 / SHOP-1240: ✨ feat(cart): centre the spinner');
   });
 });
+
+// Issue #7: `♻️` is U+267B + U+FE0F. Treating it as one codepoint stranded the selector in
+// front of the type, so the title fell through to the chore fallback.
+describe('formatCommitTitle with multi-codepoint emoji', () => {
+  const gitmoji = { allowGitmoji: true, mode: 'gitmoji' } as const;
+
+  it('keeps a variation-selector emoji whole and adds no second type', () => {
+    expect(
+      formatCommitTitle('♻️ refactor(claude-code): use shui for hook adoption prompts', gitmoji),
+    ).toBe('♻️ refactor(claude-code): use shui for hook adoption prompts');
+  });
+
+  it('adds a multi-codepoint emoji from the type map without splitting it', () => {
+    expect(formatCommitTitle('perf(provider): trim startup', gitmoji)).toBe(
+      '⚡️ perf(provider): trim startup',
+    );
+    expect(formatCommitTitle('⚡️ perf(provider): trim startup', gitmoji)).toBe(
+      '⚡️ perf(provider): trim startup',
+    );
+  });
+
+  it('keeps a ZWJ sequence as one emoji', () => {
+    expect(formatCommitTitle('🧑‍💻 feat: add dev mode', gitmoji)).toBe('🧑‍💻 feat: add dev mode');
+  });
+
+  it('keeps the emoji whole in pure mode', () => {
+    expect(
+      formatCommitTitle('♻️ refactor: tidy', { allowGitmoji: true, mode: 'gitmoji-pure' }),
+    ).toBe('♻️: tidy');
+  });
+});
