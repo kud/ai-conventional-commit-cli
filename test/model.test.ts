@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createProvider, CodexCliProvider, extractJSON } from '../src/model/provider.js';
+import { createProvider, CodexCliProvider, extractJSON, buildClaudeCliArgs, buildClaudeCliEnv } from '../src/model/provider.js';
 
 describe('extractJSON', () => {
   it('parses valid JSON', () => {
@@ -46,5 +46,44 @@ describe('CodexCliProvider', () => {
     } finally {
       process.env.AICC_DEBUG_PROVIDER = previous;
     }
+  });
+});
+
+describe('buildClaudeCliArgs', () => {
+  const args = buildClaudeCliArgs('haiku');
+
+  it('starts no MCP servers', () => {
+    expect(args).toContain('--strict-mcp-config');
+    expect(args).not.toContain('--mcp-config');
+  });
+
+  it('loads no settings, tools or skills', () => {
+    expect(args[args.indexOf('--setting-sources') + 1]).toBe('');
+    expect(args[args.indexOf('--tools') + 1]).toBe('');
+    expect(args).toContain('--disable-slash-commands');
+  });
+
+  it('replaces the default system prompt', () => {
+    expect(args[args.indexOf('--system-prompt') + 1]).toMatch(/commit messages/);
+  });
+
+  it('passes the model through', () => {
+    expect(args[args.indexOf('--model') + 1]).toBe('haiku');
+  });
+});
+
+describe('buildClaudeCliEnv', () => {
+  const env = buildClaudeCliEnv({ PATH: '/bin', MAX_THINKING_TOKENS: '8000' });
+
+  it('turns thinking off, overriding the caller', () => {
+    expect(env.MAX_THINKING_TOKENS).toBe('0');
+  });
+
+  it('skips non-essential traffic', () => {
+    expect(env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC).toBe('1');
+  });
+
+  it('keeps the rest of the environment', () => {
+    expect(env.PATH).toBe('/bin');
   });
 });
