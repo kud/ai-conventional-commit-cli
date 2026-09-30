@@ -119,7 +119,19 @@ export const getStagedFilesAndDiff = async (): Promise<{
   return { files: parsed, hasStagedChanges };
 };
 
+const hasCommits = async (): Promise<boolean> => {
+  try {
+    await execa('git', ['rev-parse', '--verify', '--quiet', 'HEAD']);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// A fresh repository has no history to learn a style from, and `git log` fails
+// outright on an unborn branch, so the first commit gets the default profile.
 export const getRecentCommitMessages = async (limit: number): Promise<string[]> => {
+  if (!(await hasCommits())) return [];
   const log = await git.log({ maxCount: limit });
   return log.all.map((e) => e.message);
 };
