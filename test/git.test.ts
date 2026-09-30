@@ -117,4 +117,50 @@ describe('getBranchTicketPrefix', () => {
       process.chdir(originalCwd);
     }
   });
+
+  it('joins multiple ticket prefixes with " / " from branch name', async () => {
+    const testDir = join(tmpdir(), `aicc-test-${Date.now()}`);
+    mkdirSync(testDir, { recursive: true });
+    writeFileSync(join(testDir, 'test.txt'), 'test');
+    const git = simpleGit(testDir);
+    await git.init();
+    await git.addConfig('user.name', 'Test');
+    await git.addConfig('user.email', 'test@test.com');
+    await git.add('.');
+    await git.commit('initial');
+
+    await git.checkoutLocalBranch('SHOP-1234/ABC-5678/feature');
+
+    const originalCwd = process.cwd();
+    process.chdir(testDir);
+    try {
+      const prefix = await getBranchTicketPrefix(testDir);
+      expect(prefix).toBe('SHOP-1234 / ABC-5678');
+    } finally {
+      process.chdir(originalCwd);
+    }
+  });
+
+  it('returns null for branch with invalid ticket format (double hyphen)', async () => {
+    const testDir = join(tmpdir(), `aicc-test-${Date.now()}`);
+    mkdirSync(testDir, { recursive: true });
+    writeFileSync(join(testDir, 'test.txt'), 'test');
+    const git = simpleGit(testDir);
+    await git.init();
+    await git.addConfig('user.name', 'Test');
+    await git.addConfig('user.email', 'test@test.com');
+    await git.add('.');
+    await git.commit('initial');
+
+    await git.checkoutLocalBranch('SHOP-1-2/foo');
+
+    const originalCwd = process.cwd();
+    process.chdir(testDir);
+    try {
+      const prefix = await getBranchTicketPrefix(testDir);
+      expect(prefix).toBeNull();
+    } finally {
+      process.chdir(originalCwd);
+    }
+  });
 });

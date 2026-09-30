@@ -186,8 +186,9 @@ export const getStagedFiles = async (): Promise<string[]> => {
   return [...status.staged, ...status.renamed.map((r) => r.to)];
 };
 
-// Extract ticket prefix from branch name (e.g., "SHOP-1234/feature" -> "SHOP-1234")
-const BRANCH_TICKET_RE = /^([A-Z][A-Z0-9]+-\d+)(?:\/|$)/;
+// Extract ticket prefix(es) from branch name (e.g., "SHOP-1234/feature" -> "SHOP-1234")
+// Multiple prefixes are joined with " / " to match the conventional commit format.
+const BRANCH_TICKET_RE = /^((?:[A-Z][A-Z0-9]+-\d+)(?:\/(?:[A-Z][A-Z0-9]+-\d+))*)(?:\/|$)/;
 
 export const getBranchTicketPrefix = async (cwd?: string): Promise<string | null> => {
   try {
@@ -195,7 +196,7 @@ export const getBranchTicketPrefix = async (cwd?: string): Promise<string | null
     const branch = (await g.revparse(['--abbrev-ref', 'HEAD'])).trim();
     const match = branch.match(BRANCH_TICKET_RE);
     if (match) {
-      return match[1];
+      return match[1].replace(/\//g, ' / ');
     }
   } catch {
     // Ignore errors (not a git repo, etc.)
