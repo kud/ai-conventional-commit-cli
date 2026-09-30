@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 ---
 
+## 4.2.2 — 2026-09-30
+
+### Performance
+
+- Commit generation is about a third faster because the prompt no longer asks the model for a `reasons` array on each candidate. Nothing in the tool ever displayed or used it, and since it came after the title in the JSON it did not improve the title either. Measured on a fixed diff with `claude/haiku`, five runs each, the model call dropped from a median of 3.46s to 2.35s and the response shrank from about 750 to about 414 characters. Commit bodies are unchanged. `reasons` stays optional in the parsed schema, so plugins and existing responses keep working. ([5ef8a82](https://github.com/kud/ai-conventional-commit-cli/commit/5ef8a82d60c8e2f111a642f944f199e73ed0b8ba))
+
+---
+
 ## 4.2.1 — 2026-09-30
 
 ### Fixes
