@@ -8,8 +8,7 @@ All notable changes to this project are documented here.
 
 ### Fixes
 
-- Repositories whose history uses gitmoji or ticket keys are now profiled correctly. The style profile read the type and scope from the very start of each past title, so anything with a leading gitmoji or ticket key (`✨ feat(auth): …`, `SHOP-12: 🐛 fix(cart): …`) counted as having no type and no scope, and the gitmoji counter missed common emoji such as ✨ ♻️ ⚡️ ✅. A gitmoji repo therefore profiled as "no scopes, not conventional", contradicting the prompt's own always-use-a-scope rule. The profile now reads past the emoji and ticket key.
-- A chore-heavy history no longer drags new work towards `chore`. The prompt used to tell the model to "prefer existing top prefixes"; the repo's frequent types now only break ties, and the type comes from what the diff does. Measured with `claude/haiku` on a repo with a chore-heavy history, three runs each: a diff adding new exported helpers went from `🧹 chore: …` with no scope (3/3) to `✨ feat(math): …` (3/3), while a bug-fix diff stayed `🐛 fix(math): …` (3/3). On a repo with real gitmoji-and-scope history both versions were already correct. ([f8725bb](https://github.com/kud/ai-conventional-commit-cli/commit/f8725bb6aca20e2a38626c66fe802c179e88113c))
+- Repos with a gitmoji or ticket-key history now get the right commit type and scope, instead of drifting towards a scopeless `chore`. ([f8725bb](https://github.com/kud/ai-conventional-commit-cli/commit/f8725bb6aca20e2a38626c66fe802c179e88113c))
 
 ---
 
@@ -17,7 +16,7 @@ All notable changes to this project are documented here.
 
 ### Performance
 
-- Commit generation is about a third faster because the prompt no longer asks the model for a `reasons` array on each candidate. Nothing in the tool ever displayed or used it, and since it came after the title in the JSON it did not improve the title either. Measured on a fixed diff with `claude/haiku`, five runs each, the model call dropped from a median of 3.46s to 2.35s and the response shrank from about 750 to about 414 characters. Commit bodies are unchanged. `reasons` stays optional in the parsed schema, so plugins and existing responses keep working. ([5ef8a82](https://github.com/kud/ai-conventional-commit-cli/commit/5ef8a82d60c8e2f111a642f944f199e73ed0b8ba))
+- Commit generation is about a third faster, as the model no longer writes reasoning the tool never used. ([5ef8a82](https://github.com/kud/ai-conventional-commit-cli/commit/5ef8a82d60c8e2f111a642f944f199e73ed0b8ba))
 
 ---
 
@@ -25,8 +24,8 @@ All notable changes to this project are documented here.
 
 ### Fixes
 
-- Running the tool in a repository with no commits yet no longer crashes. It used to die with `Internal Error: fatal: your current branch 'main' does not have any commits yet` and a stack trace, because style profiling ran `git log` on an unborn branch. Profiling is now skipped and the default style is used, so the first commit in a fresh repo works. ([a5604d8](https://github.com/kud/ai-conventional-commit-cli/commit/a5604d851b115f52b6f8c9e74836f0a462fc84b6))
-- Gitmoji titles whose emoji is more than one codepoint (♻️, ⚡️, 🏗️, 🏷️, each an emoji plus the U+FE0F variation selector) are no longer mangled. The emoji lost its selector and a spurious `chore:` type was injected, giving titles like `♻ chore: ️ refactor(x): …`. This was deterministic, not model flakiness. Emoji are now handled as whole graphemes, with regression tests added. Fixes [#7](https://github.com/kud/ai-conventional-commit-cli/issues/7). ([13e3e58](https://github.com/kud/ai-conventional-commit-cli/commit/13e3e58a7d4cb6e67ea6d53108635643dd4cc24a))
+- The first commit in a brand-new repository no longer crashes. ([a5604d8](https://github.com/kud/ai-conventional-commit-cli/commit/a5604d851b115f52b6f8c9e74836f0a462fc84b6))
+- Gitmoji like `♻️` and `⚡️` no longer get split in two with a stray `chore:` wedged in the gap ([#7](https://github.com/kud/ai-conventional-commit-cli/issues/7)). ([13e3e58](https://github.com/kud/ai-conventional-commit-cli/commit/13e3e58a7d4cb6e67ea6d53108635643dd4cc24a))
 
 ---
 
