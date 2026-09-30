@@ -194,7 +194,10 @@ export const buildGenerationMessages = (opts: {
     'Forbidden: breaking changes notation, exclamation mark after type unless truly semver-major (avoid unless diff clearly indicates).',
   );
   specLines.push('Fallback Type: use chore when no other type clearly fits.');
-  specLines.push('Consistency: prefer existing top prefixes: ' + style.topPrefixes.join(', '));
+  specLines.push(
+    'Type Choice: decide the type from what the diff does (new exported function, command or option = feat). Only when two types fit equally well, prefer the one this repo uses more: ' +
+      (style.topPrefixes.join(', ') || 'none recorded'),
+  );
   specLines.push('Provide score (0-100) measuring clarity & specificity (higher is better).');
   specLines.push(
     'When mode is split, WHERE POSSIBLE add a "files" array per commit listing the most relevant changed file paths (1-6, minimize overlap across commits).',
