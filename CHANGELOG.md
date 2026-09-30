@@ -4,6 +4,15 @@ All notable changes to this project are documented here.
 
 ---
 
+## 4.2.3 — 2026-09-30
+
+### Fixes
+
+- Repositories whose history uses gitmoji or ticket keys are now profiled correctly. The style profile read the type and scope from the very start of each past title, so anything with a leading gitmoji or ticket key (`✨ feat(auth): …`, `SHOP-12: 🐛 fix(cart): …`) counted as having no type and no scope, and the gitmoji counter missed common emoji such as ✨ ♻️ ⚡️ ✅. A gitmoji repo therefore profiled as "no scopes, not conventional", contradicting the prompt's own always-use-a-scope rule. The profile now reads past the emoji and ticket key.
+- A chore-heavy history no longer drags new work towards `chore`. The prompt used to tell the model to "prefer existing top prefixes"; the repo's frequent types now only break ties, and the type comes from what the diff does. Measured with `claude/haiku` on a repo with a chore-heavy history, three runs each: a diff adding new exported helpers went from `🧹 chore: …` with no scope (3/3) to `✨ feat(math): …` (3/3), while a bug-fix diff stayed `🐛 fix(math): …` (3/3). On a repo with real gitmoji-and-scope history both versions were already correct. ([f8725bb](https://github.com/kud/ai-conventional-commit-cli/commit/f8725bb6aca20e2a38626c66fe802c179e88113c))
+
+---
+
 ## 4.2.2 — 2026-09-30
 
 ### Performance
