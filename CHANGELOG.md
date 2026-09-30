@@ -4,6 +4,20 @@ All notable changes to this project are documented here.
 
 ---
 
+## 4.2.0 — 2026-09-30
+
+### Highlights
+
+- Commit generation through the Claude CLI provider is about four times faster: a full commit on a one-file diff dropped from roughly 16.5s to roughly 4.1s. The provider used to launch `claude -p` with your entire Claude Code setup, meaning every MCP server, plugin, hook and skill, your `CLAUDE.md` and the default system prompt (around 33k tokens of context), with extended thinking on by default. It now runs with `--strict-mcp-config --setting-sources "" --tools "" --disable-slash-commands`, a short `--system-prompt`, the OS temp directory as its working directory (so no project `CLAUDE.md` or git status leaks in), and `MAX_THINKING_TOKENS=0` plus `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`. Haiku output on the same diff fell from about 490 tokens to about 40. `--bare` was deliberately avoided because it ignores OAuth and would break subscription users. ([f2c233d](https://github.com/kud/ai-conventional-commit-cli/commit/f2c233d9ec4d2ad26ec772a133d2ce1ee6367638))
+- New opt-in `ticketFromBranch` setting (`AICC_TICKET_FROM_BRANCH`) that prepends the tracker key found in your branch name to the generated commit title, so `SHOP-1234/add-cart` yields `SHOP-1234: ✨ feat(cart): …`. It works in both `generate` and `split`, and leaves the title alone if it already carries the prefix. ([f6a32b5](https://github.com/kud/ai-conventional-commit-cli/commit/f6a32b5fdeaaeea1f88049e22c9725864b722c64))
+- Branches naming several tickets now produce all of them, joined with `/` (`SHOP-1 / SHOP-2: …`), and `refine` applies the branch ticket prefix too when the option is on, so refining a message no longer drops the key. ([fd5549f](https://github.com/kud/ai-conventional-commit-cli/commit/fd5549fb4d8a9f7ef118738783fcd29331169c5e))
+
+### Docs
+
+- The new option is documented in the provider docs and CLI help, `AICC_TICKET_FROM_BRANCH` is added to `.env.example`, and the docs now spell out that `AICC_YES` set in the environment applies globally, unlike the per-invocation `-y` flag. ([fd5549f](https://github.com/kud/ai-conventional-commit-cli/commit/fd5549fb4d8a9f7ef118738783fcd29331169c5e))
+
+---
+
 ## 4.1.0 — 2026-09-28
 
 ### Highlights
