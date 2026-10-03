@@ -53,6 +53,48 @@ describe('formatCommitTitle', () => {
     });
     expect(out).toBe('SHOP-1234 / SHOP-1240: ✨ feat(cart): centre the spinner');
   });
+
+  it('restores the key case', () => {
+    expect(
+      formatCommitTitle('abc-1234: fix: handle empty list', {
+        allowGitmoji: true,
+        mode: 'gitmoji',
+      }),
+    ).toBe('ABC-1234: 🐛 fix: handle empty list');
+  });
+
+  it('keeps the prefix when gitmoji is disabled', () => {
+    expect(
+      formatCommitTitle('ABC-1234: feat: add thing', { allowGitmoji: false, mode: 'standard' }),
+    ).toBe('ABC-1234: feat: add thing');
+  });
+
+  it('moves a leading gitmoji behind the ticket key', () => {
+    expect(
+      formatCommitTitle('✨ ABC-1234: feat: add thing', {
+        allowGitmoji: true,
+        mode: 'gitmoji',
+      }),
+    ).toBe('ABC-1234: ✨ feat: add thing');
+  });
+
+  it('moves a leading gitmoji with scope behind the ticket key', () => {
+    expect(
+      formatCommitTitle('🐛 ABC-1234: fix(api): handle empty list', {
+        allowGitmoji: true,
+        mode: 'gitmoji',
+      }),
+    ).toBe('ABC-1234: 🐛 fix(api): handle empty list');
+  });
+
+  it('drops a leading gitmoji behind the ticket key in standard mode', () => {
+    expect(
+      formatCommitTitle('✨ ABC-1234: feat: add thing', {
+        allowGitmoji: false,
+        mode: 'standard',
+      }),
+    ).toBe('ABC-1234: feat: add thing');
+  });
 });
 
 // Issue #7: `♻️` is U+267B + U+FE0F. Treating it as one codepoint stranded the selector in
