@@ -16,6 +16,7 @@ export interface AppConfig {
   plugins?: string[];
   verbose?: boolean;
   yes?: boolean; // Auto-confirm commit suggestions without prompting
+  ticketFromBranch?: boolean; // Derive ticket prefix from branch name
 }
 
 const DEFAULTS: AppConfig = {
@@ -53,6 +54,7 @@ const DEFAULTS: AppConfig = {
   plugins: [],
   verbose: process.env.AICC_VERBOSE === 'true',
   yes: process.env.AICC_YES === 'true',
+  ticketFromBranch: process.env.AICC_TICKET_FROM_BRANCH === 'true',
 };
 
 // `model` has no default, so it is absent from a merged config until something sets
@@ -161,6 +163,7 @@ export async function loadConfigDetailed(cwd = process.cwd()): Promise<{
   if (maxFileLines !== undefined) envCfg.maxFileLines = maxFileLines;
   if (process.env.AICC_VERBOSE) envCfg.verbose = process.env.AICC_VERBOSE === 'true';
   if (process.env.AICC_YES) envCfg.yes = process.env.AICC_YES === 'true';
+  if (process.env.AICC_TICKET_FROM_BRANCH) envCfg.ticketFromBranch = process.env.AICC_TICKET_FROM_BRANCH === 'true';
 
   const merged: AppConfig = {
     ...DEFAULTS,

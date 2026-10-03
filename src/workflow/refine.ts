@@ -10,6 +10,8 @@ import type { CommitPlan } from '../types.js';
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { prompt } from './util.js';
+import { getBranchTicketPrefix } from '../git.js';
+import { splitTicketPrefix } from '../guardrails.js';
 
 interface StoredSession {
   plan: CommitPlan;
@@ -105,6 +107,18 @@ export async function runRefine(config: AppConfig, options: any) {
       allowGitmoji: config.style === 'gitmoji' || config.style === 'gitmoji-pure',
       mode: config.style,
     });
+
+    // Prepend ticket prefix from branch if enabled
+    if (config.ticketFromBranch) {
+      const branchTicket = await getBranchTicketPrefix(process.cwd());
+      if (branchTicket) {
+        const prefix = `${branchTicket}: `;
+        const { prefix: existingPrefix } = splitTicketPrefix(refinedPlan.commits[0].title);
+        if (!existingPrefix) {
+          refinedPlan.commits[0].title = prefix + refinedPlan.commits[0].title;
+        }
+      }
+    }
 
     phased.phase('Suggested commit');
     phased.stop();

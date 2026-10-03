@@ -163,7 +163,7 @@ export const buildGenerationMessages = (opts: {
   );
   specLines.push('Locale: en');
   specLines.push(
-    'Output JSON Schema: { "commits": [ { "title": string, "body": string, "score": 0-100, "reasons": string[], "files"?: string[] } ], "meta": { "splitRecommended": boolean } }',
+    'Output JSON Schema: { "commits": [ { "title": string, "body": string, "score": 0-100, "files"?: string[] } ], "meta": { "splitRecommended": boolean } }',
   );
   specLines.push('Primary Output Field: commits[ ].title');
   specLines.push('Title Format (REQUIRED): <type>(<scope>): <subject>');
@@ -194,11 +194,11 @@ export const buildGenerationMessages = (opts: {
     'Forbidden: breaking changes notation, exclamation mark after type unless truly semver-major (avoid unless diff clearly indicates).',
   );
   specLines.push('Fallback Type: use chore when no other type clearly fits.');
-  specLines.push('Consistency: prefer existing top prefixes: ' + style.topPrefixes.join(', '));
-  specLines.push('Provide score (0-100) measuring clarity & specificity (higher is better).');
   specLines.push(
-    'Provide reasons array citing concrete diff elements: filenames, functions, tests, metrics.',
+    'Type Choice: decide the type from what the diff does (new exported function, command or option = feat). Only when two types fit equally well, prefer the one this repo uses more: ' +
+      (style.topPrefixes.join(', ') || 'none recorded'),
   );
+  specLines.push('Provide score (0-100) measuring clarity & specificity (higher is better).');
   specLines.push(
     'When mode is split, WHERE POSSIBLE add a "files" array per commit listing the most relevant changed file paths (1-6, minimize overlap across commits).',
   );
@@ -243,7 +243,7 @@ export const buildRefineMessages = (opts: {
   spec.push('Locale: en');
   spec.push('Input: one existing commit JSON object.');
   spec.push(
-    'Output JSON Schema: { "commits": [ { "title": string, "body": string, "score": 0-100, "reasons": string[] } ] }',
+    'Output JSON Schema: { "commits": [ { "title": string, "body": string, "score": 0-100 } ] }',
   );
   spec.push('Title Format (REQUIRED): <type>(<scope>): <subject> (<=72 chars)');
   spec.push('Subject: imperative, present tense, no trailing period.');

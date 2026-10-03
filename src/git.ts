@@ -119,7 +119,19 @@ export const getStagedFilesAndDiff = async (): Promise<{
   return { files: parsed, hasStagedChanges };
 };
 
+const hasCommits = async (): Promise<boolean> => {
+  try {
+    await execa('git', ['rev-parse', '--verify', '--quiet', 'HEAD']);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// A fresh repository has no history to learn a style from, and `git log` fails
+// outright on an unborn branch, so the first commit gets the default profile.
 export const getRecentCommitMessages = async (limit: number): Promise<string[]> => {
+  if (!(await hasCommits())) return [];
   const log = await git.log({ maxCount: limit });
   return log.all.map((e) => e.message);
 };
@@ -184,4 +196,22 @@ export const stageFiles = async (files: string[]) => {
 export const getStagedFiles = async (): Promise<string[]> => {
   const status = await git.status();
   return [...status.staged, ...status.renamed.map((r) => r.to)];
+};
+
+// Extract ticket prefix(es) from branch name (e.g., "SHOP-1234/feature" -> "SHOP-1234")
+// Multiple prefixes are joined with " / " to match the conventional commit format.
+const BRANCH_TICKET_RE = /^((?:[A-Z][A-Z0-9]+-\d+)(?:\/(?:[A-Z][A-Z0-9]+-\d+))*)(?:\/|$)/;
+
+export const getBranchTicketPrefix = async (cwd?: string): Promise<string | null> => {
+  try {
+    const g = cwd ? simpleGit(cwd) : git;
+    const branch = (await g.revparse(['--abbrev-ref', 'HEAD'])).trim();
+    const match = branch.match(BRANCH_TICKET_RE);
+    if (match) {
+      return match[1].replace(/\//g, ' / ');
+    }
+  } catch {
+    // Ignore errors (not a git repo, etc.)
+  }
+  return null;
 };

@@ -22,16 +22,16 @@ const EMOJI_MAP: Record<string, string> = {
   release: '🏷️',
 };
 
-const EMOJI_TYPE_RE = /^([\p{Emoji}\p{So}\p{Sk}])\s+(\w+)(\(.+\))?:\s+(.*)$/u; // emoji + type
+const EMOJI_TYPE_RE =
+  /^((?:[\p{Emoji}\p{So}\p{Sk}]|\u{FE0F}|\u{200D}|\u{20E3})+)\s+(\w+)(\(.+\))?:\s+(.*)$/u; // emoji + type
 const TYPE_RE = /^(\w+)(\(.+\))?:\s+(.*)$/; // type only
 
 export const formatCommitTitle = (raw: string, opts: GitmojiFormatOptions): string => {
-  const { ticket, rest } = splitTicketPrefix(raw);
-  if (ticket) return `${ticket}: ${formatConventionalTitle(rest, opts)}`;
-  return formatConventionalTitle(raw, opts);
+  const { prefix, rest } = splitTicketPrefix(raw);
+  return prefix + formatUnprefixedTitle(rest, opts);
 };
 
-const formatConventionalTitle = (raw: string, opts: GitmojiFormatOptions): string => {
+const formatUnprefixedTitle = (raw: string, opts: GitmojiFormatOptions): string => {
   const { allowGitmoji, mode = 'standard' } = opts;
   let norm = normalizeConventionalTitle(sanitizeTitle(raw, allowGitmoji));
 
@@ -50,7 +50,7 @@ const formatConventionalTitle = (raw: string, opts: GitmojiFormatOptions): strin
       const subject = m[3];
       const em = EMOJI_MAP[type as keyof typeof EMOJI_MAP] || '🔧';
       norm = `${em}: ${subject}`;
-    } else if (!/^([\p{Emoji}\p{So}\p{Sk}])+:/u.test(norm)) {
+    } else if (!/^((?:[\p{Emoji}\p{So}\p{Sk}]|\u{FE0F}|\u{200D}|\u{20E3}))+:/u.test(norm)) {
       norm = `🔧: ${norm}`;
     }
     return norm;
@@ -67,7 +67,7 @@ const formatConventionalTitle = (raw: string, opts: GitmojiFormatOptions): strin
     const subject = m[3];
     const em = EMOJI_MAP[type as keyof typeof EMOJI_MAP] || '🔧';
     norm = `${em} ${type}${scope}: ${subject}`;
-  } else if (!/^([\p{Emoji}\p{So}\p{Sk}])+\s+\w+.*:/u.test(norm)) {
+  } else if (!/^((?:[\p{Emoji}\p{So}\p{Sk}]|\u{FE0F}|\u{200D}|\u{20E3}))+\s+\w+.*:/u.test(norm)) {
     norm = `🔧 chore: ${norm}`;
   }
   return norm;

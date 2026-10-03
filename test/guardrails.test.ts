@@ -33,4 +33,12 @@ describe('guardrails', () => {
     });
     expect(errs.length).toBe(0);
   });
+
+  it('accepts a ticket-prefixed gitmoji + type form', () => {
+    const errs = checkCandidate({
+      title: 'SHOP-4518: ✨ feat(auth): add JWT token validation',
+      score: 80,
+    });
+    expect(errs.length).toBe(0);
+  });
 });

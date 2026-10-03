@@ -1,27 +1,16 @@
 import { select } from '@inquirer/prompts';
-import { execa } from 'execa';
-
-const MODEL_LINE_RE = /^[a-z0-9_.-]+\/[A-Za-z0-9_.:-]+$/;
+import { discoverModels, type DiscoveryDeps } from './discovery.js';
 
 export const isTimeoutError = (e: unknown): boolean =>
   e instanceof Error && /timed out/i.test(e.message);
 
-const fetchAvailableModels = async (): Promise<string[]> => {
-  const { stdout } = await execa('opencode', ['models']);
-  return Array.from(
-    new Set(
-      stdout
-        .split('\n')
-        .map((l) => l.trim())
-        .filter((l) => MODEL_LINE_RE.test(l)),
-    ),
-  );
-};
-
-export const pickModelOnTimeout = async (timedOutModel: string): Promise<string | undefined> => {
+export const pickModelOnTimeout = async (
+  timedOutModel: string,
+  deps?: DiscoveryDeps,
+): Promise<string | undefined> => {
   let models: string[];
   try {
-    models = await fetchAvailableModels();
+    ({ models } = await discoverModels(deps));
   } catch {
     return undefined;
   }

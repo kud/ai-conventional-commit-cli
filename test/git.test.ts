@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { parseDiffFromRaw } from '../src/git.js';
+import { parseDiffFromRaw, getBranchTicketPrefix } from '../src/git.js';
+import { simpleGit } from 'simple-git';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 
 // Minimal synthetic diff with one new file (no prior index line needed)
 const SAMPLE_DIFF = `diff --git a/src/example.ts b/src/example.ts
@@ -40,5 +44,123 @@ describe('parseDiffFromRaw', () => {
     expect(f.hunks.length).toBe(0);
     expect(f.additions).toBe(0);
     expect(f.deletions).toBe(0);
+  });
+});
+
+describe('getBranchTicketPrefix', () => {
+  it('extracts ticket prefix from branch name', async () => {
+    const testDir = join(tmpdir(), `aicc-test-${Date.now()}`);
+    mkdirSync(testDir, { recursive: true });
+    writeFileSync(join(testDir, 'test.txt'), 'test');
+    const git = simpleGit(testDir);
+    await git.init();
+    await git.addConfig('user.name', 'Test');
+    await git.addConfig('user.email', 'test@test.com');
+    await git.add('.');
+    await git.commit('initial');
+
+    // Create a branch with ticket prefix
+    await git.checkoutLocalBranch('SHOP-1234/feature');
+
+    // Change cwd to test dir and call the function
+    const originalCwd = process.cwd();
+    process.chdir(testDir);
+    try {
+      const prefix = await getBranchTicketPrefix(testDir);
+      expect(prefix).toBe('SHOP-1234');
+    } finally {
+      process.chdir(originalCwd);
+    }
+  });
+
+  it('returns null for branch without ticket prefix', async () => {
+    const testDir = join(tmpdir(), `aicc-test-${Date.now()}`);
+    mkdirSync(testDir, { recursive: true });
+    writeFileSync(join(testDir, 'test.txt'), 'test');
+    const git = simpleGit(testDir);
+    await git.init();
+    await git.addConfig('user.name', 'Test');
+    await git.addConfig('user.email', 'test@test.com');
+    await git.add('.');
+    await git.commit('initial');
+
+    // Stay on main branch
+    const originalCwd = process.cwd();
+    process.chdir(testDir);
+    try {
+      const prefix = await getBranchTicketPrefix(testDir);
+      expect(prefix).toBeNull();
+    } finally {
+      process.chdir(originalCwd);
+    }
+  });
+
+  it('extracts ticket prefix from branch with multiple slashes', async () => {
+    const testDir = join(tmpdir(), `aicc-test-${Date.now()}`);
+    mkdirSync(testDir, { recursive: true });
+    writeFileSync(join(testDir, 'test.txt'), 'test');
+    const git = simpleGit(testDir);
+    await git.init();
+    await git.addConfig('user.name', 'Test');
+    await git.addConfig('user.email', 'test@test.com');
+    await git.add('.');
+    await git.commit('initial');
+
+    await git.checkoutLocalBranch('ACC-4518/add-user-auth');
+
+    const originalCwd = process.cwd();
+    process.chdir(testDir);
+    try {
+      const prefix = await getBranchTicketPrefix(testDir);
+      expect(prefix).toBe('ACC-4518');
+    } finally {
+      process.chdir(originalCwd);
+    }
+  });
+
+  it('joins multiple ticket prefixes with " / " from branch name', async () => {
+    const testDir = join(tmpdir(), `aicc-test-${Date.now()}`);
+    mkdirSync(testDir, { recursive: true });
+    writeFileSync(join(testDir, 'test.txt'), 'test');
+    const git = simpleGit(testDir);
+    await git.init();
+    await git.addConfig('user.name', 'Test');
+    await git.addConfig('user.email', 'test@test.com');
+    await git.add('.');
+    await git.commit('initial');
+
+    await git.checkoutLocalBranch('SHOP-1234/ABC-5678/feature');
+
+    const originalCwd = process.cwd();
+    process.chdir(testDir);
+    try {
+      const prefix = await getBranchTicketPrefix(testDir);
+      expect(prefix).toBe('SHOP-1234 / ABC-5678');
+    } finally {
+      process.chdir(originalCwd);
+    }
+  });
+
+  it('returns null for branch with invalid ticket format (double hyphen)', async () => {
+    const testDir = join(tmpdir(), `aicc-test-${Date.now()}`);
+    mkdirSync(testDir, { recursive: true });
+    writeFileSync(join(testDir, 'test.txt'), 'test');
+    const git = simpleGit(testDir);
+    await git.init();
+    await git.addConfig('user.name', 'Test');
+    await git.addConfig('user.email', 'test@test.com');
+    await git.add('.');
+    await git.commit('initial');
+
+    await git.checkoutLocalBranch('SHOP-1-2/foo');
+
+    const originalCwd = process.cwd();
+    process.chdir(testDir);
+    try {
+      const prefix = await getBranchTicketPrefix(testDir);
+      expect(prefix).toBeNull();
+    } finally {
+      process.chdir(originalCwd);
+    }
   });
 });

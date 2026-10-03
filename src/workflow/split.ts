@@ -8,6 +8,7 @@ import {
   createCommit,
   resetIndex,
   stageFiles,
+  getBranchTicketPrefix,
 } from '../git.js';
 import type { CommitFailure } from '../git.js';
 import { buildStyleProfile } from '../style.js';
@@ -17,6 +18,7 @@ import type { Provider } from '../model/provider.js';
 import { createProvider, extractJSON } from '../model/provider.js';
 import { loadPlugins, applyTransforms } from '../plugins.js';
 import { formatCommitTitle } from '../title-format.js';
+import { splitTicketPrefix } from '../guardrails.js';
 import type { CommitPlan } from '../types.js';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -153,6 +155,21 @@ async function _runSplit(
       mode: config.style,
     }),
   }));
+
+  // Prepend ticket prefix from branch if enabled
+  if (config.ticketFromBranch) {
+    const branchTicket = await getBranchTicketPrefix(process.cwd());
+    if (branchTicket) {
+      const prefix = `${branchTicket}: `;
+      candidates = candidates.map((c) => {
+        const { prefix: existingPrefix } = splitTicketPrefix(c.title);
+        if (!existingPrefix) {
+          return { ...c, title: prefix + c.title };
+        }
+        return c;
+      });
+    }
+  }
 
   const fancy = candidates.length > 1;
   candidates.forEach((c, idx) => {

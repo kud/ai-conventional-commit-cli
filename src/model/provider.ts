@@ -391,6 +391,43 @@ const parseResultEnvelope = (raw: string): any | null => {
   }
 };
 
+// A commit message needs the prompt and nothing else. Without these flags every
+// call booted the user's whole Claude Code setup: each configured MCP server,
+// plugins, hooks, skills and CLAUDE.md, about 33k tokens of context and several
+// seconds per commit. `--bare` would be simpler but reads no OAuth credentials,
+// so it fails for subscription users. The caller also runs it from a temp dir
+// so no project CLAUDE.md or git status is picked up.
+export function buildClaudeCliArgs(modelAlias: string): string[] {
+  return [
+    '-p',
+    '--output-format',
+    'json',
+    '--no-session-persistence',
+    '--model',
+    modelAlias,
+    '--strict-mcp-config',
+    '--setting-sources',
+    '',
+    '--tools',
+    '',
+    '--disable-slash-commands',
+    '--system-prompt',
+    'You write git commit messages. Follow the instructions in the prompt and reply with exactly the output it asks for.',
+  ];
+}
+
+// Claude Code thinks by default, which multiplied haiku's output ~10x for a few
+// lines of JSON (measured: 490 output tokens and 5.7s API time, against 40 and
+// 0.8s without). The telemetry and update checks it skips here cost ~1s of
+// startup on every commit.
+export function buildClaudeCliEnv(base: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  return {
+    ...base,
+    MAX_THINKING_TOKENS: '0',
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
+  };
+}
+
 export class ClaudeCliProvider implements Provider {
   private readonly modelAlias: string;
   private readonly debug: boolean;
@@ -426,20 +463,13 @@ export class ClaudeCliProvider implements Provider {
 
     const prompt = messages.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
 
-    const args = [
-      '-p',
-      '--output-format',
-      'json',
-      '--no-session-persistence',
-      '--model',
-      this.modelAlias,
-    ];
+    const args = buildClaudeCliArgs(this.modelAlias);
 
     if (this.debug)
       pdbg('spawning claude cli', { model: this.modelAlias, promptChars: prompt.length });
 
     return new Promise<string>((resolve, reject) => {
-      const proc = spawn('claude', args);
+      const proc = spawn('claude', args, { cwd: tmpdir(), env: buildClaudeCliEnv(process.env) });
 
       proc.stdin?.write(prompt);
       proc.stdin?.end();
@@ -683,7 +713,6 @@ const COMMIT_PLAN_JSON_SCHEMA = {
           title: { type: 'string' },
           body: { type: 'string' },
           score: { type: 'number', minimum: 0, maximum: 100 },
-          reasons: { type: 'array', items: { type: 'string' } },
           files: { type: 'array', items: { type: 'string' } },
         },
       },

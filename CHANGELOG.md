@@ -4,6 +4,66 @@ All notable changes to this project are documented here.
 
 ---
 
+## 4.2.3 — 2026-09-30
+
+### Fixes
+
+- Repos with a gitmoji or ticket-key history now get the right commit type and scope, instead of drifting towards a scopeless `chore`. ([f8725bb](https://github.com/kud/ai-conventional-commit-cli/commit/f8725bb6aca20e2a38626c66fe802c179e88113c))
+
+---
+
+## 4.2.2 — 2026-09-30
+
+### Performance
+
+- Commit generation is about a third faster, as the model no longer writes reasoning the tool never used. ([5ef8a82](https://github.com/kud/ai-conventional-commit-cli/commit/5ef8a82d60c8e2f111a642f944f199e73ed0b8ba))
+
+---
+
+## 4.2.1 — 2026-09-30
+
+### Fixes
+
+- The first commit in a brand-new repository no longer crashes. ([a5604d8](https://github.com/kud/ai-conventional-commit-cli/commit/a5604d851b115f52b6f8c9e74836f0a462fc84b6))
+- Gitmoji like `♻️` and `⚡️` no longer get split in two with a stray `chore:` wedged in the gap ([#7](https://github.com/kud/ai-conventional-commit-cli/issues/7)). ([13e3e58](https://github.com/kud/ai-conventional-commit-cli/commit/13e3e58a7d4cb6e67ea6d53108635643dd4cc24a))
+
+---
+
+## 4.2.0 — 2026-09-30
+
+### Highlights
+
+- Commit generation through the Claude CLI provider is about four times faster: a full commit on a one-file diff dropped from roughly 16.5s to roughly 4.1s. The provider used to launch `claude -p` with your entire Claude Code setup, meaning every MCP server, plugin, hook and skill, your `CLAUDE.md` and the default system prompt (around 33k tokens of context), with extended thinking on by default. It now runs with `--strict-mcp-config --setting-sources "" --tools "" --disable-slash-commands`, a short `--system-prompt`, the OS temp directory as its working directory (so no project `CLAUDE.md` or git status leaks in), and `MAX_THINKING_TOKENS=0` plus `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`. Haiku output on the same diff fell from about 490 tokens to about 40. `--bare` was deliberately avoided because it ignores OAuth and would break subscription users. ([f2c233d](https://github.com/kud/ai-conventional-commit-cli/commit/f2c233d9ec4d2ad26ec772a133d2ce1ee6367638))
+- New opt-in `ticketFromBranch` setting (`AICC_TICKET_FROM_BRANCH`) that prepends the tracker key found in your branch name to the generated commit title, so `SHOP-1234/add-cart` yields `SHOP-1234: ✨ feat(cart): …`. It works in both `generate` and `split`, and leaves the title alone if it already carries the prefix. ([f6a32b5](https://github.com/kud/ai-conventional-commit-cli/commit/f6a32b5fdeaaeea1f88049e22c9725864b722c64))
+- Branches naming several tickets now produce all of them, joined with `/` (`SHOP-1 / SHOP-2: …`), and `refine` applies the branch ticket prefix too when the option is on, so refining a message no longer drops the key. ([fd5549f](https://github.com/kud/ai-conventional-commit-cli/commit/fd5549fb4d8a9f7ef118738783fcd29331169c5e))
+
+### Docs
+
+- The new option is documented in the provider docs and CLI help, `AICC_TICKET_FROM_BRANCH` is added to `.env.example`, and the docs now spell out that `AICC_YES` set in the environment applies globally, unlike the per-invocation `-y` flag. ([fd5549f](https://github.com/kud/ai-conventional-commit-cli/commit/fd5549fb4d8a9f7ef118738783fcd29331169c5e))
+
+---
+
+## 4.1.0 — 2026-09-28
+
+### Highlights
+
+- `models` now discovers models across providers instead of only OpenCode's list: it adds the `claude/fable`, `claude/opus` and `claude/sonnet` aliases when the Claude CLI is on `PATH`, and lists `anthropic/*` model ids straight from the Anthropic API when `ANTHROPIC_API_KEY` is set. Each id still prints one per line, and a provider that can't be reached (no CLI, no key, a failed call) is skipped silently on stdout and reported on stderr instead of breaking the list. ([28721ea](https://github.com/kud/ai-conventional-commit-cli/commit/28721ea38abb8e91789fe8dbdcf580d16d3018c5))
+- The model pickers no longer drop ids with extra structure: nested ids like `openrouter/<vendor>/<model>` and version-tagged ids like `<provider>/<model>@<version>` were filtered out entirely, which on a well-stocked OpenCode setup was most of the list. The timeout fallback picker now draws from the same provider-aware list as `models`. ([28721ea](https://github.com/kud/ai-conventional-commit-cli/commit/28721ea38abb8e91789fe8dbdcf580d16d3018c5))
+
+### Docs
+
+- The environment-variable table no longer claims `AICC_MODEL` defaults to `github-copilot/claude-sonnet-4.6`. The CLI never had a built-in model default; the table now matches the code and the provider docs. ([5942a1b](https://github.com/kud/ai-conventional-commit-cli/commit/5942a1b3b84380cdada1433b3da11d4de006689b))
+
+---
+
+## 4.0.3 — 2026-09-28
+
+### Fixes
+
+- A commit title led by a tracker key — `SHOP-1234: ✨ feat(cart): …` or `SHOP-1 / SHOP-2: …` — was being mangled into `🧹 chore: sHOP-1234: …`: the ticket prefix got folded into the type/subject and the original glyph and type were lost. The conventional-title guard now recognises the ticket prefix, strips it before validating the rest of the title, and passes it through unchanged, so the key, glyph and type all survive. ([e30e8d5](https://github.com/kud/ai-conventional-commit-cli/commit/e30e8d56e135209ab747c42263b3a33f48e00a17))
+
+---
+
 ## 4.0.2 — 2026-08-13
 
 ### Fixes

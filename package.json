@@ -1,6 +1,6 @@
 {
   "name": "@kud/ai-conventional-commit-cli",
-  "version": "4.0.2",
+  "version": "4.2.3",
   "type": "module",
   "description": "Opinionated, style-aware AI assistant for crafting and splitting git commits (opencode-based, provider-agnostic).",
   "bin": {
@@ -70,5 +70,5 @@
   "bugs": {
     "url": "https://github.com/kud/ai-conventional-commit-cli/issues"
   },
-  "homepage": "https://kud.github.io/ai-conventional-commit-cli"
+  "homepage": "https://kud.io/projects/ai-conventional-commit-cli"
 }
