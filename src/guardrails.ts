@@ -12,7 +12,15 @@ const CONVENTIONAL_RE =
 
 // A leading tracker key, as in `SHOP-4518: ✨ feat(auth): …` or `SHOP-1 / SHOP-2: …`. It is not a
 // conventional type, so normalisation must carry it through untouched rather than read it as one.
-const TICKET_PREFIX_RE = /^([A-Z][A-Z0-9]+-\d+(?:\s*\/\s*[A-Z][A-Z0-9]+-\d+)*):\s+/;
+// Keys are matched case-insensitively and uppercased; a leading emoji cluster (as in
+// `✨ ABC-1234: feat: …`) is moved to the front of `rest` unless `rest` already starts
+// with one, in which case the leading one is dropped. The leading cluster must be
+// followed by whitespace so a plain `ABC-1234` digit run (digits are \p{Emoji}) is
+// never consumed as emoji.
+const TICKET_PREFIX_RE =
+  /^(?:((?:[\p{Emoji}\p{So}\p{Sk}]|\u{FE0F}|\u{200D}|\u{20E3})+)\s+)?([A-Z][A-Z0-9]+-\d+(?:\s*\/\s*[A-Z][A-Z0-9]+-\d+)*):\s+/iu;
+
+const EMOJI_START_RE = /^(?:[\p{Emoji}\p{So}\p{Sk}]|\u{FE0F}|\u{200D}|\u{20E3})/u;
 
 // An emoji is a grapheme, not a codepoint: `♻️` is U+267B plus the U+FE0F variation
 // selector, and ZWJ sequences and keycaps carry more. Keeping only the first codepoint
@@ -24,9 +32,17 @@ const firstGrapheme = (text: string): string =>
   graphemes.segment(text)[Symbol.iterator]().next().value?.segment ?? '';
 
 export const splitTicketPrefix = (title: string): { prefix: string; rest: string } => {
-  const m = title.trim().match(TICKET_PREFIX_RE);
-  if (!m) return { prefix: '', rest: title.trim() };
-  return { prefix: `${m[1]}: `, rest: title.trim().slice(m[0].length) };
+  const trimmed = title.trim();
+  const m = trimmed.match(TICKET_PREFIX_RE);
+  if (!m) return { prefix: '', rest: trimmed };
+  const leadingEmoji = m[1] ?? '';
+  const keys = m[2].toUpperCase();
+  const after = trimmed.slice(m[0].length);
+  let rest = after;
+  if (leadingEmoji && !EMOJI_START_RE.test(after)) {
+    rest = `${leadingEmoji} ${after}`;
+  }
+  return { prefix: `${keys}: `, rest };
 };
 
 export const sanitizeTitle = (title: string, allowEmoji: boolean): string => {
