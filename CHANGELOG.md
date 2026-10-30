@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 
 ---
 
+## 4.3.0 — 2026-10-30
+
+### Highlights
+
+- New `AICC_FORCE_SPINNER` setting keeps the live spinner when stderr is not a terminal, for example when a wrapper tees stderr to read failures. ([42f990b](https://github.com/kud/ai-conventional-commit-cli/commit/42f990b9644bf713c5d8ae1b7e2a9d77f42b7986))
+
+### Fixes
+
+- Lowercase ticket keys such as `shop-1234` are now recognised, and a leading gitmoji is moved after the key instead of sitting in front of it. ([63ac5c3](https://github.com/kud/ai-conventional-commit-cli/commit/63ac5c31799c30fa060695e3132c21378241a3b3))
+
+---
+
 ## 4.2.3 — 2026-09-30
 
 ### Fixes
