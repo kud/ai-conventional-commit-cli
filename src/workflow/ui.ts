@@ -95,7 +95,12 @@ export function createPhasedSpinner(oraLib: any) {
   ];
   let label = 'Starting';
   let i = 0;
-  const spinner = oraLib({ text: chalk.bold(label), spinner: 'dots' }).start();
+  const forceSpinner = Boolean(process.env.AICC_FORCE_SPINNER);
+  const spinner = oraLib({
+    text: chalk.bold(label),
+    spinner: 'dots',
+    ...(forceSpinner ? { isEnabled: true } : {}),
+  }).start();
   let interval: any = null;
 
   function frame() {
