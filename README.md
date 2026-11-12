@@ -47,6 +47,24 @@ $ ai-conventional-commit models --interactive --save
 $ ai-conventional-commit config set style gitmoji
 ```
 
+### Quiet output
+
+When stdout is not a terminal (scripts, pipes, non-interactive runs), `generate` prints a single line after a successful commit instead of the full panel:
+
+```console
+$ ai-conventional-commit --yes | cat
+✓ 1a2b3c4 feat(api): add pagination metadata · 2 files +40 −3
+```
+
+Errors, refused commits and validation warnings still go to stderr in full.
+
+| Option                         | Effect                                                |
+| ------------------------------ | ----------------------------------------------------- |
+| `-q, --quiet` / `AICC_QUIET=1` | One-line output, even in a terminal                   |
+| `--verbose` / `AICC_QUIET=0`   | Full output everywhere, even when stdout is not a TTY |
+
+Without `--yes` in a terminal, quiet mode still shows the suggested message before asking for confirmation.
+
 ## Development
 
 ```sh

@@ -2,7 +2,12 @@ import chalk from 'chalk';
 import ora from 'ora';
 import type { AppConfig } from '../config.js';
 import { getCacheDir } from '../config.js';
-import { getStagedFilesAndDiff, getRecentCommitMessages, createCommit, getBranchTicketPrefix } from '../git.js';
+import {
+  getStagedFilesAndDiff,
+  getRecentCommitMessages,
+  createCommit,
+  getBranchTicketPrefix,
+} from '../git.js';
 import { buildStyleProfile } from '../style.js';
 import { buildGenerationMessages } from '../prompt.js';
 import type { Provider } from '../model/provider.js';
@@ -12,6 +17,7 @@ import { loadPlugins, applyTransforms, runValidations } from '../plugins.js';
 import { checkCandidate, splitTicketPrefix } from '../guardrails.js';
 import { formatCommitTitle } from '../title-format.js';
 import { truncateMiddle } from './util.js';
+import { formatQuietLine, readHeadSummary } from './quiet.js';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { select } from '@inquirer/prompts';
@@ -25,6 +31,8 @@ import {
   renderCommitBlock,
   finalSuccess,
   commitFailed,
+  commitFailedQuiet,
+  createQuietSteps,
 } from './ui.js';
 
 export async function runGenerate(config: AppConfig): Promise<number | void> {
@@ -76,14 +84,18 @@ async function _runGenerate(
     return;
   }
 
-  if (process.stdout.isTTY) {
+  const quiet = config.quiet === true;
+  // Quiet still shows the suggestion when it is about to ask for confirmation.
+  const showSuggestion = !quiet || !config.yes;
+
+  if (process.stdout.isTTY && !quiet) {
     await animateHeaderBase('ai-conventional-commit', config.model);
     borderLine(); // blank spacer with left border
   }
 
-  // Step: Files
-  sectionTitle('Files');
-  (function renderDiffStat() {
+  if (!quiet) renderDiffStat();
+  function renderDiffStat() {
+    sectionTitle('Files');
     const BAR_WIDTH = 32;
     const nameLens = files.map((f) => f.file.length);
     const maxName = Math.min(Math.max(...nameLens, 0), 50);
@@ -131,9 +143,9 @@ async function _runGenerate(
       ),
     );
     borderLine();
-  })();
+  }
 
-  const phased = createPhasedSpinner(ora);
+  const phased = quiet ? createQuietSteps() : createPhasedSpinner(ora);
   const runStep = <T>(label: string, fn: () => Promise<T>) => phased.step(label, fn);
 
   const [style, plugins] = await runStep('Profiling style', async () => {
@@ -166,7 +178,7 @@ async function _runGenerate(
   // Suggested commit step
   phased.phase('Suggested commit');
   phased.stop();
-  sectionTitle('Suggested commit');
+  if (showSuggestion) sectionTitle('Suggested commit');
 
   candidates = candidates.map((c) => ({
     ...c,
@@ -193,7 +205,7 @@ async function _runGenerate(
 
   const chosen = candidates[0];
 
-  renderCommitBlock({ title: chosen.title, body: chosen.body });
+  if (showSuggestion) renderCommitBlock({ title: chosen.title, body: chosen.body });
 
   const pluginErrors = await runValidations(chosen, plugins, {
     cwd: process.cwd(),
@@ -202,13 +214,15 @@ async function _runGenerate(
   const guardErrors = checkCandidate(chosen);
   const errors = [...pluginErrors, ...guardErrors];
 
-  if (errors.length) {
+  if (errors.length && !showSuggestion) {
+    process.stderr.write(['Validation issues:', ...errors.map((e) => '• ' + e)].join('\n') + '\n');
+  } else if (errors.length) {
     borderLine();
     console.log('⊙ ' + chalk.bold('Checks'));
     const errorLines = ['Validation issues:', ...errors.map((e) => chalk.red('• ' + e))];
     errorLines.forEach((l) => borderLine(l));
   }
-  borderLine();
+  if (showSuggestion) borderLine();
   const yn = config.yes || (await selectYesNo());
   if (!yn) {
     borderLine();
@@ -217,11 +231,19 @@ async function _runGenerate(
   }
   const commit = await createCommit(chosen.title, chosen.body);
   if (!commit.ok) {
+    if (quiet) {
+      commitFailedQuiet(commit.failure);
+      return commit.failure.exitCode;
+    }
     borderLine();
     commitFailed(commit.failure);
     return commit.failure.exitCode;
   }
   saveSession({ plan, chosen, mode: 'single' });
+  if (quiet) {
+    console.log(formatQuietLine(await readHeadSummary()));
+    return;
+  }
   borderLine();
   finalSuccess({ count: 1, startedAt });
 }

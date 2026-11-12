@@ -17,7 +17,15 @@ export interface AppConfig {
   verbose?: boolean;
   yes?: boolean; // Auto-confirm commit suggestions without prompting
   ticketFromBranch?: boolean; // Derive ticket prefix from branch name
+  quiet?: boolean; // One-line output; unset means quiet only when stdout is not a terminal
 }
+
+export const parseBooleanEnv = (raw: string | undefined): boolean | undefined => {
+  if (raw === undefined || raw === '') return undefined;
+  if (/^(1|true|yes|on)$/i.test(raw)) return true;
+  if (/^(0|false|no|off)$/i.test(raw)) return false;
+  return undefined;
+};
 
 const DEFAULTS: AppConfig = {
   privacy: (process.env.AICC_PRIVACY as any) || 'low',
@@ -57,10 +65,11 @@ const DEFAULTS: AppConfig = {
   ticketFromBranch: process.env.AICC_TICKET_FROM_BRANCH === 'true',
 };
 
-// `model` has no default, so it is absent from a merged config until something sets
-// it — which makes a plain `key in config` test report it as an unknown key.
+// `model` and `quiet` have no default, so they are absent from a merged config until
+// something sets them — which makes a plain `key in config` test report them as unknown keys.
 export const CONFIG_KEYS: (keyof AppConfig)[] = [
   'model',
+  'quiet',
   ...(Object.keys(DEFAULTS) as (keyof AppConfig)[]),
 ];
 
@@ -163,7 +172,10 @@ export async function loadConfigDetailed(cwd = process.cwd()): Promise<{
   if (maxFileLines !== undefined) envCfg.maxFileLines = maxFileLines;
   if (process.env.AICC_VERBOSE) envCfg.verbose = process.env.AICC_VERBOSE === 'true';
   if (process.env.AICC_YES) envCfg.yes = process.env.AICC_YES === 'true';
-  if (process.env.AICC_TICKET_FROM_BRANCH) envCfg.ticketFromBranch = process.env.AICC_TICKET_FROM_BRANCH === 'true';
+  if (process.env.AICC_TICKET_FROM_BRANCH)
+    envCfg.ticketFromBranch = process.env.AICC_TICKET_FROM_BRANCH === 'true';
+  const quiet = parseBooleanEnv(process.env.AICC_QUIET);
+  if (quiet !== undefined) envCfg.quiet = quiet;
 
   const merged: AppConfig = {
     ...DEFAULTS,

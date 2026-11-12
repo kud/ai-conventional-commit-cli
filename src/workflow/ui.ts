@@ -68,6 +68,32 @@ export function commitFailed(failure: CommitFailure) {
   commitFailureMessage(failure);
 }
 
+// Quiet mode keeps stdout for the success line alone, so the whole failure goes to stderr.
+export function commitFailedQuiet(failure: CommitFailure) {
+  commitFailureOutput(failure);
+  const reason = failure.rejectedByHook
+    ? 'A git hook refused the commit. Nothing was committed.'
+    : `git commit failed (exit ${failure.exitCode}). Nothing was committed.`;
+  process.stderr.write(`✖ ${reason}\n`);
+}
+
+// Same contract as createPhasedSpinner, without the spinner: nothing is drawn while
+// steps succeed, and a failing step still names itself on stderr.
+export function createQuietSteps() {
+  return {
+    async step<T>(l: string, fn: () => Promise<T>): Promise<T> {
+      try {
+        return await fn();
+      } catch (e: any) {
+        process.stderr.write(chalk.red('✖') + ` ${l} failed: ${e?.message || e}\n`);
+        throw e;
+      }
+    },
+    phase(_l: string) {},
+    stop() {},
+  };
+}
+
 export function finalSuccess(opts: { count: number; startedAt: number }) {
   const elapsedMs = Date.now() - opts.startedAt;
   const seconds = elapsedMs / 1000;

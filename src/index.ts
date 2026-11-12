@@ -8,10 +8,46 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { select } from '@inquirer/prompts';
+import { resolveQuiet } from './workflow/quiet.js';
+import type { AppConfig } from './config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkgVersion =
   JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8')).version || '0.0.0';
+
+const quietOption = () =>
+  Option.Boolean('-q,--quiet', false, {
+    description:
+      'Print one line after committing (default when stdout is not a terminal; env AICC_QUIET=1)',
+  });
+
+const verboseOption = () =>
+  Option.Boolean('--verbose', false, {
+    description:
+      'Always show the full output, even when stdout is not a terminal (env AICC_QUIET=0)',
+  });
+
+// In quiet mode stdout carries only the success line, so an error clipanion would print
+// to stdout goes to stderr instead: a failed run is never silent and never mistaken for output.
+async function generateWithOutputMode(
+  command: Command,
+  config: AppConfig,
+  flags: { quiet: boolean; verbose: boolean },
+) {
+  config.quiet = resolveQuiet({
+    quietFlag: flags.quiet,
+    verboseFlag: flags.verbose,
+    configured: config.quiet,
+    isTTY: process.stdout.isTTY,
+  });
+  if (!config.quiet) return runGenerate(config);
+  try {
+    return await runGenerate(config);
+  } catch (error: any) {
+    command.context.stderr.write(command.cli.error(error, { command }));
+    return 1;
+  }
+}
 
 // Root command (default). Mirrors generate behaviour but shows aggregated help.
 class RootCommand extends Command {
@@ -21,6 +57,7 @@ class RootCommand extends Command {
     details: `Commands:\n\n⋅ generate: Generate a single commit (default)\n\n⋅ split: Plan & apply multiple smaller commits\n\n⋅ refine: Refine last (or indexed) commit\n\n⋅ models: List or pick AI models (opencode)\n\n⋅ config show: Show merged config + sources\n\n⋅ config get <key>: Get a single config value\n\n⋅ config set <k> <v>: Persist a global config value\n\nRefine Options:\n\n⋅ --shorter: Make message more concise\n\n⋅ --longer: Expand message with detail\n\n⋅ --scope <scope>: Add or replace scope\n\n⋅ --index <n>: Target commit from previous split`,
     examples: [
       ['Generate with gitmoji style', 'ai-conventional-commit --style gitmoji'],
+      ['One-line output for scripts', 'ai-conventional-commit --yes --quiet'],
       ['Split staged changes', 'ai-conventional-commit split --max 3'],
 
       ['Pick & save default model', 'ai-conventional-commit models -i --save'],
@@ -43,12 +80,15 @@ class RootCommand extends Command {
     description: 'Auto-confirm commit without prompting',
   });
 
+  quiet = quietOption();
+  verbose = verboseOption();
+
   async execute() {
     const config = await loadConfig();
     if (this.style) config.style = this.style as any;
     if (this.model) config.model = this.model;
     if (this.yes) config.yes = this.yes;
-    return runGenerate(config);
+    return generateWithOutputMode(this, config, { quiet: this.quiet, verbose: this.verbose });
   }
 }
 
@@ -56,7 +96,7 @@ class GenerateCommand extends Command {
   static paths = [[`generate`]];
   static usage = Command.Usage({
     description: 'Generate a conventional commit message for staged changes.',
-    details: `Generate a single conventional commit using AI with style rules, guardrails, and optional model override. Uses staged changes. Add --style gitmoji or --style gitmoji-pure for emoji modes.`,
+    details: `Generate a single conventional commit using AI with style rules, guardrails, and optional model override. Uses staged changes. Add --style gitmoji or --style gitmoji-pure for emoji modes.\n\nWhen stdout is not a terminal (scripts, pipes, non-interactive runs) output is quiet: after a successful commit a single line is printed, e.g. "✓ 1a2b3c4 feat(api): add pagination · 2 files +40 −3". Errors still go to stderr in full. Use --quiet to get that line in a terminal too, or --verbose (AICC_QUIET=0) to keep the full output everywhere.`,
     examples: [
       ['Basic usage (standard style)', 'ai-conventional-commit generate'],
       ['Force gitmoji style', 'ai-conventional-commit generate --style gitmoji'],
@@ -64,6 +104,7 @@ class GenerateCommand extends Command {
         'Override model for this run',
         'ai-conventional-commit generate --model github-copilot/claude-sonnet-4.6',
       ],
+      ['One-line output for scripts', 'ai-conventional-commit generate --yes --quiet'],
     ],
   });
 
@@ -81,6 +122,9 @@ class GenerateCommand extends Command {
     description: 'Auto-confirm commit without prompting',
   });
 
+  quiet = quietOption();
+  verbose = verboseOption();
+
   async execute() {
     const config = await loadConfig();
     if (this.style) {
@@ -89,7 +133,7 @@ class GenerateCommand extends Command {
 
     if (this.model) config.model = this.model;
     if (this.yes) config.yes = this.yes;
-    return runGenerate(config);
+    return generateWithOutputMode(this, config, { quiet: this.quiet, verbose: this.verbose });
   }
 }
 
@@ -303,7 +347,7 @@ class ConfigSetCommand extends Command {
   static usage = Command.Usage({
     description: 'Set and persist a global configuration key.',
     details:
-      'Writes to the global aicc.json (XDG config). Accepts JSON for complex values. Only allowed keys: model, style, privacy, styleSamples, maxTokens, verbose, yes, ticketFromBranch.',
+      'Writes to the global aicc.json (XDG config). Accepts JSON for complex values. Only allowed keys: model, style, privacy, styleSamples, maxTokens, verbose, yes, ticketFromBranch, quiet.',
     examples: [
       [
         'Set default model',
@@ -327,6 +371,7 @@ class ConfigSetCommand extends Command {
       'verbose',
       'yes',
       'ticketFromBranch',
+      'quiet',
     ]);
     if (!allowed.has(this.key)) {
       this.context.stderr.write(`Cannot set key: ${this.key}\n`);
