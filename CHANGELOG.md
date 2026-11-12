@@ -4,6 +4,15 @@ All notable changes to this project are documented here.
 
 ---
 
+## 4.4.0 — 2026-11-12
+
+### Highlights
+
+- New quiet mode prints a single result line after committing, and it is the default when stdout is not a terminal, so scripts and non-interactive runs get clean output. Opt in or out with `-q`/`--quiet`, `--verbose`, `AICC_QUIET` or the `quiet` config key. ([728b6c4](https://github.com/kud/ai-conventional-commit-cli/commit/728b6c40f4bc89156032e3382bae147b0e63829c))
+- Failures in quiet mode are still printed in full on stderr, so errors are never silent. ([728b6c4](https://github.com/kud/ai-conventional-commit-cli/commit/728b6c40f4bc89156032e3382bae147b0e63829c))
+
+---
+
 ## 4.3.0 — 2026-10-30
 
 ### Highlights
