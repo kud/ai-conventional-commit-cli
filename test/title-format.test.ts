@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { formatCommitTitle } from '../src/title-format.js';
+import { splitTicketPrefix } from '../src/guardrails.js';
 
 describe('formatCommitTitle', () => {
   it('keeps standard conventional title when gitmoji disabled', () => {
@@ -61,6 +62,33 @@ describe('formatCommitTitle', () => {
         mode: 'gitmoji',
       }),
     ).toBe('ABC-1234: 🐛 fix: handle empty list');
+  });
+
+  it('restores the case of a mixed-case key', () => {
+    expect(
+      formatCommitTitle('aBC-1234: ✨ feat(launcher): add preview panel', {
+        allowGitmoji: true,
+        mode: 'gitmoji',
+      }),
+    ).toBe('ABC-1234: ✨ feat(launcher): add preview panel');
+  });
+
+  it.each(['utf-8', 'x86-64', 'sha-256', 'iso-8859', 'base-64', 'win-1252', 'a-1'])(
+    'does not read a lowercase %s subject as a ticket key',
+    (word) => {
+      expect(splitTicketPrefix(`${word}: decode headers`)).toEqual({
+        prefix: '',
+        rest: `${word}: decode headers`,
+      });
+    },
+  );
+
+  it('does not read a multi-key prefix as tickets when one key is not a ticket', () => {
+    expect(splitTicketPrefix('abc-12 / utf-8: fix: decode headers').prefix).toBe('');
+  });
+
+  it('keeps an uppercase key that contains digits', () => {
+    expect(splitTicketPrefix('B2B-77: fix: handle empty list').prefix).toBe('B2B-77: ');
   });
 
   it('keeps the prefix when gitmoji is disabled', () => {

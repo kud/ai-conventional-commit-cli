@@ -12,7 +12,7 @@ const CONVENTIONAL_RE =
 
 // A leading tracker key, as in `SHOP-4518: ✨ feat(auth): …` or `SHOP-1 / SHOP-2: …`. It is not a
 // conventional type, so normalisation must carry it through untouched rather than read it as one.
-// Keys are matched case-insensitively and uppercased; a leading emoji cluster (as in
+// Keys are matched case-insensitively (see isTicketKey) and uppercased; a leading emoji cluster (as in
 // `✨ ABC-1234: feat: …`) is moved to the front of `rest` unless `rest` already starts
 // with one, in which case the leading one is dropped. The leading cluster must be
 // followed by whitespace so a plain `ABC-1234` digit run (digits are \p{Emoji}) is
@@ -31,10 +31,45 @@ const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 const firstGrapheme = (text: string): string =>
   graphemes.segment(text)[Symbol.iterator]().next().value?.segment ?? '';
 
+// An uppercase key is taken as written, as it was before lowercase keys were accepted. A key in
+// any other case is a model slip (`aBC-1234`), and the case-insensitive shape also fits ordinary
+// subjects such as `utf-8: …` or `x86-64: …`. So a non-uppercase key must be letters, a hyphen
+// and digits, with a project part of at least two letters, and must not be one of the encoding,
+// architecture or standard names that share that shape.
+const UPPERCASE_KEY_RE = /^[A-Z][A-Z0-9]+-\d+$/;
+const LOOSE_KEY_RE = /^([A-Za-z]{2,})-\d+$/;
+const NOT_A_PROJECT = new Set([
+  'amd',
+  'arm',
+  'base',
+  'cp',
+  'ecma',
+  'es',
+  'http',
+  'ipv',
+  'iso',
+  'latin',
+  'md',
+  'rfc',
+  'sha',
+  'ucs',
+  'utf',
+  'win',
+  'windows',
+]);
+
+export const isTicketKey = (key: string): boolean => {
+  if (UPPERCASE_KEY_RE.test(key)) return true;
+  const m = key.match(LOOSE_KEY_RE);
+  return m !== null && !NOT_A_PROJECT.has(m[1].toLowerCase());
+};
+
 export const splitTicketPrefix = (title: string): { prefix: string; rest: string } => {
   const trimmed = title.trim();
   const m = trimmed.match(TICKET_PREFIX_RE);
   if (!m) return { prefix: '', rest: trimmed };
+  if (!m[2].split('/').every((key) => isTicketKey(key.trim())))
+    return { prefix: '', rest: trimmed };
   const leadingEmoji = m[1] ?? '';
   const keys = m[2].toUpperCase();
   const after = trimmed.slice(m[0].length);
