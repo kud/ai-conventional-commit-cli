@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 
 ---
 
+## 4.4.1 — 2026-11-18
+
+### Fixes
+
+- Lowercase subjects such as `utf-8:` or `x86-64:` are no longer mistaken for ticket keys, while mixed-case keys like `aBC-1234` are still restored to `ABC-1234`. ([e771437](https://github.com/kud/ai-conventional-commit-cli/commit/e7714376bf13b10af5e9b32bf2c89fdc75ccf509))
+
+### Documentation
+
+- The getting-started guide now lists `-q` and `--verbose` in the flags table. ([8faad28](https://github.com/kud/ai-conventional-commit-cli/commit/8faad28b22fd9bb3bc458011d3ac1bec0b1640dc))
+
+---
+
 ## 4.4.0 — 2026-11-12
 
 ### Highlights
